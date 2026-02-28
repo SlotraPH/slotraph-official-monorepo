@@ -1,0 +1,23 @@
+{
+  "name": "slotra-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "dev:landing": "turbo dev --filter=@slotra/landing",
+    "dev:web": "turbo dev --filter=@slotra/web-app",
+    "dev:mobile": "turbo dev --filter=@slotra/mobile",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

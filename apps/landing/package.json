@@ -1,0 +1,27 @@
+{
+  "name": "@slotra/landing",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "lint": "eslint src/",
+    "type-check": "astro check && tsc --noEmit"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.0.0",
+    "@slotra/ui": "workspace:*",
+    "@slotra/utils": "workspace:*",
+    "astro": "^5.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "@slotra/eslint-config": "workspace:*",
+    "@slotra/tsconfig": "workspace:*",
+    "eslint": "^9.0.0",
+    "typescript": "^5.7.0"
+  }
+}
