@@ -1,11 +1,32 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { Navbar } from '@slotra/ui';
+import { HeroSection } from '../components/HeroSection';
+import { SpotlightSection } from '../components/SpotlightSection';
+import { FeatureRow } from '../components/FeatureRow';
+import { StepsSection } from '../components/StepsSection';
+import { SocialProofSection } from '../components/SocialProofSection';
+import { PricingSection } from '../components/PricingSection';
+import { FaqSection } from '../components/FaqSection';
+import { FinalCtaBanner } from '../components/FinalCtaBanner';
+import { Footer } from '../components/Footer';
 import { APP_NAME } from '@slotra/utils';
 ---
 
-<BaseLayout title={`${APP_NAME} — Home`} description="Welcome to Slotra">
-  <main>
-    <h1>Welcome to {APP_NAME}</h1>
-    <p>The Slotra landing page.</p>
-  </main>
+<BaseLayout
+  title={`${APP_NAME} — Free Scheduling Software for Philippine Businesses`}
+  description="Slotra is a free scheduling platform for Philippine businesses. Automate bookings, reminders, and payments 24/7."
+>
+  <Navbar client:load />
+  <HeroSection client:load />
+  <SpotlightSection client:load />
+  <FeatureRow client:load />
+  <StepsSection client:load />
+  <SocialProofSection client:load />
+  <PricingSection client:load />
+  <FaqSection client:load />
+  <FinalCtaBanner client:load />
+  <Footer client:load />
 </BaseLayout>
+
+
