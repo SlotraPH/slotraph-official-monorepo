@@ -2,6 +2,10 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { Navbar } from '@slotra/ui';
 import { HeroSection } from '../components/HeroSection';
+import { SpotlightSection } from '../components/SpotlightSection';
+import { FeatureRow } from '../components/FeatureRow';
+import { StepsSection } from '../components/StepsSection';
+import { SocialProofSection } from '../components/SocialProofSection';
 import { APP_NAME } from '@slotra/utils';
 ---
 
@@ -11,4 +15,9 @@ import { APP_NAME } from '@slotra/utils';
 >
   <Navbar client:load />
   <HeroSection client:load />
+  <SpotlightSection client:load />
+  <FeatureRow client:load />
+  <StepsSection client:load />
+  <SocialProofSection client:load />
 </BaseLayout>
+
