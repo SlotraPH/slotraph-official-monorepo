@@ -1,11 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { Navbar } from '@slotra/ui';
+import { HeroSection } from '../components/HeroSection';
 import { APP_NAME } from '@slotra/utils';
 ---
 
-<BaseLayout title={`${APP_NAME} — Home`} description="Welcome to Slotra">
-  <main>
-    <h1>Welcome to {APP_NAME}</h1>
-    <p>The Slotra landing page.</p>
-  </main>
+<BaseLayout
+  title={`${APP_NAME} — Free Scheduling Software for Philippine Businesses`}
+  description="Slotra is a free scheduling platform for Philippine businesses. Automate bookings, reminders, and payments 24/7."
+>
+  <Navbar client:load />
+  <HeroSection client:load />
 </BaseLayout>
