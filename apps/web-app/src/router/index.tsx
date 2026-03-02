@@ -9,6 +9,7 @@ import { OnboardingPage } from '@/pages/owner/OnboardingPage';
 import { PaymentsPage } from '@/pages/owner/PaymentsPage';
 import { ServicesPage } from '@/pages/owner/ServicesPage';
 import { SettingsPage } from '@/pages/owner/SettingsPage';
+import { BrandDetailsPage } from '@/pages/owner/settings/BrandDetailsPage';
 import { BookingConfirmationPage } from '@/pages/public/BookingConfirmationPage';
 import { BookingPage } from '@/pages/public/BookingPage';
 
@@ -26,7 +27,10 @@ export function AppRouter() {
           <Route path="customers" element={<CustomersPage />} />
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="integrations" element={<IntegrationsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings" element={<SettingsPage />}>
+            <Route index element={<Navigate replace to="/owner/settings/brand" />} />
+            <Route path="brand" element={<BrandDetailsPage />} />
+          </Route>
           <Route path="onboarding" element={<OnboardingPage />} />
         </Route>
 

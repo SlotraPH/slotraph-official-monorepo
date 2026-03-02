@@ -42,7 +42,10 @@ function DotsIcon() {
 
 export function TopBar() {
   const { pathname } = useLocation();
-  const title = pageTitles[pathname] ?? 'Dashboard';
+
+  // Match using prefix so nested routes (e.g. /owner/settings/brand) still get the right title
+  const title =
+    Object.entries(pageTitles).find(([path]) => pathname.startsWith(path))?.[1] ?? 'Dashboard';
 
   return (
     <header className="topbar">
