@@ -5,9 +5,7 @@ import { TopBar } from '@/app/components/TopBar';
 export function OwnerLayout() {
   return (
     <div className="owner-shell">
-      <aside className="owner-shell__sidebar">
-        <SidebarNav />
-      </aside>
+      <SidebarNav />
       <div className="owner-shell__content">
         <TopBar />
         <main className="owner-shell__main">

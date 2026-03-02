@@ -1,9 +1,20 @@
+import { PageHeader } from '@slotra/ui';
+
 export function CustomersPage() {
   return (
-    <section className="page-section">
-      <h2>Customers</h2>
-      <p>Customer history and profiles will appear in this section.</p>
-      <p>This placeholder keeps the owner navigation structure intact for the MVP shell.</p>
-    </section>
+    <div>
+      <PageHeader title="Customers" subtitle="Manage your customer contacts and history." />
+      <div style={{
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: 'var(--space-8)',
+        textAlign: 'center',
+        color: 'var(--color-text-muted)',
+        fontSize: 'var(--font-size-sm)',
+      }}>
+        Customer list coming soon
+      </div>
+    </div>
   );
 }

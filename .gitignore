@@ -4,6 +4,9 @@ node_modules
 # Claude Code
 .claude/
 
+# references
+references/
+
 # Turbo
 .turbo
 

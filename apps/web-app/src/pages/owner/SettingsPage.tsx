@@ -1,9 +1,20 @@
+import { PageHeader } from '@slotra/ui';
+
 export function SettingsPage() {
   return (
-    <section className="page-section">
-      <h2>Settings</h2>
-      <p>Business preferences and account-level configuration belong here.</p>
-      <p>This placeholder page gives the owner area a complete initial settings route.</p>
-    </section>
+    <div>
+      <PageHeader title="Settings" subtitle="Configure your account and business preferences." />
+      <div style={{
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: 'var(--space-8)',
+        textAlign: 'center',
+        color: 'var(--color-text-muted)',
+        fontSize: 'var(--font-size-sm)',
+      }}>
+        Settings panels coming soon
+      </div>
+    </div>
   );
 }

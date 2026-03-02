@@ -1,9 +1,20 @@
+import { PageHeader } from '@slotra/ui';
+
 export function DashboardPage() {
   return (
-    <section className="page-section">
-      <h2>Dashboard</h2>
-      <p>Owner metrics and quick actions will live here.</p>
-      <p>This placeholder confirms the dashboard route and shell are wired correctly.</p>
-    </section>
+    <div>
+      <PageHeader title="Dashboard" subtitle="Welcome back. Here's an overview of your business." />
+      <div style={{
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: 'var(--space-8)',
+        textAlign: 'center',
+        color: 'var(--color-text-muted)',
+        fontSize: 'var(--font-size-sm)',
+      }}>
+        Dashboard metrics coming soon
+      </div>
+    </div>
   );
 }
