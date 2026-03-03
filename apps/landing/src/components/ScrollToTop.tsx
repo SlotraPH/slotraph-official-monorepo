@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ArrowUp } from 'lucide-react';
 
 export function ScrollToTop() {
     const [visible, setVisible] = useState(false);
@@ -30,20 +31,7 @@ export function ScrollToTop() {
                 transition: 'background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease, transform 0.3s ease',
             }}
         >
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-            >
-                <path
-                    fillRule="evenodd"
-                    d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"
-                    clipRule="evenodd"
-                />
-            </svg>
+            <ArrowUp size={18} aria-hidden="true" />
         </button>
     );
 }

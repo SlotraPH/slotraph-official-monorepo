@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 interface FaqItem {
     question: string;
@@ -61,19 +62,13 @@ export const FaqSection: React.FC = () => {
                                 aria-expanded={isOpen}
                             >
                                 <span>{item.question}</span>
-                                <svg
-                                    className={`w-5 h-5 flex-shrink-0 transition-[transform,color] duration-200 ${
+                                <ChevronDown
+                                    size={20}
+                                    className={`flex-shrink-0 transition-[transform,color] duration-200 ${
                                         isOpen ? 'rotate-180 text-brand' : 'text-muted'
                                     }`}
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        fillRule="evenodd"
-                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                        clipRule="evenodd"
-                                    />
-                                </svg>
+                                    aria-hidden="true"
+                                />
                             </button>
                             {/* max-height transition via inline style — Tailwind can't animate to max-height: auto */}
                             <div

@@ -12,7 +12,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@slotra/branding": "workspace:*"
+    "@slotra/branding": "workspace:*",
+    "lucide-react": "^0.576.0"
   },
   "devDependencies": {
     "@slotra/eslint-config": "workspace:*",
