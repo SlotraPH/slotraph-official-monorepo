@@ -22,7 +22,9 @@
   "devDependencies": {
     "@slotra/eslint-config": "workspace:*",
     "@slotra/tsconfig": "workspace:*",
+    "@tailwindcss/vite": "^4.0.0",
     "eslint": "^9.0.0",
+    "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0"
   }
 }

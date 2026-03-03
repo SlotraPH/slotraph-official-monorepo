@@ -1,4 +1,6 @@
 ---
+import '../styles/global.css';
+
 interface Props {
   title: string;
   description?: string;
@@ -26,7 +28,3 @@ const { title, description = 'Welcome to Slotra' } = Astro.props;
     <slot />
   </body>
 </html>
-
-<style is:global>
-  @import '../styles/landing.css';
-</style>

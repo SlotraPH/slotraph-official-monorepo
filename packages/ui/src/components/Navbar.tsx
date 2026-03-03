@@ -71,26 +71,34 @@ export function Navbar({
 
     return (
         <header
-            className={`l-navbar${scrolled ? ' l-navbar--scrolled' : ''}`}
+            className={`fixed top-0 left-0 right-0 z-[1000] py-3 transition-[background,box-shadow,backdrop-filter] duration-300 ease-in-out${scrolled ? ' bg-white/85 backdrop-blur-lg shadow-[0_1px_0_rgba(0,0,0,0.06),0_4px_24px_rgba(0,0,0,0.06)]' : ' bg-transparent'}`}
             role="banner"
         >
-            <div className="l-navbar__inner">
+            <div className="max-w-[1200px] mx-auto px-6 w-full grid grid-cols-[1fr_auto_1fr] items-center gap-6">
                 {/* Logo */}
-                <a href="/" className="l-navbar__logo" aria-label="Slotra home">
-                    <SymbolWordmark className="l-navbar__logo-img" aria-hidden="true" />
+                <a href="/" className="flex items-center" aria-label="Slotra home">
+                    <SymbolWordmark className="h-10 w-auto" aria-hidden="true" />
                 </a>
 
                 {/* Center nav pill */}
-                <nav className="l-navbar__nav-pill" aria-label="Main navigation">
-                    <ul className="l-navbar__nav" ref={navRef}>
+                <nav
+                    className="bg-[#f0f1f3] border border-[#d8dce2] rounded-full p-1 max-[900px]:hidden"
+                    aria-label="Main navigation"
+                >
+                    <ul className="flex items-center list-none gap-0.5 relative" ref={navRef}>
                         {/* Sliding indicator */}
-                        <span ref={pillRef} className="l-navbar__nav-indicator" aria-hidden="true" />
+                        <span
+                            ref={pillRef}
+                            className="absolute top-0 left-0 h-full bg-brand rounded-full pointer-events-none z-0 transition-[left,width] duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+                            aria-hidden="true"
+                        />
                         {NAV_LINKS.map(({ label, href }, i) => (
                             <li key={label}>
                                 <a
                                     ref={el => { linkRefs.current[i] = el; }}
                                     href={href}
-                                    className={`l-navbar__nav-link${activeHref === href ? ' l-navbar__nav-link--active' : ''}`}
+                                    className="block py-2 px-[18px] rounded-full text-sm font-medium whitespace-nowrap relative z-[1] transition-colors duration-200"
+                                    style={{ color: activeHref === href ? '#ffffff' : '#4a5668' }}
                                     onClick={() => setActiveHref(href)}
                                 >
                                     {label}
@@ -101,8 +109,11 @@ export function Navbar({
                 </nav>
 
                 {/* Right CTAs */}
-                <div className="l-navbar__right">
-                    <a href={loginHref} className="l-navbar__login-btn">
+                <div className="flex items-center gap-2 justify-end">
+                    <a
+                        href={loginHref}
+                        className="inline-flex items-center py-[9px] px-5 rounded-full border border-[#c8cdd2] text-sm font-medium text-navy whitespace-nowrap bg-transparent transition-[border-color,background] duration-200 hover:border-[#9aa3ad] hover:bg-black/[0.04]"
+                    >
                         Book A Demo
                     </a>
                     <LandingButton href={ctaHref} variant="primary" size="md">

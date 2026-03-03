@@ -9,18 +9,29 @@ const LOGOS = [
 
 export function SocialProofSection() {
     return (
-        <section className="l-proof" aria-label="Featured integrations and partners">
-            <div className="l-proof__inner">
-                <p className="l-proof__heading">Who's talking about us</p>
-                <div className="l-proof__strip">
+        <section
+            className="bg-white py-24 border-t border-[#e2e6ea]"
+            aria-label="Featured integrations and partners"
+        >
+            <div className="max-w-[1200px] mx-auto px-6 flex flex-col items-center gap-8 text-center">
+                <p className="text-[22px] font-extrabold text-navy tracking-[-0.5px]">
+                    Who's talking about us
+                </p>
+
+                <div className="bg-[#f0f2f5] rounded-full py-4 px-6 flex items-center gap-4 flex-wrap justify-center">
                     {LOGOS.map((logo, i) => (
-                        <div key={i} className="l-proof__logo-pill" title={logo.name}>
-                            <span className="l-proof__logo-abbr">{logo.abbr}</span>
-                            <span className="l-proof__logo-name">{logo.name}</span>
+                        <div
+                            key={i}
+                            className="flex items-center gap-1.5 py-1.5 px-[14px] bg-white border border-[#e2e6ea] rounded-full shadow-[0_1px_3px_rgba(15,31,46,0.08)]"
+                            title={logo.name}
+                        >
+                            <span className="text-xs font-extrabold text-brand tracking-[0.5px]">{logo.abbr}</span>
+                            <span className="text-sm font-semibold text-secondary">{logo.name}</span>
                         </div>
                     ))}
                 </div>
-                <p className="l-proof__caption">
+
+                <p className="text-sm text-muted max-w-[480px] leading-[1.6]">
                     Slotra integrates with the payment providers your customers already use.
                 </p>
             </div>
