@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { SymbolWordmark } from '@slotra/branding';
-import { LandingButton } from './LandingButton';
 
 interface NavLink {
     label: string;
@@ -28,6 +27,7 @@ export function Navbar({
 }: NavbarProps) {
     const [scrolled, setScrolled] = useState(false);
     const [activeHref, setActiveHref] = useState(NAV_LINKS[0].href);
+    const [hoveredBtn, setHoveredBtn] = useState<'demo' | 'cta' | null>(null);
 
     const navRef = useRef<HTMLUListElement>(null);
     const pillRef = useRef<HTMLSpanElement>(null);
@@ -112,13 +112,33 @@ export function Navbar({
                 <div className="flex items-center gap-2 justify-end">
                     <a
                         href={loginHref}
-                        className="inline-flex items-center py-[9px] px-5 rounded-full border border-[#c8cdd2] text-sm font-medium text-navy whitespace-nowrap bg-transparent transition-[border-color,background] duration-200 hover:border-[#9aa3ad] hover:bg-black/[0.04]"
+                        onMouseEnter={() => setHoveredBtn('demo')}
+                        onMouseLeave={() => setHoveredBtn(null)}
+                        className="inline-flex items-center py-[7px] px-[14px] rounded-lg text-[13px] font-medium tracking-[0.15px] whitespace-nowrap transition-[border-color,background,color] duration-150"
+                        style={{
+                            border: '1px solid',
+                            borderColor: hoveredBtn === 'demo' ? '#a8b0bb' : '#d4d8de',
+                            color: hoveredBtn === 'demo' ? '#0f1f2e' : '#4a5668',
+                            backgroundColor: hoveredBtn === 'demo' ? '#f3f4f6' : 'transparent',
+                        }}
                     >
-                        Book A Demo
+                        Book a Demo
                     </a>
-                    <LandingButton href={ctaHref} variant="primary" size="md">
+                    <a
+                        href={ctaHref}
+                        onMouseEnter={() => setHoveredBtn('cta')}
+                        onMouseLeave={() => setHoveredBtn(null)}
+                        className="inline-flex items-center py-[7px] px-[14px] rounded-lg text-[13px] font-semibold tracking-[0.15px] whitespace-nowrap transition-[background,box-shadow] duration-150"
+                        style={{
+                            backgroundColor: hoveredBtn === 'cta' ? '#252880' : '#2e3192',
+                            color: '#ffffff',
+                            boxShadow: hoveredBtn === 'cta'
+                                ? '0 2px 12px rgba(46,49,146,0.35)'
+                                : '0 1px 4px rgba(46,49,146,0.2)',
+                        }}
+                    >
                         {ctaLabel}
-                    </LandingButton>
+                    </a>
                 </div>
             </div>
         </header>
