@@ -1,4 +1,5 @@
 import React from 'react';
+import { SymbolWordmark } from '@slotra/branding';
 
 export const Footer: React.FC = () => {
     const currentYear = new Date().getFullYear();
@@ -10,8 +11,7 @@ export const Footer: React.FC = () => {
                     {/* Brand Column */}
                     <div className="l-footer__brand">
                         <div className="l-footer__logo">
-                            <div className="l-footer__logo-icon">S</div>
-                            <span>Slotra</span>
+                            <SymbolWordmark className="l-footer__logo-img" aria-label="Slotra" />
                         </div>
                         <p className="l-footer__tagline">
                             The all-in-one scheduling platform built for the modern Philippine business.

@@ -12,14 +12,14 @@
     --land-surface: #ffffff;
     --land-navy: #0f1f2e;
     --land-navy-light: #1a3248;
-    --land-green: #1b7e56;
-    --land-green-hover: #166646;
-    --land-green-light: #e8f5ee;
+    --land-green: #2e3192;
+    --land-green-hover: #252880;
+    --land-green-light: #ecedf9;
     --land-text-primary: #0f1f2e;
     --land-text-secondary: #4a5668;
     --land-text-muted: #7a8799;
     --land-border: #e2e6ea;
-    --land-border-focus: #1b7e56;
+    --land-border-focus: #2e3192;
 
     /* Spacing (8px base) */
     --land-space-1: 8px;
@@ -101,14 +101,21 @@ button {
 
 /* --- Navbar Styles --- */
 .l-navbar {
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 100;
-    background: var(--land-surface);
-    border-bottom: 1px solid var(--land-border);
-    height: 64px;
-    display: flex;
-    align-items: center;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 12px 0;
+    background: rgba(255, 255, 255, 0);
+    transition: background 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.l-navbar--scrolled {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06), 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
 .l-navbar__inner {
@@ -125,86 +132,93 @@ button {
 .l-navbar__logo {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--land-navy);
-    letter-spacing: -0.5px;
 }
 
-.l-navbar__logo-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--land-green);
-    border-radius: var(--land-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    flex-shrink: 0;
+.l-navbar__logo-img {
+    height: 40px;
+    width: auto;
+}
+
+/* Nav pill container */
+.l-navbar__nav-pill {
+    background: #f0f1f3;
+    border-radius: var(--land-radius-full);
+    padding: 4px;
 }
 
 .l-navbar__nav {
     display: flex;
     align-items: center;
-    gap: var(--land-space-3);
     list-style: none;
+    gap: 2px;
+    position: relative;
 }
 
-.l-navbar__nav a {
+/* Sliding pill indicator */
+.l-navbar__nav-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--land-green);
+    border-radius: var(--land-radius-full);
+    pointer-events: none;
+    z-index: 0;
+    transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.l-navbar__nav-link {
+    display: block;
+    padding: 8px 18px;
+    border-radius: var(--land-radius-full);
     font-size: var(--land-font-sm);
     font-weight: 500;
     color: var(--land-text-secondary);
-    transition: color 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
     position: relative;
-    padding-bottom: 2px;
+    z-index: 1;
+    transition: color 0.2s ease;
 }
 
-.l-navbar__nav a::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--land-green);
-    border-radius: 2px;
-    transition: width 0.2s ease;
+.l-navbar__nav-link:hover {
+    color: var(--land-text-primary);
 }
 
-.l-navbar__nav a:hover {
-    color: var(--land-navy);
+.l-navbar__nav-link--active {
+    color: #fff;
 }
 
-.l-navbar__nav a:hover::after {
-    width: 100%;
+.l-navbar__nav-link--active:hover {
+    color: #fff;
 }
 
+/* Right CTAs */
 .l-navbar__right {
     display: flex;
     align-items: center;
-    gap: var(--land-space-2);
+    gap: 8px;
     justify-content: flex-end;
 }
 
-.l-navbar__phone {
+.l-navbar__login-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 20px;
+    border-radius: var(--land-radius-full);
+    border: 1.5px solid var(--land-border);
     font-size: var(--land-font-sm);
     font-weight: 500;
-    color: var(--land-text-secondary);
+    color: var(--land-text-primary);
+    text-decoration: none;
     white-space: nowrap;
+    background: transparent;
+    transition: border-color 0.2s ease, background 0.2s ease;
 }
 
-.l-navbar__login {
-    font-size: var(--land-font-sm);
-    font-weight: 500;
-    color: var(--land-text-secondary);
-    transition: color 0.2s ease;
-}
-
-.l-navbar__login:hover {
-    color: var(--land-navy);
+.l-navbar__login-btn:hover {
+    border-color: #adb5bd;
+    background: rgba(0, 0, 0, 0.04);
 }
 
 /* --- Hero Section Styles --- */
@@ -543,7 +557,7 @@ button {
     font-weight: 600;
     cursor: pointer;
     border: 1.5px solid transparent;
-    border-radius: var(--land-radius-md);
+    border-radius: var(--land-radius-full);
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
     text-decoration: none;
     white-space: nowrap;
@@ -577,7 +591,7 @@ button {
     background: var(--land-green-hover);
     border-color: var(--land-green-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(27, 126, 86, 0.35);
+    box-shadow: 0 4px 14px rgba(46, 49, 146, 0.35);
 }
 
 /* Variant: outline */
@@ -637,7 +651,7 @@ button {
     width: 44px;
     height: 44px;
     border-radius: var(--land-radius-full);
-    background: linear-gradient(135deg, var(--land-green-light), #c5e8d8);
+    background: linear-gradient(135deg, var(--land-green-light), #c5c7ea);
     flex-shrink: 0;
 }
 
@@ -1049,13 +1063,13 @@ button {
         min-height: 340px;
     }
 
-    .l-navbar__phone {
+    .l-navbar__nav-pill {
         display: none;
     }
 }
 
 @media (max-width: 640px) {
-    .l-navbar__nav {
+    .l-navbar__nav-pill {
         display: none;
     }
 
@@ -1462,24 +1476,12 @@ button {
 .l-footer__logo {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 24px;
-    font-weight: 800;
-    color: #fff;
-    letter-spacing: -0.5px;
 }
 
-.l-footer__logo-icon {
-    width: 36px;
+.l-footer__logo-img {
     height: 36px;
-    background: var(--land-green);
-    border-radius: var(--land-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 18px;
-    font-weight: 800;
+    width: auto;
+    filter: brightness(0) invert(1);
 }
 
 .l-footer__tagline {

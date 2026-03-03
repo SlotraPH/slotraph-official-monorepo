@@ -20,6 +20,9 @@ importers:
       '@astrojs/react':
         specifier: ^4.0.0
         version: 4.4.2(@types/node@25.3.2)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(lightningcss@1.27.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.46.0)
+      '@slotra/branding':
+        specifier: workspace:*
+        version: link:../../packages/branding
       '@slotra/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -88,6 +91,9 @@ importers:
 
   apps/web-app:
     dependencies:
+      '@slotra/branding':
+        specifier: workspace:*
+        version: link:../../packages/branding
       '@slotra/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -129,6 +135,28 @@ importers:
         specifier: ^6.0.0
         version: 6.4.1(@types/node@25.3.2)(lightningcss@1.27.0)(terser@5.46.0)
 
+  packages/branding:
+    dependencies:
+      react:
+        specifier: '>=18.0.0'
+        version: 18.3.1
+    devDependencies:
+      '@slotra/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@slotra/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/react':
+        specifier: ^18.3.0
+        version: 18.3.28
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.3
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   packages/eslint-config:
     dependencies:
       '@eslint/js':
@@ -154,6 +182,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@slotra/branding':
+        specifier: workspace:*
+        version: link:../branding
       react:
         specifier: '>=18.0.0'
         version: 18.3.1
@@ -1308,7 +1339,7 @@ packages:
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
-    engines: {node: '>=0.10.0'}
+    engines: {'0': node >=0.10.0}
 
   '@expo/cli@0.22.28':
     resolution: {integrity: sha512-lvt72KNitGuixYD2l3SZmRKVu2G4zJpmg5V7WfUBNpmUU5oODBw/6qmiJ6kSLAlfDozscUk+BBGknBBzxUrwrA==}

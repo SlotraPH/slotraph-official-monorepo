@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@astrojs/react": "^4.0.0",
+    "@slotra/branding": "workspace:*",
     "@slotra/ui": "workspace:*",
     "@slotra/utils": "workspace:*",
     "astro": "^5.0.0",
