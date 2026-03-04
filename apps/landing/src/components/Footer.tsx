@@ -25,7 +25,7 @@ const GooglePlayIcon = ({ size = 15 }: { size?: number }) => (
 // ── Data ──────────────────────────────────────────────────
 
 const PRODUCT_LINKS = ['Features', 'Pricing', 'Integrations', 'Mobile App'];
-const COMPANY_LINKS = ['About Us', 'Careers', 'Blog', 'Contact'];
+const COMPANY_LINKS = ['About Us', 'Blog', 'Contact'];
 const LEGAL_LINKS   = ['Privacy Policy', 'Terms of Service', 'Cookies'];
 
 const SOCIAL = [
