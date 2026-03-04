@@ -128,6 +128,13 @@ export function WaitlistSection() {
         const fieldErrors = validate(fields);
         setErrors(fieldErrors);
         if (fieldErrors.name || fieldErrors.email) return;
+        if (!supabase) {
+            sileo.error({
+                title: 'Waitlist is unavailable',
+                description: 'Supabase environment variables are missing for this app.',
+            });
+            return;
+        }
 
         setLoading(true);
         const { error } = await supabase

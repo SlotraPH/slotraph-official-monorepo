@@ -19,14 +19,16 @@ function parseEnvFile(filePath) {
 }
 
 const rootEnv = parseEnvFile(path.resolve(__dirname, '../../.env'));
+const appEnv = parseEnvFile(path.resolve(__dirname, '.env'));
+const resolvedEnv = { ...rootEnv, ...appEnv, ...process.env };
 
 export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
     define: {
-      __SUPABASE_URL__:      JSON.stringify(rootEnv.VITE_SUPABASE_URL      ?? ''),
-      __SUPABASE_ANON_KEY__: JSON.stringify(rootEnv.VITE_SUPABASE_ANON_KEY ?? ''),
+      __SUPABASE_URL__:      JSON.stringify(resolvedEnv.VITE_SUPABASE_URL      ?? ''),
+      __SUPABASE_ANON_KEY__: JSON.stringify(resolvedEnv.VITE_SUPABASE_ANON_KEY ?? ''),
     },
   },
 });

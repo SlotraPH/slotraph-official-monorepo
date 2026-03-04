@@ -5,4 +5,9 @@ import { createClient } from '@supabase/supabase-js';
 declare const __SUPABASE_URL__: string;
 declare const __SUPABASE_ANON_KEY__: string;
 
-export const supabase = createClient(__SUPABASE_URL__, __SUPABASE_ANON_KEY__);
+const supabaseUrl = __SUPABASE_URL__.trim();
+const supabaseAnonKey = __SUPABASE_ANON_KEY__.trim();
+
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
