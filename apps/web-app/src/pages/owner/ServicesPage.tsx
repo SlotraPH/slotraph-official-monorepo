@@ -1,134 +1,192 @@
 import { useState } from 'react';
-import { Button, Input, Badge } from '@slotra/ui';
+import { Badge, PageHeader } from '@slotra/ui';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
+import type { ServiceRecord } from '@/domain/service/types';
+import { getOwnerServicesResource } from '@/features/owner/data';
+import { ServiceEditor, type ServiceDraft } from './services/ServiceEditor';
+import { ServiceList } from './services/ServiceList';
+import { ServiceToolbar } from './services/ServiceToolbar';
 
-// ── Mock Data ──────────────────────────────────────────────────────────
-interface Service {
-  id: string;
-  name: string;
-  category: string;
-  duration: string;
-  price: string;
-  bookings: number;
-}
-
-const MOCK_SERVICES: Service[] = [
-  { id: '1', name: 'Haircut & Style', category: 'Hair', duration: '45 min', price: '₱350', bookings: 142 },
-  { id: '2', name: 'Beard Trim', category: 'Grooming', duration: '30 min', price: '₱200', bookings: 87 },
-  { id: '3', name: 'Color & Highlights', category: 'Hair', duration: '2 hrs', price: '₱1,200', bookings: 34 },
-];
+const EMPTY_DRAFT: ServiceDraft = {
+  name: '',
+  category: '',
+  durationMinutes: '30',
+  price: '0',
+  visibility: 'Public',
+  status: 'Active',
+  description: '',
+};
 
 export function ServicesPage() {
+  const resource = getOwnerServicesResource();
+  const [services, setServices] = useState(() => (resource.status === 'ready' ? resource.data.services : []));
   const [query, setQuery] = useState('');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const filtered = MOCK_SERVICES.filter(s =>
-    s.name.toLowerCase().includes(query.toLowerCase())
+  const [status, setStatus] = useState('All');
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => (resource.status === 'ready' ? resource.data.services[0]?.id ?? null : null)
   );
+  const [draft, setDraft] = useState<ServiceDraft>(EMPTY_DRAFT);
+  const [mode, setMode] = useState<'create' | 'edit'>('edit');
 
-  function handleCopyLink(id: string) {
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 1800);
+  if (resource.status === 'loading') {
+    return <RouteStateCard title="Loading services" description="Preparing the owner service catalog." variant="loading" />;
   }
 
+  if (resource.status === 'error') {
+    return <RouteStateCard title="Services unavailable" description={resource.message} variant="error" />;
+  }
+
+  const filtered = services.filter((service) =>
+    (status === 'All' || service.status === status)
+    && `${service.name} ${service.category}`.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const selectedService = services.find((service) => service.id === selectedId) ?? null;
+
+  function toDraft(service: ServiceRecord): ServiceDraft {
+    return {
+      name: service.name,
+      category: service.category,
+      durationMinutes: String(service.durationMinutes),
+      price: String(service.price),
+      visibility: service.visibility,
+      status: service.status,
+      description: service.description,
+    };
+  }
+
+  function handleSelect(service: ServiceRecord) {
+    setSelectedId(service.id);
+    setDraft(toDraft(service));
+    setMode('edit');
+  }
+
+  function handleAddService() {
+    setSelectedId(null);
+    setDraft(EMPTY_DRAFT);
+    setMode('create');
+  }
+
+  function handleDraftChange(field: keyof ServiceDraft, value: string) {
+    setDraft((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function handleSave() {
+    if (!draft.name.trim()) {
+      return;
+    }
+
+    if (mode === 'create') {
+      const newService: ServiceRecord = {
+        id: `svc-${services.length + 1}`,
+        name: draft.name.trim(),
+        category: draft.category.trim() || 'General',
+        durationMinutes: Number(draft.durationMinutes) || 30,
+        price: Number(draft.price) || 0,
+        visibility: draft.visibility,
+        status: draft.status,
+        description: draft.description.trim() || 'New service draft.',
+        bookings: 0,
+        staffSelectionMode: 'required',
+        staffIds: [],
+        leadNote: 'New owner-created service draft.',
+      };
+
+      setServices((current) => [newService, ...current]);
+      handleSelect(newService);
+      return;
+    }
+
+    if (!selectedId) {
+      return;
+    }
+
+    setServices((current) =>
+      current.map((service) =>
+        service.id === selectedId
+          ? {
+              ...service,
+              name: draft.name.trim(),
+              category: draft.category.trim() || 'General',
+              durationMinutes: Number(draft.durationMinutes) || 30,
+              price: Number(draft.price) || 0,
+              visibility: draft.visibility,
+              status: draft.status,
+              description: draft.description.trim() || 'Service description pending.',
+            }
+          : service
+      )
+    );
+  }
+
+  function handleArchiveToggle(serviceId: string) {
+    setServices((current) =>
+      current.map((service) =>
+        service.id === serviceId
+          ? {
+              ...service,
+              status: service.status === 'Archived' ? 'Active' : 'Archived',
+            }
+          : service
+      )
+    );
+  }
+
+  function handleCancel() {
+    if (selectedService) {
+      setDraft(toDraft(selectedService));
+      setMode('edit');
+      return;
+    }
+
+    setDraft(EMPTY_DRAFT);
+  }
+
+  const activeCount = services.filter((service) => service.status === 'Active').length;
+  const hiddenCount = services.filter((service) => service.status === 'Hidden').length;
+  const archivedCount = services.filter((service) => service.status === 'Archived').length;
+
   return (
-    <div>
-      {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-header__title">
+    <div className="owner-page-stack">
+      <PageHeader
+        title={(
+          <>
             Services
-            <span className="svc-count-badge">{MOCK_SERVICES.length}</span>
-          </h1>
-          <p className="page-header__subtitle">Manage the services customers can book.</p>
-        </div>
-        <div className="page-header__actions">
-          <Button variant="primary" size="sm">+ Add Service</Button>
-        </div>
-      </div>
-
-      {/* Toolbar */}
-      <div className="svc-toolbar">
-        <div className="svc-search-wrap">
-          <svg className="svc-search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75">
-            <circle cx="8.5" cy="8.5" r="5.25" />
-            <path d="M12.5 12.5L17 17" strokeLinecap="round" />
-          </svg>
-          <input
-            className="input svc-search-input"
-            type="search"
-            placeholder="Search services…"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Table card */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        {/* Column headers */}
-        <div className="svc-table-head">
-          <div className="svc-col svc-col--name">Service</div>
-          <div className="svc-col svc-col--dur">Duration</div>
-          <div className="svc-col svc-col--price">Price</div>
-          <div className="svc-col svc-col--bookings">Bookings</div>
-          <div className="svc-col svc-col--actions" />
-        </div>
-
-        {/* Rows */}
-        {filtered.length === 0 ? (
-          <div className="svc-empty">No services match your search.</div>
-        ) : (
-          filtered.map(svc => (
-            <div key={svc.id} className="svc-row">
-              <div className="svc-col svc-col--name">
-                <div className="svc-icon-wrap">
-                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                    <rect x="3" y="3" width="6" height="6" rx="1.5" />
-                    <rect x="11" y="3" width="6" height="6" rx="1.5" />
-                    <rect x="3" y="11" width="6" height="6" rx="1.5" />
-                    <rect x="11" y="11" width="6" height="6" rx="1.5" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="svc-name">{svc.name}</p>
-                  <p className="svc-cat">{svc.category}</p>
-                </div>
-              </div>
-              <div className="svc-col svc-col--dur">{svc.duration}</div>
-              <div className="svc-col svc-col--price">
-                <span className="svc-price">{svc.price}</span>
-              </div>
-              <div className="svc-col svc-col--bookings">
-                <Badge variant="default">{svc.bookings}</Badge>
-              </div>
-              <div className="svc-col svc-col--actions">
-                <button
-                  className={`btn btn--outline btn--sm svc-copy-btn ${copiedId === svc.id ? 'svc-copy-btn--copied' : ''}`}
-                  onClick={() => handleCopyLink(svc.id)}
-                  title="Copy booking link"
-                >
-                  {copiedId === svc.id ? (
-                    <>
-                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12">
-                        <path d="M3 8l3 3 7-7" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" width="12" height="12">
-                        <rect x="5" y="5" width="8" height="8" rx="1.5" />
-                        <path d="M3 11V3h8" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      Copy link
-                    </>
-                  )}
-                </button>
-                <button className="btn btn--ghost btn--sm">⋯</button>
-              </div>
-            </div>
-          ))
+            <span className="svc-count-badge">{services.length}</span>
+          </>
         )}
+        subtitle="Manage the services customers can book."
+        actions={<Badge variant="default">Local mock state only</Badge>}
+      />
+      <div className="owner-inline-stats">
+        <Badge variant="success">{activeCount} active</Badge>
+        <Badge variant="default">{hiddenCount} hidden</Badge>
+        <Badge variant="default">{archivedCount} archived</Badge>
+      </div>
+      <ServiceToolbar
+        query={query}
+        status={status}
+        onQueryChange={setQuery}
+        onStatusChange={setStatus}
+        onAddService={handleAddService}
+      />
+      <div className="owner-two-column-layout owner-two-column-layout--wide">
+        <ServiceList
+          items={filtered}
+          selectedId={selectedId}
+          onSelect={handleSelect}
+          onArchiveToggle={handleArchiveToggle}
+        />
+        <ServiceEditor
+          mode={mode}
+          draft={draft}
+          onDraftChange={handleDraftChange}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
       </div>
     </div>
   );

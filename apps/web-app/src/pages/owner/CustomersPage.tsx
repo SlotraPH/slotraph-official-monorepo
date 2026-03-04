@@ -1,74 +1,62 @@
-import { Button } from '@slotra/ui';
+import { useState } from 'react';
+import { Badge, Button, PageHeader } from '@slotra/ui';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { getOwnerCustomersResource } from '@/features/owner/data';
+import { CustomerDetailPanel } from './customers/CustomerDetailPanel';
+import { CustomerImportCallout } from './customers/CustomerImportCallout';
+import { CustomerList } from './customers/CustomerList';
+import { CustomerToolbar } from './customers/CustomerToolbar';
 
 export function CustomersPage() {
+  const resource = getOwnerCustomersResource();
+  const [query, setQuery] = useState('');
+  const [status, setStatus] = useState('All');
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => (resource.status === 'ready' ? resource.data.customers[0]?.id ?? null : null)
+  );
+
+  if (resource.status === 'loading') {
+    return <RouteStateCard title="Loading customers" description="Preparing owner customer records." variant="loading" />;
+  }
+
+  if (resource.status === 'error') {
+    return <RouteStateCard title="Customers unavailable" description={resource.message} variant="error" />;
+  }
+
+  const { customers } = resource.data;
+
+  const filtered = customers.filter((customer) => {
+    const haystack = `${customer.name} ${customer.email} ${customer.tags.join(' ')}`.toLowerCase();
+    return (status === 'All' || customer.status === status) && haystack.includes(query.toLowerCase());
+  });
+
+  const selectedCustomer = filtered.find((customer) => customer.id === selectedId)
+    ?? customers.find((customer) => customer.id === selectedId)
+    ?? null;
+
   return (
-    <div>
-      {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-header__title">Customers</h1>
-          <p className="page-header__subtitle">View and manage your customer base.</p>
-        </div>
-        <div className="page-header__actions">
-          <Button variant="primary" size="sm">+ Add Customer</Button>
-        </div>
+    <div className="owner-page-stack">
+      <PageHeader
+        title="Customers"
+        subtitle="View and manage your customer base."
+        actions={<Button variant="primary" size="sm">Add customer</Button>}
+      />
+      <div className="owner-inline-stats">
+        <Badge variant="success">{customers.filter((customer) => customer.status === 'VIP').length} VIP</Badge>
+        <Badge variant="default">{customers.filter((customer) => customer.status === 'New').length} new</Badge>
+        <Badge variant="default">{customers.filter((customer) => customer.status === 'Needs follow-up').length} follow-up</Badge>
       </div>
-
-      {/* Empty state */}
-      <div className="cust-empty-shell">
-        {/* Icon */}
-        <div className="cust-empty-icon">
-          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" width="48" height="48">
-            <circle cx="24" cy="18" r="8" />
-            <path d="M8 42c0-8.837 7.163-16 16-16s16 7.163 16 16" strokeLinecap="round" />
-          </svg>
-        </div>
-        <h2 className="cust-empty-title">No customers yet</h2>
-        <p className="cust-empty-desc">Import your existing customer list or add them one by one.</p>
-
-        {/* Import option cards */}
-        <div className="cust-import-grid">
-          {/* CSV import */}
-          <button className="cust-import-card">
-            <div className="cust-import-card__icon cust-import-card__icon--green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" width="28" height="28">
-                <path d="M9 13h6m-3-3v6M4 6h16M4 10h16M4 14h10M4 18h10" strokeLinecap="round" strokeLinejoin="round" />
-                <rect x="3" y="3" width="18" height="18" rx="3" />
-              </svg>
-            </div>
-            <div>
-              <p className="cust-import-card__title">Import from CSV</p>
-              <p className="cust-import-card__desc">Upload a .csv file with name, email, and phone columns.</p>
-            </div>
-            <svg className="cust-import-card__arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-              <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-
-          {/* Google Contacts */}
-          <button className="cust-import-card">
-            <div className="cust-import-card__icon cust-import-card__icon--blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" width="28" height="28">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 8v4l3 3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div>
-              <p className="cust-import-card__title">Import from Google Contacts</p>
-              <p className="cust-import-card__desc">Connect your Google account to sync contacts instantly.</p>
-            </div>
-            <svg className="cust-import-card__arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-              <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Manual link */}
-        <p className="cust-empty-manual">
-          Prefer to start fresh?{' '}
-          <button className="cust-empty-link" onClick={() => { }}>Add a customer manually</button>
-        </p>
+      <CustomerToolbar
+        query={query}
+        status={status}
+        onQueryChange={setQuery}
+        onStatusChange={setStatus}
+      />
+      <div className="owner-two-column-layout owner-two-column-layout--wide">
+        <CustomerList items={filtered} selectedId={selectedId} onSelect={(customer) => setSelectedId(customer.id)} />
+        <CustomerDetailPanel customer={selectedCustomer} />
       </div>
+      <CustomerImportCallout />
     </div>
   );
 }

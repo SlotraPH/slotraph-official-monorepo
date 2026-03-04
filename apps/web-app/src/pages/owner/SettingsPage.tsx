@@ -1,24 +1,21 @@
+import { PageHeader } from '@slotra/ui';
 import { NavLink, Outlet } from 'react-router-dom';
 
 const SETTINGS_TABS = [
   { label: 'Brand Details', to: '/owner/settings/brand', enabled: true },
-  { label: 'Team', to: '/owner/settings/team', enabled: false },
-  { label: 'Notifications', to: '/owner/settings/notifications', enabled: false },
-  { label: 'Billing', to: '/owner/settings/billing', enabled: false },
+  { label: 'Business Profile', to: '/owner/settings/business', enabled: true },
+  { label: 'Team', to: '/owner/settings/team', enabled: true },
+  { label: 'Notifications', to: '/owner/settings/notifications', enabled: true },
+  { label: 'Booking', to: '/owner/settings/booking', enabled: true },
 ];
 
 export function SettingsPage() {
   return (
     <div>
-      {/* Page header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-header__title">Settings</h1>
-          <p className="page-header__subtitle">Manage your account, brand, and preferences.</p>
-        </div>
-      </div>
-
-      {/* Tab navigation */}
+      <PageHeader
+        title="Settings"
+        subtitle="Manage your account, brand, and preferences."
+      />
       <nav className="settings-tabs" aria-label="Settings sections">
         {SETTINGS_TABS.map((tab) =>
           tab.enabled ? (
@@ -40,7 +37,6 @@ export function SettingsPage() {
         )}
       </nav>
 
-      {/* Active settings panel */}
       <div className="settings-panel">
         <Outlet />
       </div>
