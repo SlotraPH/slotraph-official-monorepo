@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Button, Card, PageHeader } from '@slotra/ui';
+import { Badge, Button, Card, EmptyState, PageHeader } from '@slotra/ui';
 
 interface Service {
   id: string;
@@ -68,7 +68,11 @@ export function ServicesPage() {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="svc-empty">No services match your search.</div>
+          <EmptyState
+            title="No services match your search"
+            description="Try a different keyword or clear the search to see all services."
+            className="svc-empty-state"
+          />
         ) : (
           filtered.map((service) => (
             <div key={service.id} className="svc-row">

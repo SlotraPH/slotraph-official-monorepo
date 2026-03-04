@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button, FormField, Select, Textarea } from '@slotra/ui';
 
 const INDUSTRIES = [
     'Beauty & Wellness',
@@ -63,8 +64,7 @@ export function BrandDetailsPage() {
                 </div>
 
                 <div className="brand-form__fields">
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="brand-name">Business Name</label>
+                    <FormField label="Business Name" htmlFor="brand-name">
                         <input
                             id="brand-name"
                             className="input"
@@ -73,10 +73,13 @@ export function BrandDetailsPage() {
                             value={name}
                             onChange={(event) => setName(event.target.value)}
                         />
-                    </div>
+                    </FormField>
 
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="brand-slug">Booking Page URL</label>
+                    <FormField
+                        label="Booking Page URL"
+                        hint="Only lowercase letters, numbers, and hyphens."
+                        htmlFor="brand-slug"
+                    >
                         <div className="form-prefix-wrap">
                             <span className="form-prefix">slotra.app/book/</span>
                             <input
@@ -90,54 +93,40 @@ export function BrandDetailsPage() {
                                 }
                             />
                         </div>
-                        <span className="form-hint">Only lowercase letters, numbers, and hyphens.</span>
-                    </div>
+                    </FormField>
 
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="brand-industry">Industry</label>
-                        <div className="form-select-wrap">
-                            <select
-                                id="brand-industry"
-                                className="input form-select"
-                                value={industry}
-                                onChange={(event) => setIndustry(event.target.value)}
-                            >
-                                {INDUSTRIES.map((item) => (
-                                    <option key={item} value={item}>
-                                        {item}
-                                    </option>
-                                ))}
-                            </select>
-                            <svg className="form-select-caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75">
-                                <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </div>
-                    </div>
+                    <Select
+                        id="brand-industry"
+                        label="Industry"
+                        value={industry}
+                        onChange={(event) => setIndustry(event.target.value)}
+                    >
+                        {INDUSTRIES.map((item) => (
+                            <option key={item} value={item}>
+                                {item}
+                            </option>
+                        ))}
+                    </Select>
 
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="brand-about">
-                            About Your Business
-                        </label>
-                        <div className="form-textarea-wrap">
-                            <textarea
-                                id="brand-about"
-                                className="input form-textarea"
-                                placeholder="Tell customers what makes your business unique..."
-                                value={about}
-                                maxLength={maxAbout}
-                                onChange={(event) => setAbout(event.target.value)}
-                                rows={4}
-                            />
+                    <Textarea
+                        id="brand-about"
+                        label="About Your Business"
+                        placeholder="Tell customers what makes your business unique..."
+                        value={about}
+                        maxLength={maxAbout}
+                        onChange={(event) => setAbout(event.target.value)}
+                        rows={4}
+                        footer={(
                             <span className={`form-char-count ${aboutChars >= maxAbout ? 'form-char-count--limit' : ''}`}>
                                 {aboutChars}/{maxAbout}
                             </span>
-                        </div>
-                    </div>
+                        )}
+                    />
 
                     <div className="brand-form__actions">
-                        <button
+                        <Button
+                            className={saved ? 'btn--saved' : ''}
                             type="submit"
-                            className={`btn btn--primary ${saved ? 'btn--saved' : ''}`}
                         >
                             {saved ? (
                                 <>
@@ -149,10 +138,10 @@ export function BrandDetailsPage() {
                             ) : (
                                 'Save Changes'
                             )}
-                        </button>
-                        <button type="button" className="btn btn--ghost">
+                        </Button>
+                        <Button type="button" variant="ghost">
                             Discard
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </form>

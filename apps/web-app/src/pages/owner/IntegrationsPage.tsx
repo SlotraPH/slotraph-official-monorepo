@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Button, Card, PageHeader } from '@slotra/ui';
+import { Badge, Button, Card, PageHeader, SectionCard } from '@slotra/ui';
 
 interface Integration {
     id: string;
@@ -58,9 +58,7 @@ export function IntegrationsPage() {
                 if (items.length === 0) return null;
 
                 return (
-                    <div key={category} className="intg-section">
-                        <h2 className="intg-section-title">{category}</h2>
-                        <div className="intg-grid">
+                    <SectionCard key={category} title={category} className="intg-section" contentClassName="intg-grid">
                             {items.map((integration) => (
                                 <Card key={integration.id} className="intg-card">
                                     <div className="intg-card__top">
@@ -85,8 +83,7 @@ export function IntegrationsPage() {
                                     </Button>
                                 </Card>
                             ))}
-                        </div>
-                    </div>
+                    </SectionCard>
                 );
             })}
         </div>
