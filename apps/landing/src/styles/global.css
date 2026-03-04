@@ -68,3 +68,9 @@ button {
     animation: float 4s ease-in-out infinite;
   }
 }
+
+/* ── Sileo toast brand overrides ──────────────────────── */
+:root {
+  /* Map success state to brand indigo (#2e3192) */
+  --sileo-state-success: oklch(0.38 0.19 264);
+}

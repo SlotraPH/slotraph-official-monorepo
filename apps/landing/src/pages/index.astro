@@ -14,6 +14,7 @@ import { ScrollToTop } from '../components/ScrollToTop';
 import { DevBanner } from '../components/DevBanner';
 import { WaitlistSection } from '../components/WaitlistSection';
 import { IN_DEVELOPMENT } from '../config';
+import { Toaster } from 'sileo';
 import { APP_NAME } from '@slotra/utils';
 ---
 
@@ -39,6 +40,19 @@ import { APP_NAME } from '@slotra/utils';
   )}
   <Footer client:load />
   <ScrollToTop client:load />
+  <Toaster
+    position="bottom-left"
+    options={{
+      fill: "#0f1f2e",
+      roundness: 14,
+      styles: {
+        title: "!text-white",
+        description: "!text-white/60",
+        badge: "!bg-white/10",
+      },
+    }}
+    client:load
+  />
 </BaseLayout>
 
 

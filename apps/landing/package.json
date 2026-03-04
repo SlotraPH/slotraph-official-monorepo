@@ -18,7 +18,8 @@
     "astro": "^5.0.0",
     "lucide-react": "^0.576.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "sileo": "^0.1.5"
   },
   "devDependencies": {
     "@slotra/eslint-config": "workspace:*",

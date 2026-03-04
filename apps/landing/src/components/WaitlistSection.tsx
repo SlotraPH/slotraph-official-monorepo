@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Check, User, Mail, AlertCircle } from 'lucide-react';
 import { AppIcon } from '@slotra/branding';
+import { sileo } from 'sileo';
 
 // ── Interactive Grid Pattern ───────────────────────────────
 
@@ -127,6 +128,10 @@ export function WaitlistSection() {
         if (fieldErrors.name || fieldErrors.email) return;
         // TODO: wire up to backend / email service
         setSubmitted(true);
+        sileo.success({
+            title: "You're on the list!",
+            description: "We'll notify you when Slotra is ready to use.",
+        });
     };
 
     // Per-field input style helpers
