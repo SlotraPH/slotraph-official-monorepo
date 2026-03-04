@@ -196,7 +196,44 @@ export function WaitlistSection() {
                         className="text-[46px] font-bold leading-[1.1] tracking-[-0.03em] max-[640px]:text-[34px]"
                         style={{ color: '#0f1f2e' }}
                     >
-                        Scheduling software<br />built for the Philippines
+                        Scheduling software<br />built for the{' '}
+                        <span className="relative inline-block whitespace-nowrap">
+                            Philippines
+                            <svg
+                                aria-hidden="true"
+                                viewBox="0 0 230 18"
+                                preserveAspectRatio="none"
+                                className="absolute pointer-events-none"
+                                style={{ bottom: '-6px', left: '-4px', width: 'calc(100% + 8px)', height: '14px' }}
+                            >
+                                {/* Highlighter body — thick semi-transparent fill */}
+                                <path
+                                    d="M3 11 C40 8, 90 14, 140 10 C180 6, 210 13, 227 10"
+                                    stroke="rgba(46,49,146,0.18)"
+                                    strokeWidth="11"
+                                    fill="none"
+                                    strokeLinecap="round"
+                                    style={{
+                                        strokeDasharray: 230,
+                                        strokeDashoffset: 0,
+                                        animation: 'draw-highlight 0.5s ease-out 0.3s both',
+                                    }}
+                                />
+                                {/* Top edge — slightly darker for marker definition */}
+                                <path
+                                    d="M3 7 C40 5, 90 9, 140 6 C180 3, 210 8, 227 6"
+                                    stroke="rgba(46,49,146,0.12)"
+                                    strokeWidth="2"
+                                    fill="none"
+                                    strokeLinecap="round"
+                                    style={{
+                                        strokeDasharray: 230,
+                                        strokeDashoffset: 0,
+                                        animation: 'draw-highlight 0.5s ease-out 0.3s both',
+                                    }}
+                                />
+                            </svg>
+                        </span>
                     </h1>
 
                     {/* Subheadline */}

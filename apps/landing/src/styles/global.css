@@ -52,6 +52,12 @@ button {
   background: none;
 }
 
+/* ── Highlight draw animation ─────────────────────────── */
+@keyframes draw-highlight {
+  from { stroke-dashoffset: 230; }
+  to   { stroke-dashoffset: 0; }
+}
+
 /* ── Float animation for hero mockup ──────────────────── */
 @keyframes float {
   0%,
