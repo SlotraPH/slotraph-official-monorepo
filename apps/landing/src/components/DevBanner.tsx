@@ -37,7 +37,7 @@ export function DevBanner() {
             <p className="text-[13px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
                 We're actively building Slotra —{' '}
                 <a
-                    href="#pricing"
+                    href="#waitlist"
                     className="font-medium underline underline-offset-2"
                     style={{ color: 'rgba(255,255,255,0.9)' }}
                 >

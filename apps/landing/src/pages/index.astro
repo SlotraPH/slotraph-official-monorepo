@@ -12,6 +12,7 @@ import { FinalCtaBanner } from '../components/FinalCtaBanner';
 import { Footer } from '../components/Footer';
 import { ScrollToTop } from '../components/ScrollToTop';
 import { DevBanner } from '../components/DevBanner';
+import { WaitlistSection } from '../components/WaitlistSection';
 import { IN_DEVELOPMENT } from '../config';
 import { APP_NAME } from '@slotra/utils';
 ---
@@ -22,14 +23,20 @@ import { APP_NAME } from '@slotra/utils';
 >
   {IN_DEVELOPMENT && <DevBanner client:load />}
   <Navbar inDevelopment={IN_DEVELOPMENT} client:load />
-  <HeroSection client:load />
-  <SpotlightSection client:load />
-  <FeatureRow client:load />
-  <StepsSection client:load />
-  <SocialProofSection client:load />
-  <PricingSection client:load />
-  <FaqSection client:load />
-  <FinalCtaBanner client:load />
+  {IN_DEVELOPMENT ? (
+    <WaitlistSection client:load />
+  ) : (
+    <>
+      <HeroSection client:load />
+      <SpotlightSection client:load />
+      <FeatureRow client:load />
+      <StepsSection client:load />
+      <SocialProofSection client:load />
+      <PricingSection client:load />
+      <FaqSection client:load />
+      <FinalCtaBanner client:load />
+    </>
+  )}
   <Footer client:load />
   <ScrollToTop client:load />
 </BaseLayout>
