@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Badge, PageHeader } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { AppPill, PageIntro } from '@/app/components/PageTemplates';
 import type { ServiceRecord } from '@/domain/service/types';
 import { getOwnerServicesResource } from '@/features/owner/data';
 import { ServiceEditor, type ServiceDraft } from './services/ServiceEditor';
@@ -151,21 +151,23 @@ export function ServicesPage() {
 
   return (
     <div className="owner-page-stack">
-      <PageHeader
+      <PageIntro
+        eyebrow="Services"
         title={(
           <>
-            Services
+            Service catalog
             <span className="svc-count-badge">{services.length}</span>
           </>
         )}
-        subtitle="Manage the services customers can book."
-        actions={<Badge variant="default">Session-only changes</Badge>}
+        description="Manage the customer-facing service catalog while keeping the current session-only CRUD preview intact."
+        pills={(
+          <>
+            <AppPill tone="success">{activeCount} active</AppPill>
+            <AppPill>{hiddenCount} hidden</AppPill>
+            <AppPill>{archivedCount} archived</AppPill>
+          </>
+        )}
       />
-      <div className="owner-inline-stats">
-        <Badge variant="success">{activeCount} active</Badge>
-        <Badge variant="default">{hiddenCount} hidden</Badge>
-        <Badge variant="default">{archivedCount} archived</Badge>
-      </div>
       <ServiceToolbar
         query={query}
         status={status}

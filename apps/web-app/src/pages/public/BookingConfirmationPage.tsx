@@ -1,5 +1,10 @@
+import { AppShell } from '@/app/components/AppShell';
 import { BookingConfirmation } from './booking/BookingConfirmation';
 
 export function BookingConfirmationPage() {
-  return <BookingConfirmation />;
+  return (
+    <AppShell>
+      <BookingConfirmation />
+    </AppShell>
+  );
 }

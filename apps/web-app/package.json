@@ -15,9 +15,11 @@
     "@slotra/branding": "workspace:*",
     "@slotra/ui": "workspace:*",
     "@slotra/utils": "workspace:*",
+    "lucide-react": "^0.576.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "react-router-dom": "^6.30.1"
+    "react-router-dom": "^6.30.1",
+    "sileo": "^0.1.5"
   },
   "devDependencies": {
     "@slotra/eslint-config": "workspace:*",

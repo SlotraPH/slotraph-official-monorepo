@@ -7,7 +7,7 @@ export function BookingConfirmation() {
   const confirmation = loadPublicBookingConfirmation();
 
   return (
-    <main className="public-page booking-page booking-page--confirmation">
+    <div className="booking-page booking-page--confirmation">
       <div className="booking-shell">
         {confirmation ? (
           <ConfirmationSummary confirmation={confirmation} />
@@ -25,6 +25,6 @@ export function BookingConfirmation() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
