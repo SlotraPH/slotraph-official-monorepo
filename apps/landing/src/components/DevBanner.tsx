@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Construction } from 'lucide-react';
+import { X } from 'lucide-react';
 
 const BANNER_H = '40px';
 
@@ -27,10 +27,9 @@ export function DevBanner() {
         >
             {/* Badge */}
             <span
-                className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.6px] px-2 py-[3px] rounded-full flex-shrink-0"
-                style={{ backgroundColor: '#f59e0b', color: '#78350f' }}
+                className="hidden sm:inline-flex items-center text-[10px] font-bold uppercase tracking-[0.6px] px-2 py-[3px] rounded-full flex-shrink-0"
+                style={{ backgroundColor: '#ecedf9', color: '#2e3192' }}
             >
-                <Construction size={10} aria-hidden="true" />
                 In Development
             </span>
 
