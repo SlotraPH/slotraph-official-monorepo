@@ -25,8 +25,8 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     define: {
-      'import.meta.env.VITE_SUPABASE_URL':      JSON.stringify(rootEnv.VITE_SUPABASE_URL      ?? ''),
-      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(rootEnv.VITE_SUPABASE_ANON_KEY ?? ''),
+      __SUPABASE_URL__:      JSON.stringify(rootEnv.VITE_SUPABASE_URL      ?? ''),
+      __SUPABASE_ANON_KEY__: JSON.stringify(rootEnv.VITE_SUPABASE_ANON_KEY ?? ''),
     },
   },
 });

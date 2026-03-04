@@ -137,12 +137,9 @@ export function WaitlistSection() {
 
         if (error) {
             if (error.code === '23505') {
-                // Duplicate email — treat as success so we don't leak whether email exists
-                setSubmitted(true);
-                sileo.success({
-                    title: "You're already on the list!",
-                    description: "We'll notify you when Slotra is ready to use.",
-                });
+                // Duplicate email — show inline field error
+                setTouched(t => ({ ...t, email: true }));
+                setErrors(e => ({ ...e, email: 'This email is already on the waitlist.' }));
             } else {
                 sileo.error({
                     title: 'Something went wrong',
