@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Badge, Button, Card, SectionCard } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { formatCurrency, formatDuration } from '@/domain/service/formatters';
+import { trackWebEvent } from '@/features/analytics/trackWebEvent';
 import {
   createInitialBookingDraft,
   getBookingDateOptions,
@@ -9,7 +10,6 @@ import {
   getPublicBookingResource,
   savePublicBookingConfirmation,
 } from '@/features/public-booking/data';
-import { bookingCustomerValidationService } from '@/features/public-booking/validation';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatSelectedDate } from './availability';
 import { BusinessHeader } from './components/BusinessHeader';
@@ -20,6 +20,13 @@ import { ReviewPanel } from './components/ReviewPanel';
 import { ServicePicker } from './components/ServicePicker';
 import { StaffPicker } from './components/StaffPicker';
 import { TimeSlotPicker } from './components/TimeSlotPicker';
+import {
+  getBookingCustomerErrors,
+  getBookingStepValidationError,
+  getBookingSteps,
+  isBookingStepAccessible,
+  isBookingStepComplete,
+} from './flowState';
 import type {
   BookingConfirmationRecord,
   BookingCustomerDetails,
@@ -53,6 +60,44 @@ function createReference() {
   return `SLT-${Math.floor(Date.now() % 1000000)
     .toString()
     .padStart(6, '0')}`;
+}
+
+function getStepLabel(stepId: BookingStepId) {
+  switch (stepId) {
+    case 'service':
+      return 'Service';
+    case 'staff':
+      return 'Staff';
+    case 'date':
+      return 'Date';
+    case 'time':
+      return 'Time';
+    case 'details':
+      return 'Details';
+    case 'review':
+      return 'Review';
+    default:
+      return 'Step';
+  }
+}
+
+function getStepDescription(stepId: BookingStepId) {
+  switch (stepId) {
+    case 'service':
+      return 'Choose what you need';
+    case 'staff':
+      return 'Pick your preferred specialist';
+    case 'date':
+      return 'Find an open day';
+    case 'time':
+      return 'Choose a slot';
+    case 'details':
+      return 'Add contact info';
+    case 'review':
+      return 'Check before sending';
+    default:
+      return '';
+  }
 }
 
 export function BookingFlow() {
@@ -104,20 +149,19 @@ export function BookingFlow() {
     ? getBookingSlots(selectedService, draft.date, staffRequired ? draft.staffId : null)
     : [];
   const selectedSlot = slots.find((slot) => slot.id === draft.slotId) ?? null;
-
-  const steps: { id: BookingStepId; label: string; description: string }[] = [
-    { id: 'service', label: 'Service', description: 'Choose what you need' },
-    ...(staffRequired
-      ? [{ id: 'staff' as BookingStepId, label: 'Staff', description: 'Pick your preferred specialist' }]
-      : []),
-    { id: 'date', label: 'Date', description: 'Find an open day' },
-    { id: 'time', label: 'Time', description: 'Choose a slot' },
-    { id: 'details', label: 'Details', description: 'Add contact info' },
-    { id: 'review', label: 'Review', description: 'Check before sending' },
-  ];
-
+  const steps = getBookingSteps(selectedService).map((stepId) => ({
+    id: stepId,
+    label: getStepLabel(stepId),
+    description: getStepDescription(stepId),
+  }));
   const stepIds = steps.map((step) => step.id);
   const currentStepIndex = stepIds.indexOf(currentStep);
+  const flowContext = {
+    draft,
+    selectedService,
+    selectedStaff,
+    selectedSlot,
+  };
 
   function updateDraft(nextDraft: Partial<BookingDraft>) {
     setDraft((currentDraft) => ({ ...currentDraft, ...nextDraft }));
@@ -143,6 +187,10 @@ export function BookingFlow() {
     }));
     setCustomerErrors({});
     setStepError(null);
+    trackWebEvent('booking_service_selected', {
+      serviceId: service.id,
+      staffSelectionMode: service.staffSelectionMode,
+    });
   }
 
   function handleStaffSelect(staffId: string) {
@@ -167,60 +215,11 @@ export function BookingFlow() {
   }
 
   function getCustomerErrors(customer: BookingCustomerDetails) {
-    return bookingCustomerValidationService.validate(customer).errors;
-  }
-
-  function isStepComplete(stepId: BookingStepId) {
-    switch (stepId) {
-      case 'service':
-        return Boolean(selectedService);
-      case 'staff':
-        return !staffRequired || Boolean(selectedStaff);
-      case 'date':
-        return Boolean(draft.date);
-      case 'time':
-        return Boolean(selectedSlot);
-      case 'details':
-        return Object.keys(getCustomerErrors(draft.customer)).length === 0
-          && Boolean(draft.customer.fullName || draft.customer.email || draft.customer.phone);
-      case 'review':
-        return false;
-      default:
-        return false;
-    }
-  }
-
-  function getStepValidationError(stepId: BookingStepId) {
-    switch (stepId) {
-      case 'service':
-        return selectedService ? null : 'Choose a service before continuing.';
-      case 'staff':
-        return !staffRequired || selectedStaff
-          ? null
-          : 'Select a staff member before choosing a date.';
-      case 'date':
-        return draft.date ? null : 'Choose an available date before continuing.';
-      case 'time':
-        return selectedSlot ? null : 'Choose an available time slot before continuing.';
-      case 'details':
-        return Object.keys(getCustomerErrors(draft.customer)).length === 0
-          ? null
-          : 'Complete the customer details before reviewing the booking.';
-      case 'review':
-        return null;
-      default:
-        return null;
-    }
-  }
-
-  function getFirstIncompleteStepIndex() {
-    const index = stepIds.findIndex((stepId) => !isStepComplete(stepId));
-    return index === -1 ? stepIds.length - 1 : index;
+    return getBookingCustomerErrors(customer);
   }
 
   function isStepAccessible(stepId: BookingStepId) {
-    const targetIndex = stepIds.indexOf(stepId);
-    return targetIndex <= Math.max(currentStepIndex, getFirstIncompleteStepIndex());
+    return isBookingStepAccessible(stepId, stepIds, currentStepIndex, flowContext);
   }
 
   function moveToStep(stepId: BookingStepId) {
@@ -233,7 +232,7 @@ export function BookingFlow() {
   }
 
   function handleContinue() {
-    const validationError = getStepValidationError(currentStep);
+    const validationError = getBookingStepValidationError(currentStep, flowContext);
     if (validationError) {
       if (currentStep === 'details') {
         setCustomerErrors(getCustomerErrors(draft.customer));
@@ -246,6 +245,11 @@ export function BookingFlow() {
     if (nextStepId) {
       setCurrentStep(nextStepId);
       setStepError(null);
+      trackWebEvent('booking_step_completed', {
+        stepId: currentStep,
+        nextStepId,
+        serviceId: draft.serviceId,
+      });
     }
   }
 
@@ -282,6 +286,11 @@ export function BookingFlow() {
     };
 
     savePublicBookingConfirmation(confirmation);
+    trackWebEvent('booking_confirmation_saved', {
+      reference: confirmation.reference,
+      serviceId: selectedService.id,
+      staffId: selectedStaff?.id ?? 'next-available',
+    });
     navigate('/book/confirmation');
   }
 
@@ -289,7 +298,7 @@ export function BookingFlow() {
     {
       label: 'Service',
       value: selectedService
-        ? `${selectedService.name} • ${formatCurrency(selectedService.price)}`
+        ? `${selectedService.name} | ${formatCurrency(selectedService.price)}`
         : 'Not selected yet',
     },
     {
@@ -333,7 +342,7 @@ export function BookingFlow() {
               <BookingProgress
                 steps={steps}
                 currentStep={currentStep}
-                isStepComplete={isStepComplete}
+                isStepComplete={(stepId) => isBookingStepComplete(stepId, flowContext)}
                 isStepAccessible={isStepAccessible}
                 onStepSelect={moveToStep}
               />

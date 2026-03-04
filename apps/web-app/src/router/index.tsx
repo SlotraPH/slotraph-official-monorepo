@@ -16,6 +16,7 @@ import { BusinessProfilePage } from '@/pages/owner/settings/BusinessProfilePage'
 import { NotificationsSettingsPage } from '@/pages/owner/settings/NotificationsSettingsPage';
 import { TeamSettingsPage } from '@/pages/owner/settings/TeamSettingsPage';
 import { BookingConfirmationPage } from '@/pages/public/BookingConfirmationPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 import { BookingPage } from '@/pages/public/BookingPage';
 
 export function AppRouter() {
@@ -39,13 +40,15 @@ export function AppRouter() {
             <Route path="team" element={<TeamSettingsPage />} />
             <Route path="notifications" element={<NotificationsSettingsPage />} />
             <Route path="booking" element={<BookingPreferencesPage />} />
+            <Route path="*" element={<NotFoundPage context="owner" />} />
           </Route>
           <Route path="onboarding" element={<OnboardingPage />} />
+          <Route path="*" element={<NotFoundPage context="owner" />} />
         </Route>
 
         <Route path="/book" element={<BookingPage />} />
         <Route path="/book/confirmation" element={<BookingConfirmationPage />} />
-        <Route path="*" element={<Navigate replace to="/" />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

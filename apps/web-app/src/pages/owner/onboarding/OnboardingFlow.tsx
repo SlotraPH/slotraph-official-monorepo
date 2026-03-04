@@ -3,10 +3,17 @@ import { Badge, Button, Card, PageHeader } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { ServiceRecord } from '@/domain/service/types';
 import type { TeamMemberRecord } from '@/domain/staff/types';
+import { trackWebEvent } from '@/features/analytics/trackWebEvent';
 import { getDefaultOwnerOnboardingSeed } from '@/features/owner/data';
 import { mockOnboardingRepository } from '@/features/owner/onboarding/mockOnboardingRepository';
 import { sanitizeBookingSlug } from '../settings/brandDetailsShared';
 import { createDefaultOnboardingDraft } from './mockData';
+import {
+  canAccessOnboardingStep,
+  getFurthestOnboardingStepIndex,
+  getOnboardingProgressPercent,
+  ONBOARDING_STEPS,
+} from './progression';
 import { BusinessHoursStep } from './steps/BusinessHoursStep';
 import { BusinessInfoStep } from './steps/BusinessInfoStep';
 import { BookingSlugStep } from './steps/BookingSlugStep';
@@ -16,16 +23,6 @@ import { ServicesSetupStep } from './steps/ServicesSetupStep';
 import { TeamSetupStep } from './steps/TeamSetupStep';
 import type { OnboardingDraft, OnboardingStepId } from './types';
 import { validateOnboardingStep } from './validation';
-
-const STEP_ORDER: Array<{ id: OnboardingStepId; title: string; description: string }> = [
-  { id: 'business-info', title: 'Business info', description: 'Profile, contact details, and industry' },
-  { id: 'booking-slug', title: 'Booking slug', description: 'Public URL and identity preview' },
-  { id: 'services', title: 'Services', description: 'Core offerings, price, and visibility' },
-  { id: 'team', title: 'Staff', description: 'Roster and service assignments' },
-  { id: 'hours', title: 'Hours', description: 'Availability defaults by day' },
-  { id: 'payments', title: 'Payments', description: 'Deposit and collection preferences' },
-  { id: 'completion', title: 'Complete', description: 'Review and handoff' },
-];
 
 export function OnboardingFlow() {
   const resource = getDefaultOwnerOnboardingSeed();
@@ -69,14 +66,11 @@ export function OnboardingFlow() {
     return <RouteStateCard title="Onboarding unavailable" description={resource.message} variant="error" />;
   }
 
-  const currentStepIndex = STEP_ORDER.findIndex((step) => step.id === currentStepId);
+  const currentStepIndex = ONBOARDING_STEPS.findIndex((step) => step.id === currentStepId);
   const safeCurrentStepIndex = currentStepIndex >= 0 ? currentStepIndex : 0;
-  const currentStep = STEP_ORDER[safeCurrentStepIndex]!;
-  const progressPercent = Math.round((safeCurrentStepIndex / (STEP_ORDER.length - 1)) * 100);
-  const furthestStepIndex = Math.max(
-    currentStepIndex,
-    ...completedStepIds.map((stepId) => STEP_ORDER.findIndex((step) => step.id === stepId))
-  );
+  const currentStep = ONBOARDING_STEPS[safeCurrentStepIndex]!;
+  const progressPercent = getOnboardingProgressPercent(currentStepId);
+  const furthestStepIndex = getFurthestOnboardingStepIndex(currentStepId, completedStepIds);
 
   function persistManually() {
     mockOnboardingRepository.saveSession({
@@ -92,9 +86,7 @@ export function OnboardingFlow() {
   }
 
   function goToStep(stepId: OnboardingStepId) {
-    const targetIndex = STEP_ORDER.findIndex((step) => step.id === stepId);
-
-    if (targetIndex <= furthestStepIndex + 1) {
+    if (canAccessOnboardingStep(stepId, currentStepId, completedStepIds)) {
       setCurrentStepId(stepId);
     }
   }
@@ -110,16 +102,20 @@ export function OnboardingFlow() {
     setErrors({});
     markStepComplete(currentStepId);
 
-    const nextStep = STEP_ORDER[safeCurrentStepIndex + 1];
+    const nextStep = ONBOARDING_STEPS[safeCurrentStepIndex + 1];
 
     if (nextStep) {
       setCurrentStepId(nextStep.id);
       setSaveMessage('Step saved in this session');
+      trackWebEvent('owner_onboarding_step_completed', {
+        stepId: currentStepId,
+        nextStepId: nextStep.id,
+      });
     }
   }
 
   function handleBack() {
-    const previousStep = STEP_ORDER[safeCurrentStepIndex - 1];
+    const previousStep = ONBOARDING_STEPS[safeCurrentStepIndex - 1];
 
     if (previousStep) {
       setCurrentStepId(previousStep.id);
@@ -358,7 +354,7 @@ export function OnboardingFlow() {
           <Card className="onboarding-progress-card">
             <div className="onboarding-progress-card__top">
               <p className="onboarding-progress-card__eyebrow">Setup progress</p>
-              <p className="onboarding-progress-card__value">{currentStepIndex + 1} / {STEP_ORDER.length}</p>
+              <p className="onboarding-progress-card__value">{safeCurrentStepIndex + 1} / {ONBOARDING_STEPS.length}</p>
             </div>
             <div className="onboarding-progress-bar" aria-hidden="true">
               <span style={{ width: `${progressPercent}%` }} />
@@ -366,7 +362,7 @@ export function OnboardingFlow() {
             <p className="onboarding-progress-card__hint">{saveMessage}</p>
 
             <div className="onboarding-step-list">
-              {STEP_ORDER.map((step, index) => {
+              {ONBOARDING_STEPS.map((step, index) => {
                 const isCurrent = step.id === currentStepId;
                 const isComplete = completedStepIds.includes(step.id);
                 const isClickable = index <= furthestStepIndex + 1;
@@ -408,12 +404,12 @@ export function OnboardingFlow() {
             {renderCurrentStep()}
 
             <div className="onboarding-stage-card__footer">
-              <Button type="button" variant="ghost" onClick={handleBack} disabled={currentStepIndex === 0}>
+              <Button type="button" variant="ghost" onClick={handleBack} disabled={safeCurrentStepIndex === 0}>
                 Back
               </Button>
               {currentStepId !== 'completion' ? (
                 <Button type="button" onClick={handleNext}>
-                  {safeCurrentStepIndex === STEP_ORDER.length - 2 ? 'Finish onboarding' : 'Next step'}
+                  {safeCurrentStepIndex === ONBOARDING_STEPS.length - 2 ? 'Finish onboarding' : 'Next step'}
                 </Button>
               ) : (
                 <Button type="button" variant="outline" onClick={() => goToStep('business-info')}>
