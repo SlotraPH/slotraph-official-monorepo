@@ -71,7 +71,8 @@ export function Navbar({
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 z-[1000] py-3 transition-[background,box-shadow,backdrop-filter] duration-300 ease-in-out${scrolled ? ' bg-white/85 backdrop-blur-lg shadow-[0_1px_0_rgba(0,0,0,0.06),0_4px_24px_rgba(0,0,0,0.06)]' : ' bg-transparent'}`}
+            className={`fixed left-0 right-0 z-[1000] py-3 transition-[background,box-shadow,backdrop-filter] duration-300 ease-in-out${scrolled ? ' bg-white/85 backdrop-blur-lg shadow-[0_1px_0_rgba(0,0,0,0.06),0_4px_24px_rgba(0,0,0,0.06)]' : ' bg-transparent'}`}
+            style={{ top: 'var(--banner-h, 0px)' }}
             role="banner"
         >
             <div className="max-w-[1200px] mx-auto px-6 w-full grid grid-cols-[1fr_auto_1fr] items-center gap-6">

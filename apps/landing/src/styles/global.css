@@ -20,6 +20,7 @@
 
 /* ── Base reset & global styles ────────────────────────── */
 html {
+  --banner-h: 0px;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

@@ -11,6 +11,8 @@ import { FaqSection } from '../components/FaqSection';
 import { FinalCtaBanner } from '../components/FinalCtaBanner';
 import { Footer } from '../components/Footer';
 import { ScrollToTop } from '../components/ScrollToTop';
+import { DevBanner } from '../components/DevBanner';
+import { IN_DEVELOPMENT } from '../config';
 import { APP_NAME } from '@slotra/utils';
 ---
 
@@ -18,6 +20,7 @@ import { APP_NAME } from '@slotra/utils';
   title={`${APP_NAME} — Free Scheduling Software for Philippine Businesses`}
   description="Slotra is a free scheduling platform for Philippine businesses. Automate bookings, reminders, and payments 24/7."
 >
+  {IN_DEVELOPMENT && <DevBanner client:load />}
   <Navbar client:load />
   <HeroSection client:load />
   <SpotlightSection client:load />
