@@ -5,3 +5,4 @@
 //   name: string;
 //   email: string;
 // };
+export {};

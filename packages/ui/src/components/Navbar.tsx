@@ -29,7 +29,6 @@ export function Navbar({
 }: NavbarProps) {
     const [scrolled, setScrolled] = useState(false);
     const [activeHref, setActiveHref] = useState(NAV_LINKS[0]?.href ?? '');
-    const [activeHref, setActiveHref] = useState(NAV_LINKS[0]?.href);
     const [hoveredLink, setHoveredLink] = useState<string | null>(null);
     const [hoveredBtn, setHoveredBtn] = useState<'demo' | 'cta' | null>(null);
 

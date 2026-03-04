@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "expo start",
+    "dev": "expo start --offline",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "build": "expo export",
