@@ -28,7 +28,7 @@ export function Navbar({
     inDevelopment = false,
 }: NavbarProps) {
     const [scrolled, setScrolled] = useState(false);
-    const [activeHref, setActiveHref] = useState(NAV_LINKS[0].href);
+    const [activeHref, setActiveHref] = useState(NAV_LINKS[0]?.href);
     const [hoveredLink, setHoveredLink] = useState<string | null>(null);
     const [hoveredBtn, setHoveredBtn] = useState<'demo' | 'cta' | null>(null);
 
@@ -52,7 +52,7 @@ export function Navbar({
 
                 {/* Logo */}
                 <a href="/" className="flex items-center flex-shrink-0" aria-label="Slotra home">
-                    <SymbolWordmark className="h-[30px] w-auto" aria-hidden="true" />
+                    <SymbolWordmark className="h-[50px] w-auto" aria-hidden="true" />
                 </a>
 
                 {/* Center nav — invisible while in development to keep logo centered */}
@@ -90,12 +90,16 @@ export function Navbar({
                         href={loginHref}
                         onMouseEnter={() => setHoveredBtn('demo')}
                         onMouseLeave={() => setHoveredBtn(null)}
-                        className="inline-flex items-center h-[34px] px-4 rounded-md text-[13px] font-medium tracking-[0.1px] whitespace-nowrap transition-[background,color,border-color] duration-150"
+                        className="inline-flex items-center h-[34px] px-4 rounded-md text-[13px] font-medium tracking-[0.1px] whitespace-nowrap transition-all duration-150"
                         style={{
-                            border: '1px solid',
-                            borderColor: hoveredBtn === 'demo' ? '#c2c7cf' : '#d4d8de',
                             color: hoveredBtn === 'demo' ? '#0f1f2e' : '#4a5668',
-                            backgroundColor: hoveredBtn === 'demo' ? '#f6f7f9' : 'transparent',
+                            border: '1px solid #d0d5dd',
+                            background: hoveredBtn === 'demo'
+                                ? 'linear-gradient(180deg, #f9fafb 0%, #eceef1 100%)'
+                                : 'linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%)',
+                            boxShadow: hoveredBtn === 'demo'
+                                ? 'inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 4px rgba(0,0,0,0.08)'
+                                : 'inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 3px rgba(0,0,0,0.05)',
                         }}
                     >
                         Book a Demo
@@ -109,13 +113,16 @@ export function Navbar({
                                 href={ctaHref}
                                 onMouseEnter={() => setHoveredBtn('cta')}
                                 onMouseLeave={() => setHoveredBtn(null)}
-                                className="inline-flex items-center h-[34px] px-4 rounded-md text-[13px] font-semibold tracking-[0.1px] whitespace-nowrap transition-[background,box-shadow] duration-150"
+                                className="inline-flex items-center h-[34px] px-4 rounded-md text-[13px] font-semibold tracking-[0.1px] whitespace-nowrap transition-all duration-150"
                                 style={{
-                                    backgroundColor: hoveredBtn === 'cta' ? '#252880' : '#2e3192',
                                     color: '#ffffff',
+                                    border: '1px solid rgba(0,0,0,0.18)',
+                                    background: hoveredBtn === 'cta'
+                                        ? 'linear-gradient(180deg, #3538b5 0%, #272a86 100%)'
+                                        : 'linear-gradient(180deg, #3336a4 0%, #2a2d8c 100%)',
                                     boxShadow: hoveredBtn === 'cta'
-                                        ? '0 2px 10px rgba(46,49,146,0.3)'
-                                        : '0 1px 3px rgba(46,49,146,0.15)',
+                                        ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 3px 10px rgba(46,49,146,0.4)'
+                                        : 'inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 6px rgba(46,49,146,0.25)',
                                 }}
                             >
                                 {ctaLabel}
