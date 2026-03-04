@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3, Plus } from 'lucide-react';
 import { AppPill, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
@@ -43,13 +43,10 @@ export function SchedulingWorkspace() {
   const { bookings } = dashboardResource.data;
   const { businessHours, teamMembers } = businessResource.data;
 
-  const daySummary = useMemo(
-    () => businessHours.map((item) => ({
-      label: item.day,
-      value: item.isOpen ? `${item.openTime} - ${item.closeTime}` : 'Closed',
-    })),
-    [businessHours],
-  );
+  const daySummary = businessHours.map((item) => ({
+    label: item.day,
+    value: item.isOpen ? `${item.openTime} - ${item.closeTime}` : 'Closed',
+  }));
 
   function syncDraft(dayId: string) {
     const nextDay = businessHours.find((item) => item.id === dayId);

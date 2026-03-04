@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { Check, ChevronRight } from 'lucide-react';
-import type { CSSProperties, ReactNode } from 'react';
+import { useId, type CSSProperties, type ReactNode } from 'react';
 import { BrandButton, Card, colors, radii, shadows, spacing, typography } from '@/ui';
 
 export interface FlowStep {
@@ -26,7 +26,7 @@ export function FlowLayout({
       style={{
         display: 'grid',
         gap: spacing[5],
-        gridTemplateColumns: sidebar ? 'minmax(0, 1.75fr) minmax(300px, 0.9fr)' : 'minmax(0, 1fr)',
+        gridTemplateColumns: sidebar ? 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))' : 'minmax(0, 1fr)',
       }}
     >
       <div style={{ display: 'grid', gap: spacing[5] }}>{children}</div>
@@ -136,8 +136,10 @@ export function FlowSection({
   eyebrow?: string;
   title: ReactNode;
 }) {
+  const headingId = useId();
+
   return (
-    <Card>
+    <Card as="section" aria-labelledby={headingId}>
       <div style={{ display: 'grid', gap: spacing[4] }}>
         <div
           style={{
@@ -154,7 +156,7 @@ export function FlowSection({
                 {eyebrow}
               </span>
             ) : null}
-            <h2 style={{ color: colors.navy, fontFamily: typography.fontFamily, margin: 0, ...typography.subHeading }}>
+            <h2 id={headingId} style={{ color: colors.navy, fontFamily: typography.fontFamily, margin: 0, ...typography.subHeading }}>
               {title}
             </h2>
             <p style={{ color: colors.secondary, fontFamily: typography.fontFamily, margin: 0, ...typography.body }}>
@@ -181,7 +183,7 @@ export function ReviewBlock({
       <h3 style={{ color: colors.navy, fontFamily: typography.fontFamily, margin: 0, ...typography.bodySmall, fontWeight: 700 }}>
         {title}
       </h3>
-      <div style={{ display: 'grid', gap: spacing[3] }}>
+      <dl style={{ display: 'grid', gap: spacing[3], margin: 0 }}>
         {items.map((item) => (
           <div
             key={item.label}
@@ -193,13 +195,13 @@ export function ReviewBlock({
               padding: spacing[3],
             }}
           >
-            <span style={{ color: colors.muted, fontFamily: typography.fontFamily, ...typography.overline }}>{item.label}</span>
-            <strong style={{ color: colors.navy, fontFamily: typography.fontFamily, fontSize: typography.body.fontSize }}>
+            <dt style={{ color: colors.muted, fontFamily: typography.fontFamily, ...typography.overline }}>{item.label}</dt>
+            <dd style={{ color: colors.navy, fontFamily: typography.fontFamily, fontSize: typography.body.fontSize, fontWeight: 700, margin: 0 }}>
               {item.value}
-            </strong>
+            </dd>
           </div>
         ))}
-      </div>
+      </dl>
     </div>
   );
 }
@@ -289,7 +291,7 @@ export function StatusTabs<T extends string>({
   return (
     <div
       aria-label="View options"
-      role="tablist"
+      role="group"
       style={{
         alignItems: 'center',
         background: '#ffffff',
@@ -306,8 +308,7 @@ export function StatusTabs<T extends string>({
         return (
           <button
             key={option.value}
-            aria-selected={active}
-            role="tab"
+            aria-pressed={active}
             type="button"
             onClick={() => onChange(option.value)}
             style={{

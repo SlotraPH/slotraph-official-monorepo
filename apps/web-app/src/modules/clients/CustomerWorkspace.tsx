@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Compass, Mail, Phone, Search, UserPlus, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PageIntro, AppPill } from '@/app/components/PageTemplates';
@@ -83,14 +83,11 @@ export function CustomerWorkspace() {
     setErrors({});
   }
 
-  const segmentSummary = useMemo(
-    () => [
-      { label: 'VIP clients', value: customers.filter((customer) => customer.status === 'VIP').length.toString() },
-      { label: 'New this cycle', value: customers.filter((customer) => customer.status === 'New').length.toString() },
-      { label: 'Follow-up queue', value: customers.filter((customer) => customer.status === 'Needs follow-up').length.toString() },
-    ],
-    [customers],
-  );
+  const segmentSummary = [
+    { label: 'VIP clients', value: customers.filter((customer) => customer.status === 'VIP').length.toString() },
+    { label: 'New this cycle', value: customers.filter((customer) => customer.status === 'New').length.toString() },
+    { label: 'Follow-up queue', value: customers.filter((customer) => customer.status === 'Needs follow-up').length.toString() },
+  ];
 
   return (
     <div className="owner-page-stack">

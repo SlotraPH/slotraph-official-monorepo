@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
   ArrowRight,
@@ -30,6 +30,8 @@ const bannerStorageKey = 'slotra-web-app-banner-dismissed';
 export function AppShell({ children, contentClassName }: AppShellProps) {
   const { pathname } = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
+  const isScrolledRef = useRef(false);
+  const scrollFrameRef = useRef<number | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(() => {
     if (typeof window === 'undefined') {
       return false;
@@ -43,12 +45,30 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
 
   useEffect(() => {
     const onScroll = () => {
-      setIsScrolled(window.scrollY > 12);
+      if (scrollFrameRef.current !== null) {
+        return;
+      }
+
+      scrollFrameRef.current = window.requestAnimationFrame(() => {
+        scrollFrameRef.current = null;
+        const nextIsScrolled = window.scrollY > 12;
+        if (isScrolledRef.current === nextIsScrolled) {
+          return;
+        }
+
+        isScrolledRef.current = nextIsScrolled;
+        setIsScrolled(nextIsScrolled);
+      });
     };
 
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {

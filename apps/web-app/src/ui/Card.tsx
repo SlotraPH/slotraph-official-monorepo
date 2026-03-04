@@ -1,13 +1,17 @@
-import type { CSSProperties, HTMLAttributes } from 'react';
+import type { CSSProperties, ElementType, HTMLAttributes } from 'react';
 import { colors, radii, shadows, spacing } from './tokens';
 
-export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+type CardElement = HTMLDivElement;
+
+export interface CardProps extends HTMLAttributes<CardElement> {
+  as?: ElementType;
   padding?: keyof typeof spacing;
   elevated?: boolean;
   surfaceStyle?: CSSProperties;
 }
 
 export function Card({
+  as: Component = 'div',
   children,
   elevated,
   padding = 5,
@@ -16,7 +20,7 @@ export function Card({
   ...props
 }: CardProps) {
   return (
-    <div
+    <Component
       {...props}
       style={{
         background: '#ffffff',
@@ -29,6 +33,6 @@ export function Card({
       }}
     >
       {children}
-    </div>
+    </Component>
   );
 }

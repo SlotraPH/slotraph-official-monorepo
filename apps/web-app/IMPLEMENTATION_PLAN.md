@@ -460,3 +460,46 @@ Deferred to Phase 5 polish:
 - Replacing the remaining legacy owner child components and global CSS clusters that are still unused but present in `src/styles.css`
 - Expanding booking success/error toast usage and confirmation side effects once persistence and async mutation states are real
 - Resolving the current Vitest worker environment issue (`expect-type` missing `./branding` in this workspace) so the broader suite can run cleanly again
+
+## Phase 5 notes - March 5, 2026
+
+Implemented in this phase:
+
+- Split the web-app router with `React.lazy()` + `Suspense`, so owner/public pages now ship as route chunks instead of one monolithic entry bundle
+- Added Rollup manual chunking for React/router, Lucide, and toast vendor code to keep caching and route hydration more predictable
+- Removed the remaining conditional-hook lint failures in booking, scheduling, and customer modules
+- Tightened shell scroll handling with `requestAnimationFrame` throttling so the navbar/banner state only updates when the scrolled threshold actually changes
+- Upgraded shared flow scaffolds for accessibility and semantics: responsive auto-fit layout, section landmarks with heading associations, definition-list review blocks, and pressed-state filter controls instead of mis-modeled tabs
+- Added shared focus-visible treatment for links/buttons plus a reduced-motion fallback in `src/ui/theme.css`
+
+Final architecture snapshot:
+
+- App shell and top-level route framing live in `src/app/components/AppShell.tsx` and `src/app/components/PageTemplates.tsx`
+- Route definitions and lazy-loading boundaries live in `src/router/index.tsx`
+- Shared branded primitives remain under `src/ui/*`, with document-level tokens in `src/ui/tokens.ts`
+- Cross-flow owner/public scaffolds live in `src/modules/shared/flow/FlowScaffolds.tsx`
+- Domain-heavy owner/public screens stay in `src/modules/*` and `src/pages/**`, with route files remaining thin
+
+Component catalog in active use:
+
+- Shell/layout: `AppShell`, `AppShellContainer`, `HeroSection`, `FeatureGridSection`, `StepsSection`, `MetricsSection`, `PageIntro`
+- Brand primitives: `BrandButton`, `BrandInput`, `BrandSelect`, `BrandTextarea`, `Card`, `FormLabel`, `SectionHeading`, `Typography`
+- Flow primitives: `FlowLayout`, `FlowStepper`, `FlowSection`, `ReviewBlock`, `FlowActions`, `StatusTabs`, `EmptyFlowState`
+- State handling: `RouteStateCard`, `AppErrorBoundary`, `ToastProvider`, `useBrandToast`
+
+Brand usage rules to preserve:
+
+- Keep Slotra colors, spacing, radii, shadows, and typography sourced from `src/ui/tokens.ts`
+- Keep brand gradients, focus rings, and hover chrome in inline styles on primitives/components; use CSS for document/layout rules only
+- Keep Lucide as the only icon library and retain named imports for tree shaking
+- Keep page sections at the 1200px layout width and on the 8pt spacing rhythm defined in `brand.md`
+- Keep interactive motion at 150ms for UI feedback, with reduced-motion fallbacks preserved in `src/ui/theme.css`
+
+Release-readiness checklist:
+
+- Visual QA: shared shell, CTA/button gradients, focus states, scrollbars, and reduced-motion behavior align with the March 2026 `brand.md` tokens now in use
+- Performance: production build now emits route chunks plus vendor chunks instead of a single ~476 kB JS payload
+- Accessibility: skip link remains in place; flow sections now expose clearer landmarks/headings; pressed-state controls are more semantically correct than the previous tab treatment
+- Reliability: `pnpm --filter @slotra/web-app lint` passes and `pnpm --filter @slotra/web-app build` passes
+- Tests: `pnpm --filter @slotra/web-app test` is still blocked by a corrupted local dependency install in this workspace (`expect-type`, `whatwg-url`, and `undici` runtime files missing from `node_modules` before app tests execute)
+- Modals/focus traps: no dialog/modal components currently exist under `apps/web-app`, so there was no active trap implementation to adjust in this phase

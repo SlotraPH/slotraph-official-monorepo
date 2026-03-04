@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -130,14 +130,11 @@ export function BookingFlowScreen() {
   const dateOptions = selectedService ? getBookingDateOptions(selectedService, staffRequired ? draft.staffId : null) : [];
   const slots = selectedService && draft.date ? getBookingSlots(selectedService, draft.date, staffRequired ? draft.staffId : null) : [];
   const selectedSlot = slots.find((slot) => slot.id === draft.slotId) ?? null;
-  const steps = useMemo(
-    () => getBookingSteps(selectedService).map((step) => ({
-      id: step,
-      label: STAGE_COPY[step].title,
-      description: STAGE_COPY[step].eyebrow,
-    })),
-    [selectedService],
-  );
+  const steps = getBookingSteps(selectedService).map((step) => ({
+    id: step,
+    label: STAGE_COPY[step].title,
+    description: STAGE_COPY[step].eyebrow,
+  }));
   const stepIds = steps.map((step) => step.id as BookingStepId);
   const currentStepIndex = stepIds.indexOf(currentStep);
   const context = { draft, selectedService, selectedStaff, selectedSlot };
