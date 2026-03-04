@@ -40,7 +40,7 @@ export function Navbar({
 
     return (
         <header
-            className="fixed left-0 right-0 z-[1000] transition-[background,box-shadow] duration-300"
+            className="fixed left-0 right-0 z-[1000] transition-[background,box-shadow] duration-150"
             style={{
                 top: 'var(--banner-h, 0px)',
                 backgroundColor: scrolled ? '#ffffff' : 'transparent',
