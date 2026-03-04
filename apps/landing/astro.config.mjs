@@ -1,10 +1,32 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
+import { fileURLToPath } from 'url';
+import path from 'path';
+import fs from 'fs';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Parse root .env using only Node built-ins (no vite/dotenv dependency)
+function parseEnvFile(filePath) {
+  const vars = {};
+  if (!fs.existsSync(filePath)) return vars;
+  for (const line of fs.readFileSync(filePath, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([^#=\s][^=]*?)\s*=\s*(.*)\s*$/);
+    if (m) vars[m[1].trim()] = m[2].trim().replace(/^['"]|['"]$/g, '');
+  }
+  return vars;
+}
+
+const rootEnv = parseEnvFile(path.resolve(__dirname, '../../.env'));
 
 export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
+    define: {
+      'import.meta.env.VITE_SUPABASE_URL':      JSON.stringify(rootEnv.VITE_SUPABASE_URL      ?? ''),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(rootEnv.VITE_SUPABASE_ANON_KEY ?? ''),
+    },
   },
 });
