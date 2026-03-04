@@ -21,7 +21,7 @@ import { APP_NAME } from '@slotra/utils';
   description="Slotra is a free scheduling platform for Philippine businesses. Automate bookings, reminders, and payments 24/7."
 >
   {IN_DEVELOPMENT && <DevBanner client:load />}
-  <Navbar client:load />
+  <Navbar inDevelopment={IN_DEVELOPMENT} client:load />
   <HeroSection client:load />
   <SpotlightSection client:load />
   <FeatureRow client:load />

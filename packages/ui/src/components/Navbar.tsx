@@ -18,12 +18,14 @@ interface NavbarProps {
     loginHref?: string;
     ctaHref?: string;
     ctaLabel?: string;
+    inDevelopment?: boolean;
 }
 
 export function Navbar({
     loginHref = '/login',
     ctaHref = '/register',
     ctaLabel = 'Get Started',
+    inDevelopment = false,
 }: NavbarProps) {
     const [scrolled, setScrolled] = useState(false);
     const [activeHref, setActiveHref] = useState(NAV_LINKS[0].href);
@@ -81,9 +83,9 @@ export function Navbar({
                     <SymbolWordmark className="h-10 w-auto" aria-hidden="true" />
                 </a>
 
-                {/* Center nav pill */}
+                {/* Center nav pill — hidden while in development */}
                 <nav
-                    className="bg-[#f0f1f3] border border-[#d8dce2] rounded-full p-1 max-[900px]:hidden"
+                    className={`bg-[#f0f1f3] border border-[#d8dce2] rounded-full p-1 max-[900px]:hidden${inDevelopment ? ' invisible pointer-events-none' : ''}`}
                     aria-label="Main navigation"
                 >
                     <ul className="flex items-center list-none gap-0.5 relative" ref={navRef}>
@@ -125,21 +127,23 @@ export function Navbar({
                     >
                         Book a Demo
                     </a>
-                    <a
-                        href={ctaHref}
-                        onMouseEnter={() => setHoveredBtn('cta')}
-                        onMouseLeave={() => setHoveredBtn(null)}
-                        className="inline-flex items-center py-[7px] px-[14px] rounded-lg text-[13px] font-semibold tracking-[0.15px] whitespace-nowrap transition-[background,box-shadow] duration-150"
-                        style={{
-                            backgroundColor: hoveredBtn === 'cta' ? '#252880' : '#2e3192',
-                            color: '#ffffff',
-                            boxShadow: hoveredBtn === 'cta'
-                                ? '0 2px 12px rgba(46,49,146,0.35)'
-                                : '0 1px 4px rgba(46,49,146,0.2)',
-                        }}
-                    >
-                        {ctaLabel}
-                    </a>
+                    {!inDevelopment && (
+                        <a
+                            href={ctaHref}
+                            onMouseEnter={() => setHoveredBtn('cta')}
+                            onMouseLeave={() => setHoveredBtn(null)}
+                            className="inline-flex items-center py-[7px] px-[14px] rounded-lg text-[13px] font-semibold tracking-[0.15px] whitespace-nowrap transition-[background,box-shadow] duration-150"
+                            style={{
+                                backgroundColor: hoveredBtn === 'cta' ? '#252880' : '#2e3192',
+                                color: '#ffffff',
+                                boxShadow: hoveredBtn === 'cta'
+                                    ? '0 2px 12px rgba(46,49,146,0.35)'
+                                    : '0 1px 4px rgba(46,49,146,0.2)',
+                            }}
+                        >
+                            {ctaLabel}
+                        </a>
+                    )}
                 </div>
             </div>
         </header>
