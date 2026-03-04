@@ -1,18 +1,13 @@
-import { Button } from '@slotra/ui';
+import { Button, PageHeader } from '@slotra/ui';
 
 export function CustomersPage() {
   return (
     <div>
-      {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-header__title">Customers</h1>
-          <p className="page-header__subtitle">View and manage your customer base.</p>
-        </div>
-        <div className="page-header__actions">
-          <Button variant="primary" size="sm">+ Add Customer</Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Customers"
+        subtitle="View and manage your customer base."
+        actions={<Button variant="primary" size="sm">+ Add Customer</Button>}
+      />
 
       {/* Empty state */}
       <div className="cust-empty-shell">

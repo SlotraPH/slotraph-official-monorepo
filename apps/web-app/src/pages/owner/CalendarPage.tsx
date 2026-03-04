@@ -1,11 +1,10 @@
-import { Button, Badge } from '@slotra/ui';
+import { Badge, Button, Card, PageHeader } from '@slotra/ui';
 
-// ── Mock Data ──────────────────────────────────────────────────────────
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DATES = [24, 25, 26, 27, 28, 29, 30];
 const TODAY_IDX = 2; // Wednesday
 
-const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8am – 8pm
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8am - 8pm
 
 interface CalEvent {
     day: number;
@@ -31,26 +30,23 @@ const CELL_HEIGHT = 64; // px per hour
 export function CalendarPage() {
     return (
         <div>
-            {/* Header */}
-            <div className="page-header">
-                <div>
-                    <h1 className="page-header__title">Calendar</h1>
-                    <p className="page-header__subtitle">Week of Mar 24 – 30, 2025</p>
-                </div>
-                <div className="page-header__actions">
-                    <Button variant="outline" size="sm">Today</Button>
-                    <div className="cal-nav-group">
-                        <button className="cal-nav-btn" aria-label="Previous week">‹</button>
-                        <button className="cal-nav-btn" aria-label="Next week">›</button>
-                    </div>
-                    <Badge variant="accent">Week</Badge>
-                    <Button variant="primary" size="sm">+ New Appointment</Button>
-                </div>
-            </div>
+            <PageHeader
+                title="Calendar"
+                subtitle="Week of Mar 24 - 30, 2025"
+                actions={
+                    <>
+                        <Button variant="outline" size="sm">Today</Button>
+                        <div className="cal-nav-group">
+                            <button className="cal-nav-btn" aria-label="Previous week" type="button">{'<'}</button>
+                            <button className="cal-nav-btn" aria-label="Next week" type="button">{'>'}</button>
+                        </div>
+                        <Badge variant="accent">Week</Badge>
+                        <Button variant="primary" size="sm">+ New Appointment</Button>
+                    </>
+                }
+            />
 
-            {/* Calendar shell */}
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                {/* Day headers */}
+            <Card padded={false} style={{ overflow: 'hidden' }}>
                 <div className="cal-header">
                     <div className="cal-time-gutter" />
                     {DAYS.map((day, i) => (
@@ -61,46 +57,40 @@ export function CalendarPage() {
                     ))}
                 </div>
 
-                {/* Scrollable grid body */}
                 <div className="cal-body">
-                    {/* Time column + day columns */}
                     <div className="cal-grid">
-                        {/* Time labels */}
                         <div className="cal-time-col">
-                            {HOURS.map(h => (
-                                <div key={h} className="cal-time-cell">
+                            {HOURS.map((hour) => (
+                                <div key={hour} className="cal-time-cell">
                                     <span className="cal-time-label">
-                                        {h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`}
+                                        {hour < 12 ? `${hour}am` : hour === 12 ? '12pm' : `${hour - 12}pm`}
                                     </span>
                                 </div>
                             ))}
                         </div>
 
-                        {/* Day columns */}
                         {DAYS.map((day, dayIdx) => (
                             <div key={day} className={`cal-col ${dayIdx === TODAY_IDX ? 'cal-col--today' : ''}`}>
-                                {/* Hour rows */}
-                                {HOURS.map(h => (
-                                    <div key={h} className="cal-hour-row" />
+                                {HOURS.map((hour) => (
+                                    <div key={hour} className="cal-hour-row" />
                                 ))}
 
-                                {/* Events */}
-                                {MOCK_EVENTS.filter(e => e.day === dayIdx).map((ev, ei) => {
-                                    const top = (ev.startHour - (HOURS[0] ?? 8)) * CELL_HEIGHT;
-                                    const height = ev.durationHours * CELL_HEIGHT - 4;
+                                {MOCK_EVENTS.filter((event) => event.day === dayIdx).map((event, eventIdx) => {
+                                    const top = (event.startHour - (HOURS[0] ?? 8)) * CELL_HEIGHT;
+                                    const height = event.durationHours * CELL_HEIGHT - 4;
                                     return (
                                         <div
-                                            key={ei}
+                                            key={eventIdx}
                                             className="cal-event"
                                             style={{
                                                 top: top + 2,
                                                 height,
-                                                borderLeftColor: ev.color,
-                                                background: `${ev.color}18`,
+                                                borderLeftColor: event.color,
+                                                background: `${event.color}18`,
                                             }}
                                         >
-                                            <span className="cal-event__title" style={{ color: ev.color }}>{ev.title}</span>
-                                            <span className="cal-event__customer">{ev.customer}</span>
+                                            <span className="cal-event__title" style={{ color: event.color }}>{event.title}</span>
+                                            <span className="cal-event__customer">{event.customer}</span>
                                         </div>
                                     );
                                 })}
@@ -108,7 +98,7 @@ export function CalendarPage() {
                         ))}
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }

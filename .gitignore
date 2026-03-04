@@ -4,7 +4,7 @@ node_modules
 # Claude Code
 .claude/
 
-# references
+# references and local implementation prompts
 references/
 prompts/
 

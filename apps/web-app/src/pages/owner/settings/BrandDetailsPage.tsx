@@ -17,7 +17,7 @@ const INDUSTRIES = [
 ];
 
 export function BrandDetailsPage() {
-    const [name, setName] = useState('Dheyn\'s Barbershop');
+    const [name, setName] = useState("Dheyn's Barbershop");
     const [slug, setSlug] = useState('dheyns-barbershop');
     const [industry, setIndustry] = useState('Hair & Barbering');
     const [about, setAbout] = useState(
@@ -25,28 +25,25 @@ export function BrandDetailsPage() {
     );
     const [saved, setSaved] = useState(false);
 
-    function handleSave(e: React.FormEvent) {
-        e.preventDefault();
+    function handleSave(event: React.FormEvent) {
+        event.preventDefault();
         setSaved(true);
         setTimeout(() => setSaved(false), 2200);
     }
 
     const aboutChars = about.length;
-    const MAX_ABOUT = 280;
+    const maxAbout = 280;
 
-    // Generate initials for preview avatar
     const initials = name
         .split(' ')
-        .map((w) => w[0])
+        .map((word) => word[0])
         .join('')
         .slice(0, 2)
         .toUpperCase();
 
     return (
         <div className="brand-details-layout">
-            {/* ── Left: Form ──────────────────────────────────────── */}
             <form className="brand-form" onSubmit={handleSave} noValidate>
-                {/* Banner upload zone */}
                 <div className="brand-upload-banner-zone" role="button" tabIndex={0} aria-label="Upload banner image">
                     <div className="brand-upload-zone__inner">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -55,20 +52,17 @@ export function BrandDetailsPage() {
                             <path d="M21 15l-5-5L5 21" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="brand-upload-zone__label">Upload banner image</span>
-                        <span className="brand-upload-zone__hint">1400 × 400px recommended</span>
+                        <span className="brand-upload-zone__hint">1400 x 400px recommended</span>
                     </div>
 
-                    {/* Logo overlay zone */}
-                    <div className="brand-upload-logo-zone" role="button" tabIndex={0} aria-label="Upload logo" onClick={(e) => e.stopPropagation()}>
+                    <div className="brand-upload-logo-zone" role="button" tabIndex={0} aria-label="Upload logo" onClick={(event) => event.stopPropagation()}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                             <path d="M12 5v14M5 12h14" strokeLinecap="round" />
                         </svg>
                     </div>
                 </div>
 
-                {/* Form fields */}
                 <div className="brand-form__fields">
-                    {/* Business name */}
                     <div className="form-group">
                         <label className="form-label" htmlFor="brand-name">Business Name</label>
                         <input
@@ -77,11 +71,10 @@ export function BrandDetailsPage() {
                             type="text"
                             placeholder="e.g. Dheyn's Barbershop"
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            onChange={(event) => setName(event.target.value)}
                         />
                     </div>
 
-                    {/* Slug */}
                     <div className="form-group">
                         <label className="form-label" htmlFor="brand-slug">Booking Page URL</label>
                         <div className="form-prefix-wrap">
@@ -92,15 +85,14 @@ export function BrandDetailsPage() {
                                 type="text"
                                 placeholder="your-business-slug"
                                 value={slug}
-                                onChange={(e) =>
-                                    setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))
+                                onChange={(event) =>
+                                    setSlug(event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))
                                 }
                             />
                         </div>
                         <span className="form-hint">Only lowercase letters, numbers, and hyphens.</span>
                     </div>
 
-                    {/* Industry */}
                     <div className="form-group">
                         <label className="form-label" htmlFor="brand-industry">Industry</label>
                         <div className="form-select-wrap">
@@ -108,11 +100,11 @@ export function BrandDetailsPage() {
                                 id="brand-industry"
                                 className="input form-select"
                                 value={industry}
-                                onChange={(e) => setIndustry(e.target.value)}
+                                onChange={(event) => setIndustry(event.target.value)}
                             >
-                                {INDUSTRIES.map((ind) => (
-                                    <option key={ind} value={ind}>
-                                        {ind}
+                                {INDUSTRIES.map((item) => (
+                                    <option key={item} value={item}>
+                                        {item}
                                     </option>
                                 ))}
                             </select>
@@ -122,7 +114,6 @@ export function BrandDetailsPage() {
                         </div>
                     </div>
 
-                    {/* About */}
                     <div className="form-group">
                         <label className="form-label" htmlFor="brand-about">
                             About Your Business
@@ -131,19 +122,18 @@ export function BrandDetailsPage() {
                             <textarea
                                 id="brand-about"
                                 className="input form-textarea"
-                                placeholder="Tell customers what makes your business unique…"
+                                placeholder="Tell customers what makes your business unique..."
                                 value={about}
-                                maxLength={MAX_ABOUT}
-                                onChange={(e) => setAbout(e.target.value)}
+                                maxLength={maxAbout}
+                                onChange={(event) => setAbout(event.target.value)}
                                 rows={4}
                             />
-                            <span className={`form-char-count ${aboutChars >= MAX_ABOUT ? 'form-char-count--limit' : ''}`}>
-                                {aboutChars}/{MAX_ABOUT}
+                            <span className={`form-char-count ${aboutChars >= maxAbout ? 'form-char-count--limit' : ''}`}>
+                                {aboutChars}/{maxAbout}
                             </span>
                         </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="brand-form__actions">
                         <button
                             type="submit"
@@ -167,9 +157,7 @@ export function BrandDetailsPage() {
                 </div>
             </form>
 
-            {/* ── Right: Preview + Help ────────────────────────────── */}
             <aside className="brand-sidebar">
-                {/* Booking page preview card */}
                 <div className="brand-preview-card card">
                     <div className="brand-preview__label">
                         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75">
@@ -178,23 +166,20 @@ export function BrandDetailsPage() {
                         Booking Page Preview
                     </div>
 
-                    {/* Simulated banner */}
                     <div className="brand-preview__banner">
                         <div className="brand-preview__banner-overlay" />
                     </div>
 
-                    {/* Avatar overlapping banner */}
                     <div className="brand-preview__avatar-wrap">
                         <div className="brand-preview__avatar">{initials || 'S'}</div>
                     </div>
 
-                    {/* Business info */}
                     <div className="brand-preview__body">
                         <p className="brand-preview__biz-name">{name || 'Your Business Name'}</p>
                         <p className="brand-preview__industry">{industry}</p>
                         {about && (
                             <p className="brand-preview__about">
-                                {about.length > 90 ? about.slice(0, 90) + '…' : about}
+                                {about.length > 90 ? `${about.slice(0, 90)}...` : about}
                             </p>
                         )}
                         <div className="brand-preview__url">
@@ -207,7 +192,6 @@ export function BrandDetailsPage() {
                     </div>
                 </div>
 
-                {/* Tips help card */}
                 <div className="help-card">
                     <div className="help-card__header">
                         <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75">
@@ -220,15 +204,15 @@ export function BrandDetailsPage() {
                     <ul className="help-card__list">
                         <li className="help-card__item">
                             <span className="help-card__bullet" />
-                            Use a wide banner (1400 × 400px) for the best first impression.
+                            Use a wide banner (1400 x 400px) for the best first impression.
                         </li>
                         <li className="help-card__item">
                             <span className="help-card__bullet" />
-                            Keep your slug short and memorable — it's your booking link customers will share.
+                            Keep your slug short and memorable - it&apos;s your booking link customers will share.
                         </li>
                         <li className="help-card__item">
                             <span className="help-card__bullet" />
-                            Write an About in 1–2 sentences: what you do and where you're located.
+                            Write an About in 1-2 sentences: what you do and where you&apos;re located.
                         </li>
                         <li className="help-card__item">
                             <span className="help-card__bullet" />
