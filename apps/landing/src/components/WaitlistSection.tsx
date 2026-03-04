@@ -226,7 +226,7 @@ export function WaitlistSection() {
                                 <div className="flex flex-col gap-[6px]">
                                     <label
                                         htmlFor="waitlist-name"
-                                        className="text-[12px] font-medium"
+                                        className="text-[12px] font-medium text-left"
                                         style={{ color: '#4a5668' }}
                                     >
                                         Full Name
@@ -265,7 +265,7 @@ export function WaitlistSection() {
                                 <div className="flex flex-col gap-[6px]">
                                     <label
                                         htmlFor="waitlist-email"
-                                        className="text-[12px] font-medium"
+                                        className="text-[12px] font-medium text-left"
                                         style={{ color: '#4a5668' }}
                                     >
                                         Work Email

@@ -27,23 +27,23 @@ export function DevBanner() {
         >
             {/* Badge */}
             <span
-                className="hidden sm:inline-flex items-center text-[10px] font-bold uppercase tracking-[0.6px] px-2 py-[3px] rounded-full flex-shrink-0"
+                className="inline-flex items-center text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.6px] px-[7px] sm:px-2 py-[3px] rounded-full flex-shrink-0"
                 style={{ backgroundColor: '#ecedf9', color: '#2e3192' }}
             >
                 In Development
             </span>
 
             {/* Message */}
-            <p className="text-[13px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                We're actively building Slotra —{' '}
+            <p className="text-[11px] sm:text-[13px] leading-tight" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                <span className="hidden sm:inline">We're actively building Slotra — </span>
                 <a
                     href="#waitlist"
                     className="font-medium underline underline-offset-2"
                     style={{ color: 'rgba(255,255,255,0.9)' }}
                 >
-                    join the waitlist
-                </a>{' '}
-                to get early access.
+                    Join the waitlist
+                </a>
+                <span className="hidden sm:inline"> to get early access.</span>
             </p>
 
             {/* Dismiss */}
