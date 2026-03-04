@@ -327,54 +327,85 @@ export function WaitlistSection() {
                 {/* ── Right: 3D AppIcon ── */}
                 <div className="relative flex items-center justify-center max-[900px]:hidden">
 
-                    {/* Subtle ambient glow — follows tilt */}
+                    {/* Outer ambient glow */}
                     <div
                         className="absolute pointer-events-none"
                         style={{
-                            width: 360,
-                            height: 360,
-                            background: 'radial-gradient(circle, rgba(46,49,146,0.18) 0%, transparent 70%)',
-                            filter: 'blur(64px)',
+                            width: 480,
+                            height: 480,
+                            background: 'radial-gradient(circle, rgba(46,49,146,0.2) 0%, rgba(46,49,146,0.06) 50%, transparent 70%)',
+                            filter: 'blur(56px)',
                             transform: `translate(${tilt.y * 8}px, ${tilt.x * -8}px)`,
                             transition: 'transform 0.35s ease-out',
                         }}
                     />
 
-                    {/* Icon wrapper — perspective tilt + subtle shadow */}
+                    {/* Icon wrapper — perspective tilt */}
                     <div
                         style={{
-                            transform: `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+                            transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
                             transition: 'transform 0.2s ease-out',
-                            boxShadow: `${-tilt.y * 2}px ${tilt.x * 2}px 48px rgba(46,49,146,0.22), 0 8px 24px rgba(46,49,146,0.12)`,
                             borderRadius: '23%',
                             overflow: 'hidden',
                             position: 'relative',
+                            boxShadow: [
+                                `${-tilt.y * 2.5}px ${tilt.x * 2.5}px 70px rgba(46,49,146,0.3)`,
+                                '0 24px 64px rgba(46,49,146,0.2)',
+                                '0 6px 20px rgba(0,0,0,0.14)',
+                                'inset 0 0 0 1px rgba(255,255,255,0.14)',
+                            ].join(', '),
                         }}
                     >
                         <AppIcon
-                            style={{ width: 220, height: 220, display: 'block' }}
+                            style={{ width: 300, height: 300, display: 'block' }}
                             aria-hidden="true"
                         />
 
-                        {/* Top-left shine */}
+                        {/* Primary shine — top-left sweep */}
                         <div
                             style={{
                                 position: 'absolute',
                                 inset: 0,
-                                background: 'linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.06) 40%, transparent 65%)',
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.08) 38%, transparent 62%)',
                                 pointerEvents: 'none',
                             }}
                         />
 
-                        {/* Bottom edge depth */}
+                        {/* Specular highlight — small bright spot top-left */}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: '-8%',
+                                left: '-4%',
+                                width: '52%',
+                                height: '52%',
+                                background: 'radial-gradient(ellipse at 42% 42%, rgba(255,255,255,0.18) 0%, transparent 65%)',
+                                pointerEvents: 'none',
+                            }}
+                        />
+
+                        {/* Right edge shadow */}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                bottom: 0,
+                                width: '28%',
+                                background: 'linear-gradient(to left, rgba(0,0,20,0.14) 0%, transparent 100%)',
+                                pointerEvents: 'none',
+                            }}
+                        />
+
+                        {/* Bottom depth */}
                         <div
                             style={{
                                 position: 'absolute',
                                 bottom: 0,
                                 left: 0,
                                 right: 0,
-                                height: '35%',
-                                background: 'linear-gradient(to top, rgba(0,0,20,0.18) 0%, transparent 100%)',
+                                height: '38%',
+                                background: 'linear-gradient(to top, rgba(0,0,20,0.22) 0%, transparent 100%)',
                                 pointerEvents: 'none',
                             }}
                         />
