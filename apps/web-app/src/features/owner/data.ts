@@ -11,19 +11,12 @@ import type { ServiceRecord } from '@/domain/service/types';
 import type { TeamMemberRecord } from '@/domain/staff/types';
 import { OWNER_BUSINESS } from '@/mocks/business';
 import { OWNER_UPCOMING_BOOKINGS } from '@/mocks/bookings';
-import { OWNER_BUSINESS_HOURS } from '@/mocks/businessHours';
-import { OWNER_CUSTOMERS } from '@/mocks/customers';
 import { DASHBOARD_ACTIVITY, DASHBOARD_QUICK_ACTIONS, DASHBOARD_SUMMARY } from '@/mocks/owner/dashboard';
 import { INTEGRATION_ROADMAP, INTEGRATION_WORKFLOWS } from '@/mocks/owner/integrations';
-import {
-  OWNER_BOOKING_PREFERENCES,
-  OWNER_PAYMENT_CHECKLIST,
-  OWNER_PAYMENT_SETTINGS,
-  PAYMENT_METHOD_OPTIONS,
-  TIMEZONE_OPTIONS,
-} from '@/mocks/payments';
-import { OWNER_SERVICES } from '@/mocks/services';
-import { OWNER_TEAM_MEMBERS } from '@/mocks/staff';
+import { mockCustomerRepository } from '@/features/owner/customers/mockCustomerRepository';
+import { mockOnboardingRepository } from '@/features/owner/onboarding/mockOnboardingRepository';
+import { mockSettingsRepository } from '@/features/owner/settings/mockSettingsRepository';
+import { mockServiceRepository } from '@/features/owner/services/mockServiceRepository';
 import { createReadyResource } from '@/features/resource';
 import type { ActivityItem, DashboardSummary, QuickAction } from '@/mocks/owner/dashboard';
 import type { IntegrationWorkflow } from '@/mocks/owner/integrations';
@@ -119,37 +112,43 @@ export function getOwnerDashboardResource() {
 
 export function getOwnerServicesResource() {
   return createReadyResource<OwnerServicesData>({
-    services: cloneServices(OWNER_SERVICES),
+    services: cloneServices(mockServiceRepository.list()),
   });
 }
 
 export function getOwnerCustomersResource() {
   return createReadyResource<OwnerCustomersData>({
-    customers: cloneCustomers(OWNER_CUSTOMERS),
+    customers: cloneCustomers(mockCustomerRepository.list()),
   });
 }
 
 export function getOwnerTeamResource() {
+  const snapshot = mockSettingsRepository.getSnapshot();
+
   return createReadyResource<OwnerTeamData>({
-    teamMembers: cloneTeam(OWNER_TEAM_MEMBERS),
+    teamMembers: cloneTeam(snapshot.teamMembers),
   });
 }
 
 export function getOwnerBusinessSettingsResource() {
+  const snapshot = mockSettingsRepository.getSnapshot();
+
   return createReadyResource<OwnerBusinessSettingsData>({
-    business: cloneBusiness(OWNER_BUSINESS),
-    teamMembers: cloneTeam(OWNER_TEAM_MEMBERS),
-    businessHours: cloneBusinessHours(OWNER_BUSINESS_HOURS),
-    timezoneOptions: [...TIMEZONE_OPTIONS],
+    business: cloneBusiness(snapshot.business),
+    teamMembers: cloneTeam(snapshot.teamMembers),
+    businessHours: cloneBusinessHours(snapshot.businessHours),
+    timezoneOptions: [...snapshot.timezoneOptions],
   });
 }
 
 export function getOwnerPaymentsResource() {
+  const snapshot = mockSettingsRepository.getSnapshot();
+
   return createReadyResource<OwnerPaymentsData>({
-    paymentSettings: clonePaymentSettings(OWNER_PAYMENT_SETTINGS),
-    bookingPreferences: cloneBookingPreferences(OWNER_BOOKING_PREFERENCES),
-    checklist: [...OWNER_PAYMENT_CHECKLIST],
-    acceptedPaymentMethodOptions: [...PAYMENT_METHOD_OPTIONS],
+    paymentSettings: clonePaymentSettings(snapshot.paymentSettings),
+    bookingPreferences: cloneBookingPreferences(snapshot.bookingPreferences),
+    checklist: [...snapshot.paymentChecklist],
+    acceptedPaymentMethodOptions: [...snapshot.paymentMethodOptions],
   });
 }
 
@@ -161,11 +160,13 @@ export function getOwnerIntegrationsResource() {
 }
 
 export function getDefaultOwnerOnboardingSeed() {
+  const seed = mockOnboardingRepository.getSeed();
+
   return createReadyResource({
-    business: cloneBusiness(OWNER_BUSINESS),
-    services: cloneServices(OWNER_SERVICES),
-    teamMembers: cloneTeam(OWNER_TEAM_MEMBERS),
-    businessHours: cloneBusinessHours(OWNER_BUSINESS_HOURS),
-    paymentSettings: clonePaymentSettings(OWNER_PAYMENT_SETTINGS),
+    business: cloneBusiness(seed.business),
+    services: cloneServices(seed.services),
+    teamMembers: cloneTeam(seed.teamMembers),
+    businessHours: cloneBusinessHours(seed.businessHours),
+    paymentSettings: clonePaymentSettings(seed.paymentSettings),
   });
 }

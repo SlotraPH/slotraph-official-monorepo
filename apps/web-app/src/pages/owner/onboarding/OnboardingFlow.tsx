@@ -4,9 +4,9 @@ import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { ServiceRecord } from '@/domain/service/types';
 import type { TeamMemberRecord } from '@/domain/staff/types';
 import { getDefaultOwnerOnboardingSeed } from '@/features/owner/data';
+import { mockOnboardingRepository } from '@/features/owner/onboarding/mockOnboardingRepository';
 import { sanitizeBookingSlug } from '../settings/brandDetailsShared';
 import { createDefaultOnboardingDraft } from './mockData';
-import { loadOnboardingSession, saveOnboardingSession } from './session';
 import { BusinessHoursStep } from './steps/BusinessHoursStep';
 import { BusinessInfoStep } from './steps/BusinessInfoStep';
 import { BookingSlugStep } from './steps/BookingSlugStep';
@@ -37,7 +37,7 @@ export function OnboardingFlow() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const persisted = loadOnboardingSession();
+    const persisted = mockOnboardingRepository.loadSession();
 
     if (persisted) {
       setDraft(persisted.draft);
@@ -54,7 +54,7 @@ export function OnboardingFlow() {
       return;
     }
 
-    saveOnboardingSession({
+    mockOnboardingRepository.saveSession({
       draft,
       currentStepId,
       completedStepIds,
@@ -79,7 +79,7 @@ export function OnboardingFlow() {
   );
 
   function persistManually() {
-    saveOnboardingSession({
+    mockOnboardingRepository.saveSession({
       draft,
       currentStepId,
       completedStepIds,

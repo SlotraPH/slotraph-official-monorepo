@@ -2,10 +2,16 @@ import { useState } from 'react';
 import { Badge, Button, Card, SectionCard } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { formatCurrency, formatDuration } from '@/domain/service/formatters';
-import { createInitialBookingDraft, getPublicBookingResource } from '@/features/public-booking/data';
+import {
+  createInitialBookingDraft,
+  getBookingDateOptions,
+  getBookingSlots,
+  getPublicBookingResource,
+  savePublicBookingConfirmation,
+} from '@/features/public-booking/data';
+import { bookingCustomerValidationService } from '@/features/public-booking/validation';
 import { Link, useNavigate } from 'react-router-dom';
-import { formatSelectedDate, getDateOptions, getSlotsForDate } from './availability';
-import { saveBookingConfirmation } from './bookingSession';
+import { formatSelectedDate } from './availability';
 import { BusinessHeader } from './components/BusinessHeader';
 import { BookingProgress } from './components/BookingProgress';
 import { CustomerDetailsForm } from './components/CustomerDetailsForm';
@@ -42,29 +48,6 @@ const STAGE_DESCRIPTIONS: Record<BookingStepId, string> = {
   details: 'Capture the minimum customer details needed for confirmation follow-up.',
   review: 'Verify the final selection before creating the local confirmation record.',
 };
-
-function getCustomerErrors(customer: BookingCustomerDetails) {
-  const errors: BookingCustomerErrors = {};
-
-  if (!customer.fullName.trim()) {
-    errors.fullName = 'Enter the customer name.';
-  }
-
-  if (!customer.email.trim()) {
-    errors.email = 'Enter an email address.';
-  } else if (!/\S+@\S+\.\S+/.test(customer.email)) {
-    errors.email = 'Enter a valid email address.';
-  }
-
-  const digits = customer.phone.replace(/\D/g, '');
-  if (!digits) {
-    errors.phone = 'Enter a mobile number.';
-  } else if (digits.length < 10) {
-    errors.phone = 'Enter a valid mobile number.';
-  }
-
-  return errors;
-}
 
 function createReference() {
   return `SLT-${Math.floor(Date.now() % 1000000)
@@ -115,10 +98,10 @@ export function BookingFlow() {
     : [];
   const selectedStaff = draft.staffId ? bookingStaffById[draft.staffId] ?? null : null;
   const dateOptions = selectedService
-    ? getDateOptions(selectedService, staffRequired ? draft.staffId : null)
+    ? getBookingDateOptions(selectedService, staffRequired ? draft.staffId : null)
     : [];
   const slots = selectedService && draft.date
-    ? getSlotsForDate(selectedService, draft.date, staffRequired ? draft.staffId : null)
+    ? getBookingSlots(selectedService, draft.date, staffRequired ? draft.staffId : null)
     : [];
   const selectedSlot = slots.find((slot) => slot.id === draft.slotId) ?? null;
 
@@ -181,6 +164,10 @@ export function BookingFlow() {
       },
     }));
     setCustomerErrors((currentErrors) => ({ ...currentErrors, [field]: undefined }));
+  }
+
+  function getCustomerErrors(customer: BookingCustomerDetails) {
+    return bookingCustomerValidationService.validate(customer).errors;
   }
 
   function isStepComplete(stepId: BookingStepId) {
@@ -294,7 +281,7 @@ export function BookingFlow() {
         'A backend confirmation, reminders, and payment collection flow are intentionally deferred to later phases.',
     };
 
-    saveBookingConfirmation(confirmation);
+    savePublicBookingConfirmation(confirmation);
     navigate('/book/confirmation');
   }
 

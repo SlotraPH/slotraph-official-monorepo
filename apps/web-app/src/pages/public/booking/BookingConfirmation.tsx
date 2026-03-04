@@ -1,10 +1,10 @@
 import { EmptyState } from '@slotra/ui';
+import { loadPublicBookingConfirmation } from '@/features/public-booking/data';
 import { Link } from 'react-router-dom';
-import { loadBookingConfirmation } from './bookingSession';
 import { ConfirmationSummary } from './components/ConfirmationSummary';
 
 export function BookingConfirmation() {
-  const confirmation = loadBookingConfirmation();
+  const confirmation = loadPublicBookingConfirmation();
 
   return (
     <main className="public-page booking-page booking-page--confirmation">

@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { OwnerRouteGuard } from '@/app/routes/OwnerRouteGuard';
 import { OwnerLayout } from '@/app/layouts/OwnerLayout';
 import { HomePage } from '@/pages/HomePage';
 import { CalendarPage } from '@/pages/owner/CalendarPage';
@@ -23,7 +24,7 @@ export function AppRouter() {
       <Routes>
         <Route path="/" element={<HomePage />} />
 
-        <Route path="/owner" element={<OwnerLayout />}>
+        <Route path="/owner" element={<OwnerRouteGuard><OwnerLayout /></OwnerRouteGuard>}>
           <Route index element={<Navigate replace to="/owner/calendar" />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
