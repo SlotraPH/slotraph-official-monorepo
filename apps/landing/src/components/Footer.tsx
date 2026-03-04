@@ -53,7 +53,7 @@ export const Footer: React.FC = () => {
 
                     {/* Brand */}
                     <div className="flex flex-col gap-5">
-                        <SymbolWordmark className="h-7 w-auto" aria-label="Slotra" />
+                        <SymbolWordmark className="h-9 w-auto self-start" aria-label="Slotra" />
 
                         <p className="text-[12px] leading-[1.7] max-w-[200px]" style={{ color: '#7a8799' }}>
                             Automated scheduling for Philippine businesses.
