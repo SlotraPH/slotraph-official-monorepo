@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Badge, PageHeader } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { AppPill, PageIntro } from '@/app/components/PageTemplates';
 import { getOwnerCustomersResource } from '@/features/owner/data';
 import { Link } from 'react-router-dom';
+import { Compass } from 'lucide-react';
+import { BrandButton } from '@/ui';
 import { CustomerDetailPanel } from './customers/CustomerDetailPanel';
 import { CustomerImportCallout } from './customers/CustomerImportCallout';
 import { CustomerList } from './customers/CustomerList';
@@ -37,16 +39,25 @@ export function CustomersPage() {
 
   return (
     <div className="owner-page-stack">
-      <PageHeader
-        title="Customers"
-        subtitle="View and manage your customer base."
-        actions={<Link className="button-link" to="/book">Open booking form</Link>}
+      <PageIntro
+        eyebrow="Customers"
+        title="Customer relationships"
+        description="Search, segment, and review the current customer base without changing the mock data wiring underneath the page."
+        actions={(
+          <Link style={{ textDecoration: 'none' }} to="/book">
+            <BrandButton size="nav" startIcon={<Compass size={15} />} variant="secondary">
+              Open booking form
+            </BrandButton>
+          </Link>
+        )}
+        pills={(
+          <>
+            <AppPill tone="success">{customers.filter((customer) => customer.status === 'VIP').length} VIP</AppPill>
+            <AppPill>{customers.filter((customer) => customer.status === 'New').length} new</AppPill>
+            <AppPill>{customers.filter((customer) => customer.status === 'Needs follow-up').length} follow-up</AppPill>
+          </>
+        )}
       />
-      <div className="owner-inline-stats">
-        <Badge variant="success">{customers.filter((customer) => customer.status === 'VIP').length} VIP</Badge>
-        <Badge variant="default">{customers.filter((customer) => customer.status === 'New').length} new</Badge>
-        <Badge variant="default">{customers.filter((customer) => customer.status === 'Needs follow-up').length} follow-up</Badge>
-      </div>
       <CustomerToolbar
         query={query}
         status={status}

@@ -1,4 +1,4 @@
-import { PageHeader } from '@slotra/ui';
+import { PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { getOwnerDashboardResource } from '@/features/owner/data';
 import { DashboardActivityFeed } from './dashboard/DashboardActivityFeed';
@@ -21,7 +21,11 @@ export function DashboardPage() {
 
   return (
     <div className="owner-page-stack">
-      <PageHeader title="Dashboard" subtitle="Welcome back. Here's an overview of your business." />
+      <PageIntro
+        eyebrow="Owner dashboard"
+        title="Business overview"
+        description="Track upcoming bookings, recent activity, and the current setup posture from one branded workspace shell."
+      />
       <DashboardSummaryCards items={summary} />
       <div className="owner-two-column-layout">
         <DashboardUpcomingBookings bookings={bookings} />

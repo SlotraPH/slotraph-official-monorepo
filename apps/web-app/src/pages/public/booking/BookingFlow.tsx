@@ -325,7 +325,7 @@ export function BookingFlow() {
   const previousStepId = currentStepIndex > 0 ? stepIds[currentStepIndex - 1] ?? null : null;
 
   return (
-    <main className="public-page booking-page">
+    <div className="booking-page">
       <div className="booking-shell">
         <BusinessHeader business={bookingBusiness} />
 
@@ -467,6 +467,6 @@ export function BookingFlow() {
           </aside>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

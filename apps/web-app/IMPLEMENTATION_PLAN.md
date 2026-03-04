@@ -425,3 +425,21 @@ apps/web-app/src/
 - Keep gradients, focus rings, and brand glows in inline `style` props through these primitives; reserve CSS for layout and document-wide rules.
 - Keep toast usage on `useBrandToast()` so Sileo stays aligned with the bottom-left navy configuration from `brand.md`.
 - Use `/sandbox` as the visual verification route before migrating existing owner or public screens to the new primitives.
+
+## Phase 3 notes - March 4, 2026
+
+Implemented in this phase:
+
+- Added an app-level shell with dev-banner offset handling, fixed navbar, shared footer, and branded home/public framing
+- Rebuilt the owner workspace rail with Slotra branding assets and aligned navigation states
+- Added reusable layout templates for hero, feature-grid, steps, metrics, and owner page intros
+- Migrated the top-level owner routes and public routes onto the new shell without changing the current route/data contracts
+- Overrode legacy global tokens so older modules inherit the March 2026 brand palette, input styling, and button treatment more consistently
+
+Remaining off-brand or Phase 4 follow-up areas:
+
+- Several nested owner modules still render `@slotra/ui` primitives and app-local classes that predate the Phase 2 token layer
+- Settings subpages still use raw `.input` fields and custom preview/upload blocks instead of fully branded local primitives
+- Public booking and onboarding internals still rely on older card/progress/detail compositions even though they now sit inside the new shell
+- `src/styles.css` still carries legacy page-specific CSS; Phase 4 should continue moving feature styling beside owning modules and shrinking global scope
+- `TopBar.tsx` is now effectively superseded by page-intro templates and should either be removed or reintroduced only if a real product need appears

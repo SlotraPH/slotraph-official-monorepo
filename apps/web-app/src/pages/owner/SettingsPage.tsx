@@ -1,4 +1,4 @@
-import { PageHeader } from '@slotra/ui';
+import { PageIntro } from '@/app/components/PageTemplates';
 import { NavLink, Outlet } from 'react-router-dom';
 
 const SETTINGS_TABS = [
@@ -11,10 +11,11 @@ const SETTINGS_TABS = [
 
 export function SettingsPage() {
   return (
-    <div>
-      <PageHeader
-        title="Settings"
-        subtitle="Manage your account, brand, and preferences."
+    <div className="owner-page-stack">
+      <PageIntro
+        eyebrow="Settings"
+        title="Brand and operational preferences"
+        description="Manage business identity, booking behavior, notifications, and team defaults from one settings surface."
       />
       <nav className="settings-tabs" aria-label="Settings sections">
         {SETTINGS_TABS.map((tab) =>

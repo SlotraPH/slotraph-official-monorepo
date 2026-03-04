@@ -1,6 +1,7 @@
 import { Bell, CalendarDays, CheckCircle2, Mail, Search, Sparkles, UserRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AppShell, AppShellContainer } from '@/app/components/AppShell';
 import {
   BrandButton,
   BrandInput,
@@ -8,7 +9,6 @@ import {
   SectionHeading,
   Typography,
   colors,
-  layout,
   radii,
   shadows,
   spacing,
@@ -40,23 +40,17 @@ export function SandboxPage() {
   }, [attempted, email]);
 
   return (
-    <main
-      style={{
-        background: `
-          radial-gradient(circle at top left, rgba(46,49,146,0.08), transparent 30%),
-          linear-gradient(180deg, #ffffff 0%, ${colors.page} 100%)
-        `,
-        minHeight: '100vh',
-        padding: `${spacing[10]}px ${spacing[4]}px`,
-      }}
-    >
-      <div
+    <AppShell>
+      <section
         style={{
-          margin: '0 auto',
-          maxWidth: layout.maxWidth,
-          width: '100%',
+          background: `
+            radial-gradient(circle at top left, rgba(46,49,146,0.08), transparent 30%),
+            linear-gradient(180deg, #ffffff 0%, ${colors.page} 100%)
+          `,
+          padding: `${spacing[10]}px 0`,
         }}
       >
+        <AppShellContainer>
         <div
           style={{
             alignItems: 'center',
@@ -245,7 +239,8 @@ export function SandboxPage() {
             </div>
           </Card>
         </div>
-      </div>
-    </main>
+        </AppShellContainer>
+      </section>
+    </AppShell>
   );
 }

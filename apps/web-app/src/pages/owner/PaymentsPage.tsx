@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Badge, PageHeader } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { AppPill, PageIntro } from '@/app/components/PageTemplates';
 import { getOwnerPaymentsResource } from '@/features/owner/data';
 import { PaymentChecklist } from './payments/PaymentChecklist';
 import { PaymentLimitations } from './payments/PaymentLimitations';
@@ -25,10 +25,15 @@ export function PaymentsPage() {
 
   return (
     <div className="owner-page-stack">
-      <PageHeader
-        title="Payments"
-        subtitle="Owner-facing payment setup is intentionally scoped to operational settings for MVP."
-        actions={<Badge variant="warning">{paymentSettings.collectionMethod === 'hybrid' ? 'Manual collection' : 'Scoped setting'}</Badge>}
+      <PageIntro
+        eyebrow="Payments"
+        title="Payment setup"
+        description="Keep the payments story operational and honest for MVP: what is configured, what still needs manual collection, and what remains out of scope."
+        pills={(
+          <AppPill tone="warning">
+            {paymentSettings.collectionMethod === 'hybrid' ? 'Manual collection' : 'Scoped setting'}
+          </AppPill>
+        )}
       />
       <PaymentStatusOverview policyLabel={policy} />
       <div className="owner-two-column-layout">

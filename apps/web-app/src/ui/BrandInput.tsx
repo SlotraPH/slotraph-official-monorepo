@@ -3,7 +3,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { forwardRef, useId, useState, type CSSProperties, type InputHTMLAttributes, type ReactNode } from 'react';
-import { colors, motion, radii, shadows, spacing, typography } from './tokens';
+import { colors, motion, radii, spacing, typography } from './tokens';
 import { FormLabel, type FormLabelProps } from './FormLabel';
 
 export interface BrandInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
