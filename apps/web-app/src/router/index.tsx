@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { OwnerRouteGuard } from '@/app/routes/OwnerRouteGuard';
 import { OwnerLayout } from '@/app/layouts/OwnerLayout';
 import { HomePage } from '@/pages/HomePage';
+import { SandboxPage } from '@/pages/SandboxPage';
 import { CalendarPage } from '@/pages/owner/CalendarPage';
 import { CustomersPage } from '@/pages/owner/CustomersPage';
 import { DashboardPage } from '@/pages/owner/DashboardPage';
@@ -48,6 +49,7 @@ export function AppRouter() {
 
         <Route path="/book" element={<BookingPage />} />
         <Route path="/book/confirmation" element={<BookingConfirmationPage />} />
+        <Route path="/sandbox" element={<SandboxPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

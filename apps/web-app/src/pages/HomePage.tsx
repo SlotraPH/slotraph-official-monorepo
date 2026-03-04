@@ -19,6 +19,9 @@ export function HomePage() {
           <Link className="button-link button-link--secondary" to="/book">
             Go to Public Booking
           </Link>
+          <Link className="button-link button-link--secondary" to="/sandbox">
+            Open Sandbox
+          </Link>
         </div>
       </div>
     </main>

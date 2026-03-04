@@ -417,3 +417,11 @@ apps/web-app/src/
 3. Extract `StatePanel`, `Stepper`, `SelectionCard`, and branded form controls first because both onboarding and booking need them
 4. Move page-coupled repository/session code into `domains/*/services` and `shared/storage`
 5. Rebuild owner shell (`SidebarNav`, `TopBar`, settings tabs) on top of the brand token layer before deeper page redesign
+
+### Phase 2 adoption notes
+
+- Use `src/ui/tokens.ts` as the source of truth for Slotra colors, spacing, radii, shadows, motion, and typography values in `apps/web-app`.
+- Prefer `BrandButton`, `BrandInput`, `Card`, `FormLabel`, `SectionHeading`, and `Typography` from `src/ui` for new screens before touching app-local `.btn`, `.input`, `.card`, and freehand heading styles.
+- Keep gradients, focus rings, and brand glows in inline `style` props through these primitives; reserve CSS for layout and document-wide rules.
+- Keep toast usage on `useBrandToast()` so Sileo stays aligned with the bottom-left navy configuration from `brand.md`.
+- Use `/sandbox` as the visual verification route before migrating existing owner or public screens to the new primitives.
