@@ -44,6 +44,10 @@ pnpm-debug.log*
 coverage
 .nyc_output
 
+# Supabase
+supabase/.branches
+supabase/.temp
+
 # Expo
 *.jks
 *.p8

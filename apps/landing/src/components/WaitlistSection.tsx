@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Check, User, Mail, AlertCircle } from 'lucide-react';
 import { AppIcon } from '@slotra/branding';
 import { sileo } from 'sileo';
+import { supabase } from '../lib/supabase';
 
 // ── Interactive Grid Pattern ───────────────────────────────
 
@@ -75,6 +76,7 @@ export function WaitlistSection() {
     const [errors, setErrors] = useState<FieldErrors>({});
     const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [btnHovered, setBtnHovered] = useState(false);
     const [tilt, setTilt] = useState({ x: 0, y: 0 });
     const sectionRef = useRef<HTMLElement>(null);
@@ -119,14 +121,37 @@ export function WaitlistSection() {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const allTouched = { name: true, email: true };
         setTouched(allTouched);
         const fieldErrors = validate(fields);
         setErrors(fieldErrors);
         if (fieldErrors.name || fieldErrors.email) return;
-        // TODO: wire up to backend / email service
+
+        setLoading(true);
+        const { error } = await supabase
+            .from('waitlist_entries')
+            .insert({ name: fields.name.trim(), email: fields.email.trim().toLowerCase() });
+        setLoading(false);
+
+        if (error) {
+            if (error.code === '23505') {
+                // Duplicate email — treat as success so we don't leak whether email exists
+                setSubmitted(true);
+                sileo.success({
+                    title: "You're already on the list!",
+                    description: "We'll notify you when Slotra is ready to use.",
+                });
+            } else {
+                sileo.error({
+                    title: 'Something went wrong',
+                    description: 'Please try again in a moment.',
+                });
+            }
+            return;
+        }
+
         setSubmitted(true);
         sileo.success({
             title: "You're on the list!",
@@ -340,6 +365,7 @@ export function WaitlistSection() {
                                 {/* Submit */}
                                 <button
                                     type="submit"
+                                    disabled={loading}
                                     onMouseEnter={() => setBtnHovered(true)}
                                     onMouseLeave={() => setBtnHovered(false)}
                                     className="w-full h-[44px] rounded-lg text-[14px] font-semibold transition-all duration-150"
@@ -347,15 +373,19 @@ export function WaitlistSection() {
                                         marginTop: 6,
                                         color: '#ffffff',
                                         border: '1px solid rgba(0,0,0,0.18)',
-                                        background: btnHovered
-                                            ? 'linear-gradient(180deg, #3538b5 0%, #272a86 100%)'
-                                            : 'linear-gradient(180deg, #3336a4 0%, #2a2d8c 100%)',
-                                        boxShadow: btnHovered
+                                        background: loading
+                                            ? 'linear-gradient(180deg, #3336a4 0%, #2a2d8c 100%)'
+                                            : btnHovered
+                                                ? 'linear-gradient(180deg, #3538b5 0%, #272a86 100%)'
+                                                : 'linear-gradient(180deg, #3336a4 0%, #2a2d8c 100%)',
+                                        boxShadow: btnHovered && !loading
                                             ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 3px 10px rgba(46,49,146,0.4)'
                                             : 'inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 6px rgba(46,49,146,0.25)',
+                                        opacity: loading ? 0.75 : 1,
+                                        cursor: loading ? 'not-allowed' : 'pointer',
                                     }}
                                 >
-                                    Join the Waitlist
+                                    {loading ? 'Joining…' : 'Join the Waitlist'}
                                 </button>
                             </form>
 
