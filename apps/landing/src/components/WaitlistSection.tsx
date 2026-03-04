@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Check, User, Mail, AlertCircle } from 'lucide-react';
-import { Symbol } from '@slotra/branding';
+import { AppIcon } from '@slotra/branding';
 
 // ── Interactive Grid Pattern ───────────────────────────────
 
@@ -324,36 +324,59 @@ export function WaitlistSection() {
                     )}
                 </div>
 
-                {/* ── Right: 3D Symbol ── */}
+                {/* ── Right: 3D AppIcon ── */}
                 <div className="relative flex items-center justify-center max-[900px]:hidden">
 
-                    {/* Ambient glow — follows tilt */}
+                    {/* Subtle ambient glow — follows tilt */}
                     <div
                         className="absolute pointer-events-none"
                         style={{
-                            width: 480,
-                            height: 480,
-                            background: 'radial-gradient(circle, rgba(46,49,146,0.12) 0%, transparent 65%)',
-                            filter: 'blur(56px)',
-                            transform: `translate(${tilt.y * 12}px, ${tilt.x * -12}px)`,
+                            width: 360,
+                            height: 360,
+                            background: 'radial-gradient(circle, rgba(46,49,146,0.18) 0%, transparent 70%)',
+                            filter: 'blur(64px)',
+                            transform: `translate(${tilt.y * 8}px, ${tilt.x * -8}px)`,
                             transition: 'transform 0.35s ease-out',
                         }}
                     />
 
-                    {/* Symbol with perspective tilt */}
+                    {/* Icon wrapper — perspective tilt + subtle shadow */}
                     <div
                         style={{
                             transform: `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
                             transition: 'transform 0.2s ease-out',
-                            filter: [
-                                `drop-shadow(${-tilt.y * 3}px ${tilt.x * 3}px 40px rgba(46,49,146,0.3))`,
-                                'drop-shadow(0 12px 32px rgba(46,49,146,0.12))',
-                            ].join(' '),
+                            boxShadow: `${-tilt.y * 2}px ${tilt.x * 2}px 48px rgba(46,49,146,0.22), 0 8px 24px rgba(46,49,146,0.12)`,
+                            borderRadius: '23%',
+                            overflow: 'hidden',
+                            position: 'relative',
                         }}
                     >
-                        <Symbol
-                            style={{ width: 380, height: 380, display: 'block' }}
+                        <AppIcon
+                            style={{ width: 220, height: 220, display: 'block' }}
                             aria-hidden="true"
+                        />
+
+                        {/* Top-left shine */}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.06) 40%, transparent 65%)',
+                                pointerEvents: 'none',
+                            }}
+                        />
+
+                        {/* Bottom edge depth */}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                height: '35%',
+                                background: 'linear-gradient(to top, rgba(0,0,20,0.18) 0%, transparent 100%)',
+                                pointerEvents: 'none',
+                            }}
                         />
                     </div>
                 </div>
