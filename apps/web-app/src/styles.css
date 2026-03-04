@@ -3373,6 +3373,30 @@ body {
   flex-direction: column;
 }
 
+.app-shell__skip-link {
+  background: linear-gradient(180deg, #3336a4 0%, #2a2d8c 100%);
+  border: 1px solid rgba(0,0,0,0.18);
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 6px rgba(46,49,146,0.25);
+  color: #ffffff;
+  left: 24px;
+  opacity: 0;
+  padding: 10px 14px;
+  pointer-events: none;
+  position: fixed;
+  text-decoration: none;
+  top: calc(var(--banner-h) + 12px);
+  transform: translateY(-16px);
+  transition: opacity 150ms ease, transform 150ms ease;
+  z-index: 1003;
+}
+
+.app-shell__skip-link:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 .app-shell__banner {
   background: #0f1f2e;
   left: 0;

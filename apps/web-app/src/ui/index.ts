@@ -1,5 +1,7 @@
 export * from './BrandButton';
 export * from './BrandInput';
+export * from './BrandSelect';
+export * from './BrandTextarea';
 export * from './Card';
 export * from './FormLabel';
 export * from './helpers';

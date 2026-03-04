@@ -47,6 +47,36 @@ describe('BookingFlow', () => {
     await user.click(screen.getByRole('button', { name: /Signature Cut \+ Finish/i }));
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
-    expect(screen.getByText('Choose your staff member')).toBeInTheDocument();
+    expect(screen.getByText('Assign the right staff member')).toBeInTheDocument();
+  });
+
+  it('validates customer fields on blur and clears the error after a valid change', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <BookingFlow />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: /Scalp Reset Treatment/i }));
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    const slotButton = screen.getAllByRole('button').find((button) => {
+      return button.textContent?.includes('Available') && !button.hasAttribute('disabled');
+    });
+    expect(slotButton).toBeDefined();
+    await user.click(slotButton!);
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+    const nameInput = screen.getByLabelText('Full name');
+    await user.click(nameInput);
+    await user.tab();
+
+    expect(screen.getByText('Enter the customer name.')).toBeInTheDocument();
+
+    await user.type(nameInput, 'Arielle Cruz');
+
+    expect(screen.queryByText('Enter the customer name.')).not.toBeInTheDocument();
   });
 });

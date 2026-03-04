@@ -443,3 +443,20 @@ Remaining off-brand or Phase 4 follow-up areas:
 - Public booking and onboarding internals still rely on older card/progress/detail compositions even though they now sit inside the new shell
 - `src/styles.css` still carries legacy page-specific CSS; Phase 4 should continue moving feature styling beside owning modules and shrinking global scope
 - `TopBar.tsx` is now effectively superseded by page-intro templates and should either be removed or reintroduced only if a real product need appears
+
+## Phase 4 notes - March 4, 2026
+
+Implemented in this phase:
+
+- Added branded `BrandSelect` and `BrandTextarea` primitives plus shared flow scaffolds for stepper, review blocks, empty states, and segmented tabs
+- Rebuilt the public booking flow on top of the branded primitives with blur-first validation, keyboard-accessible step navigation, and review scaffolds
+- Reworked owner scheduling, client intake, and billing screens into dedicated domain modules under `src/modules/*` so page routes now stay thin
+- Added a skip-to-content link at the shell level and removed the nested owner `<main>` to improve focus order and landmark structure
+- Added targeted flow tests for booking validation and client intake validation, while keeping the current route/data contracts in place
+
+Deferred to Phase 5 polish:
+
+- Persisting scheduling, client intake, and billing form changes beyond local screen state and mock repositories
+- Replacing the remaining legacy owner child components and global CSS clusters that are still unused but present in `src/styles.css`
+- Expanding booking success/error toast usage and confirmation side effects once persistence and async mutation states are real
+- Resolving the current Vitest worker environment issue (`expect-type` missing `./branding` in this workspace) so the broader suite can run cleanly again

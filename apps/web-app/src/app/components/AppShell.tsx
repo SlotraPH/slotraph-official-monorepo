@@ -60,6 +60,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
 
   return (
     <div className="app-shell">
+      <a className="app-shell__skip-link" href="#main-content">Skip to content</a>
       {showBanner ? (
         <div className="app-shell__banner">
           <div className="app-shell__banner-inner">
@@ -126,7 +127,9 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
         </div>
       </header>
 
-      <main className={`app-shell__main${contentClassName ? ` ${contentClassName}` : ''}`}>{children}</main>
+      <main className={`app-shell__main${contentClassName ? ` ${contentClassName}` : ''}`} id="main-content" tabIndex={-1}>
+        {children}
+      </main>
 
       <footer className="app-shell__footer">
         <div className="app-shell__footer-inner">

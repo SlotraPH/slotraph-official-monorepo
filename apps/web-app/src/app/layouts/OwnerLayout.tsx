@@ -8,9 +8,9 @@ export function OwnerLayout() {
       <div className="owner-workspace">
         <SidebarNav />
         <div className="owner-workspace__content">
-          <main className="owner-workspace__main">
+          <div className="owner-workspace__main">
             <Outlet />
-          </main>
+          </div>
         </div>
       </div>
     </AppShell>
