@@ -1,5 +1,5 @@
 import React from 'react';
-import { Facebook, Instagram } from 'lucide-react';
+import { Facebook } from 'lucide-react';
 import { SymbolWordmark } from '@slotra/branding';
 
 // ── Custom brand icons not in lucide ──────────────────────
@@ -29,9 +29,7 @@ const COMPANY_LINKS = ['About Us', 'Careers', 'Blog', 'Contact'];
 const LEGAL_LINKS   = ['Privacy Policy', 'Terms of Service', 'Cookies'];
 
 const SOCIAL = [
-    { label: 'Facebook',  Icon: Facebook,  href: '#' },
-    { label: 'Instagram', Icon: Instagram, href: '#' },
-    { label: 'TikTok',    Icon: TikTokIcon, href: '#' },
+    { label: 'Facebook', Icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61586607277534' },
 ] as const;
 
 const STORE_BUTTONS = [
@@ -172,6 +170,8 @@ function SocialBtn({
         <a
             href={href}
             aria-label={label}
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-[28px] h-[28px] flex items-center justify-center rounded-md transition-[border-color,color] duration-150"
             style={{ border: '1px solid #e2e6ea', color: '#7a8799' }}
             onMouseEnter={e => {
