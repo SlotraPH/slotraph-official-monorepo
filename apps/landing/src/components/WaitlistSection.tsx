@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Check, User, Mail } from 'lucide-react';
+import { Check, User, Mail, AlertCircle } from 'lucide-react';
 import { Symbol } from '@slotra/branding';
 
 // ── Interactive Grid Pattern ───────────────────────────────
@@ -53,9 +53,26 @@ function InteractiveGridPattern({
 
 // ── WaitlistSection ────────────────────────────────────────
 
+type Fields = { name: string; email: string };
+type FieldErrors = Partial<Fields>;
+
+function validateName(v: string): string {
+    if (!v.trim()) return 'Full name is required.';
+    if (v.trim().length < 2) return 'Name must be at least 2 characters.';
+    if (!/^[\p{L}\s\-'.]+$/u.test(v.trim())) return 'Please enter a valid name.';
+    return '';
+}
+
+function validateEmail(v: string): string {
+    if (!v.trim()) return 'Work email is required.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())) return 'Please enter a valid email address.';
+    return '';
+}
+
 export function WaitlistSection() {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
+    const [fields, setFields] = useState<Fields>({ name: '', email: '' });
+    const [errors, setErrors] = useState<FieldErrors>({});
+    const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
     const [submitted, setSubmitted] = useState(false);
     const [btnHovered, setBtnHovered] = useState(false);
     const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -80,10 +97,69 @@ export function WaitlistSection() {
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, []);
 
+    const validate = (f: Fields): FieldErrors => ({
+        name: validateName(f.name) || undefined,
+        email: validateEmail(f.email) || undefined,
+    });
+
+    const handleBlur = (field: keyof Fields) => {
+        setTouched(t => ({ ...t, [field]: true }));
+        const fieldErrors = validate(fields);
+        setErrors(e => ({ ...e, [field]: fieldErrors[field] }));
+    };
+
+    const handleChange = (field: keyof Fields, value: string) => {
+        const next = { ...fields, [field]: value };
+        setFields(next);
+        // Clear error as soon as the field becomes valid
+        if (touched[field]) {
+            const fieldErrors = validate(next);
+            setErrors(e => ({ ...e, [field]: fieldErrors[field] }));
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        const allTouched = { name: true, email: true };
+        setTouched(allTouched);
+        const fieldErrors = validate(fields);
+        setErrors(fieldErrors);
+        if (fieldErrors.name || fieldErrors.email) return;
         // TODO: wire up to backend / email service
         setSubmitted(true);
+    };
+
+    // Per-field input style helpers
+    const inputStyle = (field: keyof Fields): React.CSSProperties => {
+        const hasError = touched[field] && errors[field];
+        return {
+            padding: '0 14px 0 40px',
+            border: `1px solid ${hasError ? '#e53e3e' : '#d4d8de'}`,
+            color: '#0f1f2e',
+            backgroundColor: '#ffffff',
+            boxShadow: hasError
+                ? '0 0 0 3px rgba(229,62,62,0.1), 0 1px 2px rgba(0,0,0,0.04)'
+                : '0 1px 2px rgba(0,0,0,0.04)',
+        };
+    };
+
+    const iconColor = (field: keyof Fields): string =>
+        touched[field] && errors[field] ? '#e53e3e' : '#a0aab4';
+
+    const onInputFocus = (e: React.FocusEvent<HTMLInputElement>, field: keyof Fields) => {
+        const hasError = touched[field] && errors[field];
+        e.currentTarget.style.borderColor = hasError ? '#e53e3e' : '#2e3192';
+        e.currentTarget.style.boxShadow = hasError
+            ? '0 0 0 3px rgba(229,62,62,0.12), 0 1px 2px rgba(0,0,0,0.04)'
+            : '0 0 0 3px rgba(46,49,146,0.08), 0 1px 2px rgba(0,0,0,0.04)';
+    };
+
+    const onInputBlur = (e: React.FocusEvent<HTMLInputElement>, field: keyof Fields) => {
+        handleBlur(field);
+        // style is re-derived after state update via inputStyle()
+        const hasError = errors[field] || validateName(fields.name) || validateEmail(fields.email);
+        e.currentTarget.style.borderColor = hasError ? '#e53e3e' : '#d4d8de';
+        e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)';
     };
 
     return (
@@ -151,34 +227,33 @@ export function WaitlistSection() {
                                         Full Name
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#a0aab4' }}>
+                                        <span className="absolute left-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: iconColor('name') }}>
                                             <User size={15} aria-hidden="true" />
                                         </span>
                                         <input
                                             id="waitlist-name"
                                             type="text"
-                                            required
                                             placeholder="Juan dela Cruz"
-                                            value={name}
-                                            onChange={e => setName(e.target.value)}
+                                            value={fields.name}
+                                            onChange={e => handleChange('name', e.target.value)}
+                                            onFocus={e => onInputFocus(e, 'name')}
+                                            onBlur={e => onInputBlur(e, 'name')}
+                                            aria-invalid={!!(touched.name && errors.name)}
+                                            aria-describedby={errors.name ? 'error-name' : undefined}
                                             className="w-full h-[44px] rounded-lg text-[14px] outline-none transition-all duration-150"
-                                            style={{
-                                                padding: '0 14px 0 40px',
-                                                border: '1px solid #d4d8de',
-                                                color: '#0f1f2e',
-                                                backgroundColor: '#ffffff',
-                                                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                                            }}
-                                            onFocus={e => {
-                                                e.currentTarget.style.borderColor = '#2e3192';
-                                                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(46,49,146,0.08), 0 1px 2px rgba(0,0,0,0.04)';
-                                            }}
-                                            onBlur={e => {
-                                                e.currentTarget.style.borderColor = '#d4d8de';
-                                                e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)';
-                                            }}
+                                            style={inputStyle('name')}
                                         />
+                                        {touched.name && errors.name && (
+                                            <span className="absolute right-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#e53e3e' }}>
+                                                <AlertCircle size={15} aria-hidden="true" />
+                                            </span>
+                                        )}
                                     </div>
+                                    {touched.name && errors.name && (
+                                        <p id="error-name" className="flex items-center gap-1 text-[12px]" style={{ color: '#e53e3e' }}>
+                                            {errors.name}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Work Email */}
@@ -191,34 +266,33 @@ export function WaitlistSection() {
                                         Work Email
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#a0aab4' }}>
+                                        <span className="absolute left-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: iconColor('email') }}>
                                             <Mail size={15} aria-hidden="true" />
                                         </span>
                                         <input
                                             id="waitlist-email"
                                             type="email"
-                                            required
                                             placeholder="juan@company.com"
-                                            value={email}
-                                            onChange={e => setEmail(e.target.value)}
+                                            value={fields.email}
+                                            onChange={e => handleChange('email', e.target.value)}
+                                            onFocus={e => onInputFocus(e, 'email')}
+                                            onBlur={e => onInputBlur(e, 'email')}
+                                            aria-invalid={!!(touched.email && errors.email)}
+                                            aria-describedby={errors.email ? 'error-email' : undefined}
                                             className="w-full h-[44px] rounded-lg text-[14px] outline-none transition-all duration-150"
-                                            style={{
-                                                padding: '0 14px 0 40px',
-                                                border: '1px solid #d4d8de',
-                                                color: '#0f1f2e',
-                                                backgroundColor: '#ffffff',
-                                                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                                            }}
-                                            onFocus={e => {
-                                                e.currentTarget.style.borderColor = '#2e3192';
-                                                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(46,49,146,0.08), 0 1px 2px rgba(0,0,0,0.04)';
-                                            }}
-                                            onBlur={e => {
-                                                e.currentTarget.style.borderColor = '#d4d8de';
-                                                e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)';
-                                            }}
+                                            style={inputStyle('email')}
                                         />
+                                        {touched.email && errors.email && (
+                                            <span className="absolute right-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#e53e3e' }}>
+                                                <AlertCircle size={15} aria-hidden="true" />
+                                            </span>
+                                        )}
                                     </div>
+                                    {touched.email && errors.email && (
+                                        <p id="error-email" className="flex items-center gap-1 text-[12px]" style={{ color: '#e53e3e' }}>
+                                            {errors.email}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Submit */}
@@ -228,7 +302,7 @@ export function WaitlistSection() {
                                     onMouseLeave={() => setBtnHovered(false)}
                                     className="w-full h-[44px] rounded-lg text-[14px] font-semibold transition-all duration-150"
                                     style={{
-                                        marginTop: 4,
+                                        marginTop: 6,
                                         color: '#ffffff',
                                         border: '1px solid rgba(0,0,0,0.18)',
                                         background: btnHovered
