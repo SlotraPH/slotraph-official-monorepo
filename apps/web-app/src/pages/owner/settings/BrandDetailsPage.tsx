@@ -1,21 +1,11 @@
 import { useState } from 'react';
 import { Button, FormField, Select, Textarea } from '@slotra/ui';
-
-const INDUSTRIES = [
-    'Beauty & Wellness',
-    'Health & Fitness',
-    'Hair & Barbering',
-    'Nail & Spa',
-    'Medical & Dental',
-    'Tutoring & Education',
-    'Legal & Consulting',
-    'Photography',
-    'Cleaning Services',
-    'Pet Care',
-    'Auto Services',
-    'Events & Entertainment',
-    'Other',
-];
+import {
+    BRAND_INDUSTRIES,
+    getBusinessInitials,
+    MAX_BRAND_ABOUT_LENGTH,
+    sanitizeBookingSlug,
+} from './brandDetailsShared';
 
 export function BrandDetailsPage() {
     const [name, setName] = useState("Dheyn's Barbershop");
@@ -33,14 +23,7 @@ export function BrandDetailsPage() {
     }
 
     const aboutChars = about.length;
-    const maxAbout = 280;
-
-    const initials = name
-        .split(' ')
-        .map((word) => word[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase();
+    const initials = getBusinessInitials(name);
 
     return (
         <div className="brand-details-layout">
@@ -88,9 +71,7 @@ export function BrandDetailsPage() {
                                 type="text"
                                 placeholder="your-business-slug"
                                 value={slug}
-                                onChange={(event) =>
-                                    setSlug(event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))
-                                }
+                                onChange={(event) => setSlug(sanitizeBookingSlug(event.target.value))}
                             />
                         </div>
                     </FormField>
@@ -101,7 +82,7 @@ export function BrandDetailsPage() {
                         value={industry}
                         onChange={(event) => setIndustry(event.target.value)}
                     >
-                        {INDUSTRIES.map((item) => (
+                        {BRAND_INDUSTRIES.map((item) => (
                             <option key={item} value={item}>
                                 {item}
                             </option>
@@ -113,12 +94,12 @@ export function BrandDetailsPage() {
                         label="About Your Business"
                         placeholder="Tell customers what makes your business unique..."
                         value={about}
-                        maxLength={maxAbout}
+                        maxLength={MAX_BRAND_ABOUT_LENGTH}
                         onChange={(event) => setAbout(event.target.value)}
                         rows={4}
                         footer={(
-                            <span className={`form-char-count ${aboutChars >= maxAbout ? 'form-char-count--limit' : ''}`}>
-                                {aboutChars}/{maxAbout}
+                            <span className={`form-char-count ${aboutChars >= MAX_BRAND_ABOUT_LENGTH ? 'form-char-count--limit' : ''}`}>
+                                {aboutChars}/{MAX_BRAND_ABOUT_LENGTH}
                             </span>
                         )}
                     />
