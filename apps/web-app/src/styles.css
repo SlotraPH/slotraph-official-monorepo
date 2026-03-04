@@ -2133,3 +2133,417 @@ select.input {
     display: none;
   }
 }
+
+/* ===================================================================
+   OWNER MVP SCREENS
+   =================================================================== */
+
+.owner-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.owner-two-column-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.owner-two-column-layout--wide {
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
+}
+
+.owner-summary-grid,
+.owner-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.owner-summary-card,
+.owner-status-card {
+  min-height: 100%;
+}
+
+.owner-summary-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.owner-summary-card__label,
+.owner-status-card__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.owner-summary-card__value {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.owner-summary-card__hint,
+.owner-status-card p,
+.owner-checklist__description,
+.owner-toggle-row__description,
+.customer-import-card__description,
+.owner-action-card__description,
+.owner-bookings-item__meta,
+.owner-activity-item__detail,
+.owner-checklist__meta,
+.customer-list__meta,
+.customer-panel__contact {
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.owner-status-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.owner-bookings-list,
+.owner-activity-list,
+.owner-checklist,
+.owner-settings-stack,
+.owner-toggle-list,
+.service-list,
+.customer-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.owner-bookings-item,
+.owner-checklist__item,
+.owner-toggle-row,
+.service-list__item,
+.customer-list__item {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.owner-bookings-item,
+.owner-checklist__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.owner-bookings-item__name,
+.owner-action-card__title,
+.owner-activity-item__title,
+.service-list__title,
+.customer-list__name,
+.customer-panel__name,
+.owner-checklist__title,
+.customer-import-card__title,
+.owner-toggle-row__title {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.owner-bookings-item__time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.owner-action-grid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.owner-action-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-subtle);
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+
+.owner-activity-item {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.owner-activity-item__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.owner-activity-item__time,
+.customer-panel__section-label {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.owner-toolbar {
+  display: flex;
+  align-items: end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.owner-toolbar .form-field {
+  min-width: 200px;
+}
+
+.owner-toolbar__search {
+  position: relative;
+  min-width: min(100%, 360px);
+  flex: 1 1 280px;
+}
+
+.owner-toolbar__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+}
+
+.owner-toolbar__input {
+  padding-left: 42px;
+}
+
+.owner-toolbar__select {
+  min-width: 200px;
+}
+
+.owner-inline-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.service-list__item,
+.customer-list__item {
+  overflow: hidden;
+}
+
+.service-list__item--selected,
+.customer-list__item--selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.18);
+}
+
+.service-list__body,
+.customer-list__item {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-4);
+  border: none;
+  background: transparent;
+}
+
+.service-list__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.service-list__header,
+.customer-list__item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.service-list__subtitle,
+.service-list__description,
+.service-list__footer,
+.customer-list__stats {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.service-list__footer,
+.customer-list__stats {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.service-list__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.owner-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.owner-form-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.customer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.customer-panel__hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.customer-panel__avatar {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.customer-panel__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.customer-panel__stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+}
+
+.customer-panel__stats span {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.customer-panel__tags,
+.customer-panel__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.customer-panel__note {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+}
+
+.customer-import-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.customer-import-card {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--color-border);
+  background: #fcfcfd;
+}
+
+.owner-inline-empty-state {
+  padding: var(--space-5);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+  background: #fffdf7;
+}
+
+.owner-simple-list {
+  padding-left: 18px;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.owner-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.owner-toggle-row input {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 1100px) {
+  .owner-summary-grid,
+  .owner-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .owner-two-column-layout,
+  .owner-two-column-layout--wide {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .owner-summary-grid,
+  .owner-status-grid,
+  .owner-form-grid,
+  .customer-import-grid,
+  .customer-panel__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-bookings-item,
+  .owner-checklist__item,
+  .owner-action-card,
+  .owner-toggle-row,
+  .service-list__header,
+  .customer-list__item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .owner-bookings-item__time {
+    align-items: flex-start;
+  }
+
+  .service-list__actions,
+  .owner-form-actions {
+    justify-content: flex-start;
+  }
+}
