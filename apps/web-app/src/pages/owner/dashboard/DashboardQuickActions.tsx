@@ -1,5 +1,5 @@
 import { Button, SectionCard } from '@slotra/ui';
-import type { QuickAction } from '../mockOwnerData';
+import type { QuickAction } from '@/mocks/owner/dashboard';
 
 interface DashboardQuickActionsProps {
   actions: QuickAction[];

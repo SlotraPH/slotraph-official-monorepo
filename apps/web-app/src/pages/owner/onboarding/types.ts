@@ -1,4 +1,10 @@
-import type { ServiceRecord, TeamMemberRecord } from '../mockOwnerData';
+import type { BusinessHourDraft } from '@/domain/hours/types';
+import type { PaymentPreferencesDraft } from '@/domain/payments/types';
+import type { ServiceRecord } from '@/domain/service/types';
+import type { TeamMemberRecord } from '@/domain/staff/types';
+
+export type { BusinessHourDraft } from '@/domain/hours/types';
+export type { PaymentPreferencesDraft } from '@/domain/payments/types';
 
 export type OnboardingStepId =
   | 'business-info'
@@ -17,23 +23,6 @@ export interface BusinessInfoDraft {
   email: string;
   address: string;
   timezone: string;
-}
-
-export interface BusinessHourDraft {
-  id: string;
-  day: string;
-  isOpen: boolean;
-  openTime: string;
-  closeTime: string;
-}
-
-export interface PaymentPreferencesDraft {
-  collectionMethod: 'manual-transfer' | 'pay-on-site' | 'hybrid';
-  depositType: 'none' | 'flat' | 'percentage';
-  depositValue: string;
-  requireDepositFor: 'all-bookings' | 'high-value-only' | 'manual-review';
-  acceptedMethods: string[];
-  instructions: string;
 }
 
 export interface OnboardingDraft {

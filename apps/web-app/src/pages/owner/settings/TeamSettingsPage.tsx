@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Badge, Button, FormField, SectionCard } from '@slotra/ui';
-import { TEAM_MEMBERS } from '../mockOwnerData';
+import { getOwnerTeamResource } from '@/features/owner/data';
 
 export function TeamSettingsPage() {
+  const resource = getOwnerTeamResource();
+  const teamMembers = resource.status === 'ready' ? resource.data.teamMembers : [];
   const [inviteName, setInviteName] = useState('');
   const [inviteRole, setInviteRole] = useState('');
 
@@ -10,7 +12,7 @@ export function TeamSettingsPage() {
     <div className="owner-settings-stack">
       <SectionCard title="Team roster" description="Staff setup stays local for now, but the structure matches future availability and booking assignment work.">
         <div className="owner-checklist">
-          {TEAM_MEMBERS.map((member) => (
+          {teamMembers.map((member) => (
             <div key={member.id} className="owner-checklist__item">
               <div>
                 <p className="owner-checklist__title">{member.name}</p>

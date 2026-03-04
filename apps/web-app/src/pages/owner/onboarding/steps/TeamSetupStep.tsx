@@ -1,5 +1,5 @@
 import { Badge, Button, FormField, SectionCard } from '@slotra/ui';
-import type { TeamMemberRecord } from '../../mockOwnerData';
+import type { TeamMemberRecord } from '@/domain/staff/types';
 
 interface TeamSetupStepProps {
   team: TeamMemberRecord[];

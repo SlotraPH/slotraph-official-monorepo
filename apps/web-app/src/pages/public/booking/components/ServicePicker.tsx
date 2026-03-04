@@ -1,5 +1,5 @@
 import { Badge } from '@slotra/ui';
-import { formatCurrency, formatDuration } from '../mockData';
+import { formatCurrency, formatDuration } from '@/domain/service/formatters';
 import type { BookingService } from '../types';
 
 interface ServicePickerProps {

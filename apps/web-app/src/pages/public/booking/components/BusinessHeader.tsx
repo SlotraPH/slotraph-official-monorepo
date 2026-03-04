@@ -28,11 +28,11 @@ export function BusinessHeader({ business }: BusinessHeaderProps) {
       </div>
       <div className="booking-business-header__stats" aria-label="Business highlights">
         <div>
-          <strong>{business.rating.toFixed(1)}</strong>
+          <strong>{business.rating?.toFixed(1) ?? '0.0'}</strong>
           <span>Average rating</span>
         </div>
         <div>
-          <strong>{business.reviewCount}+</strong>
+          <strong>{business.reviewCount ?? 0}+</strong>
           <span>Recent reviews</span>
         </div>
       </div>

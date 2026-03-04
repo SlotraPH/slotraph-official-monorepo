@@ -1,5 +1,5 @@
 import { SectionCard } from '@slotra/ui';
-import type { ActivityItem } from '../mockOwnerData';
+import type { ActivityItem } from '@/mocks/owner/dashboard';
 
 interface DashboardActivityFeedProps {
   items: ActivityItem[];

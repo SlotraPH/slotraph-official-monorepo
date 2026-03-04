@@ -1,5 +1,5 @@
 import { FormField, SectionCard, Textarea } from '@slotra/ui';
-import { PAYMENT_METHOD_OPTIONS } from '../mockData';
+import { PAYMENT_METHOD_OPTIONS } from '@/mocks/payments';
 import type { PaymentPreferencesDraft } from '../types';
 
 interface PaymentPreferencesStepProps {

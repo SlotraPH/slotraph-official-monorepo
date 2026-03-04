@@ -1,64 +1,62 @@
-import { OWNER_SERVICES, TEAM_MEMBERS, type ServiceRecord, type TeamMemberRecord } from '../mockOwnerData';
+import { getDefaultOwnerOnboardingSeed } from '@/features/owner/data';
+import { PAYMENT_METHOD_OPTIONS, TIMEZONE_OPTIONS } from '@/mocks/payments';
 import { sanitizeBookingSlug } from '../settings/brandDetailsShared';
-import type { BusinessHourDraft, OnboardingDraft } from './types';
-
-const DEFAULT_HOURS: BusinessHourDraft[] = [
-  { id: 'mon', day: 'Monday', isOpen: false, openTime: '09:00', closeTime: '18:00' },
-  { id: 'tue', day: 'Tuesday', isOpen: true, openTime: '10:00', closeTime: '19:00' },
-  { id: 'wed', day: 'Wednesday', isOpen: true, openTime: '10:00', closeTime: '19:00' },
-  { id: 'thu', day: 'Thursday', isOpen: true, openTime: '10:00', closeTime: '19:00' },
-  { id: 'fri', day: 'Friday', isOpen: true, openTime: '10:00', closeTime: '20:00' },
-  { id: 'sat', day: 'Saturday', isOpen: true, openTime: '10:00', closeTime: '20:00' },
-  { id: 'sun', day: 'Sunday', isOpen: true, openTime: '10:00', closeTime: '18:00' },
-];
-
-function cloneServices() {
-  return OWNER_SERVICES.map<ServiceRecord>((service) => ({
-    ...service,
-  }));
-}
-
-function cloneTeam() {
-  return TEAM_MEMBERS.map<TeamMemberRecord>((member) => ({
-    ...member,
-    services: [...member.services],
-  }));
-}
-
-function cloneHours() {
-  return DEFAULT_HOURS.map<BusinessHourDraft>((slot) => ({
-    ...slot,
-  }));
-}
+import type { OnboardingDraft } from './types';
 
 export function createDefaultOnboardingDraft(): OnboardingDraft {
-  const businessName = "Dheyn's Barbershop";
+  const resource = getDefaultOwnerOnboardingSeed();
+
+  if (resource.status !== 'ready') {
+    return {
+      businessInfo: {
+        name: '',
+        industry: '',
+        about: '',
+        phone: '',
+        email: '',
+        address: '',
+        timezone: 'Asia/Manila',
+      },
+      bookingSlug: '',
+      services: [],
+      team: [],
+      businessHours: [],
+      paymentPreferences: {
+        collectionMethod: 'hybrid',
+        depositType: 'none',
+        depositValue: '0',
+        requireDepositFor: 'manual-review',
+        acceptedMethods: [],
+        instructions: '',
+      },
+    };
+  }
+
+  const { business, businessHours, paymentSettings, services, teamMembers } = resource.data;
 
   return {
     businessInfo: {
-      name: businessName,
-      industry: 'Hair & Barbering',
-      about: 'Premium grooming experience in the heart of Manila. Walk-ins welcome, appointments preferred.',
-      phone: '+63 917 555 1200',
-      email: 'hello@dheynsbarbershop.com',
-      address: 'Poblacion, Makati City',
-      timezone: 'Asia/Manila',
+      name: business.name,
+      industry: business.industry,
+      about: business.description,
+      phone: business.phone,
+      email: business.email,
+      address: business.address,
+      timezone: business.timezone,
     },
-    bookingSlug: sanitizeBookingSlug(businessName),
-    services: cloneServices(),
-    team: cloneTeam(),
-    businessHours: cloneHours(),
+    bookingSlug: sanitizeBookingSlug(business.bookingSlug || business.name),
+    services,
+    team: teamMembers,
+    businessHours,
     paymentPreferences: {
-      collectionMethod: 'hybrid',
-      depositType: 'percentage',
-      depositValue: '30',
-      requireDepositFor: 'high-value-only',
-      acceptedMethods: ['GCash', 'Maya', 'Bank transfer'],
-      instructions: 'Ask customers to send proof of payment before confirming high-ticket bookings.',
+      collectionMethod: paymentSettings.collectionMethod,
+      depositType: paymentSettings.depositType,
+      depositValue: paymentSettings.depositValue,
+      requireDepositFor: paymentSettings.requireDepositFor,
+      acceptedMethods: paymentSettings.acceptedMethods,
+      instructions: paymentSettings.instructions,
     },
   };
 }
 
-export const PAYMENT_METHOD_OPTIONS = ['GCash', 'Maya', 'Bank transfer', 'Cash'];
-
-export const TIMEZONE_OPTIONS = ['Asia/Manila', 'Asia/Singapore', 'Asia/Hong_Kong'];
+export { PAYMENT_METHOD_OPTIONS, TIMEZONE_OPTIONS };

@@ -1,21 +1,12 @@
 import { Badge, Button, EmptyState, SectionCard } from '@slotra/ui';
-import type { ServiceRecord } from '../mockOwnerData';
+import { formatCurrency, formatDuration } from '@/domain/service/formatters';
+import type { ServiceRecord } from '@/domain/service/types';
 
 interface ServiceListProps {
   items: ServiceRecord[];
   selectedId: string | null;
   onSelect: (service: ServiceRecord) => void;
   onArchiveToggle: (serviceId: string) => void;
-}
-
-function formatPrice(price: number) {
-  return `PHP ${price.toLocaleString()}`;
-}
-
-function formatDuration(durationMinutes: number) {
-  return durationMinutes >= 60
-    ? `${durationMinutes / 60} hr${durationMinutes >= 120 ? 's' : ''}`
-    : `${durationMinutes} min`;
 }
 
 export function ServiceList({
@@ -62,7 +53,7 @@ export function ServiceList({
                 <p className="service-list__description">{service.description}</p>
 
                 <div className="service-list__footer">
-                  <span>{formatPrice(service.price)}</span>
+                  <span>{formatCurrency(service.price)}</span>
                   <span>{service.bookings} bookings</span>
                   <span>{service.visibility}</span>
                 </div>

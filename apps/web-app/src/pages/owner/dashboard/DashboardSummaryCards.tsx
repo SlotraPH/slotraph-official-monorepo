@@ -1,5 +1,5 @@
 import { Badge, Card } from '@slotra/ui';
-import type { DashboardSummary } from '../mockOwnerData';
+import type { DashboardSummary } from '@/mocks/owner/dashboard';
 
 interface DashboardSummaryCardsProps {
   items: DashboardSummary[];

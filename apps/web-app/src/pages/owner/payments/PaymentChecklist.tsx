@@ -1,5 +1,5 @@
 import { Badge, SectionCard } from '@slotra/ui';
-import type { PaymentChecklistItem } from '../mockOwnerData';
+import type { PaymentChecklistItem } from '@/domain/payments/types';
 
 interface PaymentChecklistProps {
   items: PaymentChecklistItem[];

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Badge, PageHeader } from '@slotra/ui';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
+import type { ServiceRecord } from '@/domain/service/types';
+import { getOwnerServicesResource } from '@/features/owner/data';
 import { ServiceEditor, type ServiceDraft } from './services/ServiceEditor';
 import { ServiceList } from './services/ServiceList';
 import { ServiceToolbar } from './services/ServiceToolbar';
-import { OWNER_SERVICES, type ServiceRecord } from './mockOwnerData';
 
 const EMPTY_DRAFT: ServiceDraft = {
   name: '',
@@ -16,12 +18,23 @@ const EMPTY_DRAFT: ServiceDraft = {
 };
 
 export function ServicesPage() {
-  const [services, setServices] = useState(OWNER_SERVICES);
+  const resource = getOwnerServicesResource();
+  const [services, setServices] = useState(() => (resource.status === 'ready' ? resource.data.services : []));
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('All');
-  const [selectedId, setSelectedId] = useState<string | null>(OWNER_SERVICES[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => (resource.status === 'ready' ? resource.data.services[0]?.id ?? null : null)
+  );
   const [draft, setDraft] = useState<ServiceDraft>(EMPTY_DRAFT);
   const [mode, setMode] = useState<'create' | 'edit'>('edit');
+
+  if (resource.status === 'loading') {
+    return <RouteStateCard title="Loading services" description="Preparing the owner service catalog." variant="loading" />;
+  }
+
+  if (resource.status === 'error') {
+    return <RouteStateCard title="Services unavailable" description={resource.message} variant="error" />;
+  }
 
   const filtered = services.filter((service) =>
     (status === 'All' || service.status === status)
@@ -77,6 +90,9 @@ export function ServicesPage() {
         status: draft.status,
         description: draft.description.trim() || 'New service draft.',
         bookings: 0,
+        staffSelectionMode: 'required',
+        staffIds: [],
+        leadNote: 'New owner-created service draft.',
       };
 
       setServices((current) => [newService, ...current]);

@@ -1,6 +1,6 @@
 import { FormField, SectionCard, Select, Textarea } from '@slotra/ui';
+import { TIMEZONE_OPTIONS } from '@/mocks/payments';
 import { BRAND_INDUSTRIES, MAX_BRAND_ABOUT_LENGTH } from '../../settings/brandDetailsShared';
-import { TIMEZONE_OPTIONS } from '../mockData';
 import type { BusinessInfoDraft } from '../types';
 
 interface BusinessInfoStepProps {

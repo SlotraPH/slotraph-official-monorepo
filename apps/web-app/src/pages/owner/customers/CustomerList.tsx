@@ -1,5 +1,5 @@
 import { Badge, EmptyState, SectionCard } from '@slotra/ui';
-import type { CustomerRecord } from '../mockOwnerData';
+import type { CustomerRecord } from '@/domain/customer/types';
 
 interface CustomerListProps {
   items: CustomerRecord[];

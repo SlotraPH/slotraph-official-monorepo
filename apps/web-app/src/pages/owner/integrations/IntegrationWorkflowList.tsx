@@ -1,5 +1,5 @@
 import { Badge, SectionCard } from '@slotra/ui';
-import type { IntegrationWorkflow } from '../mockOwnerData';
+import type { IntegrationWorkflow } from '@/mocks/owner/integrations';
 
 interface IntegrationWorkflowListProps {
   items: IntegrationWorkflow[];

@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Button, SectionCard, Select } from '@slotra/ui';
+import { getOwnerPaymentsResource } from '@/features/owner/data';
 
 export function BookingPreferencesPage() {
-  const [leadTime, setLeadTime] = useState('2 hours');
-  const [cancellationWindow, setCancellationWindow] = useState('12 hours');
-  const [bookingApproval, setBookingApproval] = useState('Manual review');
+  const resource = getOwnerPaymentsResource();
+  const preferences = resource.status === 'ready' ? resource.data.bookingPreferences : null;
+  const [leadTime, setLeadTime] = useState(() => preferences?.leadTime ?? '2 hours');
+  const [cancellationWindow, setCancellationWindow] = useState(() => preferences?.cancellationWindow ?? '12 hours');
+  const [bookingApproval, setBookingApproval] = useState(() => preferences?.bookingApproval ?? 'Manual review');
 
   return (
     <SectionCard title="Booking preferences" description="Operational rules for how bookings should be accepted before backend persistence is added.">

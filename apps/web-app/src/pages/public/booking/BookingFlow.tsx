@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Badge, Button, Card, SectionCard } from '@slotra/ui';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { formatCurrency, formatDuration } from '@/domain/service/formatters';
+import { createInitialBookingDraft, getPublicBookingResource } from '@/features/public-booking/data';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatSelectedDate, getDateOptions, getSlotsForDate } from './availability';
 import { saveBookingConfirmation } from './bookingSession';
@@ -11,15 +14,6 @@ import { ReviewPanel } from './components/ReviewPanel';
 import { ServicePicker } from './components/ServicePicker';
 import { StaffPicker } from './components/StaffPicker';
 import { TimeSlotPicker } from './components/TimeSlotPicker';
-import {
-  bookingBusiness,
-  bookingServices,
-  bookingServicesById,
-  bookingStaff,
-  bookingStaffById,
-  formatCurrency,
-  formatDuration,
-} from './mockData';
 import type {
   BookingConfirmationRecord,
   BookingCustomerDetails,
@@ -30,22 +24,6 @@ import type {
   BookingStaffMember,
   BookingStepId,
 } from './types';
-
-const INITIAL_CUSTOMER: BookingCustomerDetails = {
-  fullName: '',
-  email: '',
-  phone: '',
-  notes: '',
-};
-
-const INITIAL_DRAFT: BookingDraft = {
-  businessId: bookingBusiness.id,
-  serviceId: null,
-  staffId: null,
-  date: null,
-  slotId: null,
-  customer: INITIAL_CUSTOMER,
-};
 
 const STAGE_TITLES: Record<BookingStepId, string> = {
   service: 'Select a service',
@@ -96,11 +74,39 @@ function createReference() {
 
 export function BookingFlow() {
   const navigate = useNavigate();
-  const [draft, setDraft] = useState(INITIAL_DRAFT);
+  const resource = getPublicBookingResource();
+  const [draft, setDraft] = useState<BookingDraft>(() =>
+    resource.status === 'ready' ? createInitialBookingDraft(resource.data.business.id) : createInitialBookingDraft('')
+  );
   const [currentStep, setCurrentStep] = useState<BookingStepId>('service');
   const [customerErrors, setCustomerErrors] = useState<BookingCustomerErrors>({});
   const [stepError, setStepError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (resource.status === 'loading') {
+    return <RouteStateCard title="Loading booking flow" description="Preparing the public business profile, services, and staff." variant="loading" />;
+  }
+
+  if (resource.status === 'error') {
+    return <RouteStateCard title="Booking flow unavailable" description={resource.message} variant="error" />;
+  }
+
+  const {
+    bookingEnabled,
+    business: bookingBusiness,
+    services: bookingServices,
+    servicesById: bookingServicesById,
+    staff: bookingStaff,
+    staffById: bookingStaffById,
+  } = resource.data;
+
+  if (!bookingEnabled) {
+    return <RouteStateCard title="Booking not enabled" description="This public route is still guarded until the booking experience is ready to open." variant="empty" />;
+  }
+
+  if (bookingServices.length === 0) {
+    return <RouteStateCard title="No bookable services yet" description="The public booking route is connected, but the service catalog is currently empty." variant="empty" />;
+  }
 
   const selectedService = draft.serviceId ? bookingServicesById[draft.serviceId] ?? null : null;
   const staffRequired = selectedService?.staffSelectionMode === 'required';

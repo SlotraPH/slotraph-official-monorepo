@@ -1,5 +1,5 @@
 import { Button, FormField, SectionCard, Select, Textarea } from '@slotra/ui';
-import type { ServiceRecord } from '../mockOwnerData';
+import type { ServiceRecord } from '@/domain/service/types';
 
 export interface ServiceDraft {
   name: string;

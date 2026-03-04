@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Badge, Button, Card, PageHeader } from '@slotra/ui';
-import type { ServiceRecord, TeamMemberRecord } from '../mockOwnerData';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
+import type { ServiceRecord } from '@/domain/service/types';
+import type { TeamMemberRecord } from '@/domain/staff/types';
+import { getDefaultOwnerOnboardingSeed } from '@/features/owner/data';
 import { sanitizeBookingSlug } from '../settings/brandDetailsShared';
 import { createDefaultOnboardingDraft } from './mockData';
 import { loadOnboardingSession, saveOnboardingSession } from './session';
@@ -25,6 +28,7 @@ const STEP_ORDER: Array<{ id: OnboardingStepId; title: string; description: stri
 ];
 
 export function OnboardingFlow() {
+  const resource = getDefaultOwnerOnboardingSeed();
   const [draft, setDraft] = useState<OnboardingDraft>(createDefaultOnboardingDraft);
   const [currentStepId, setCurrentStepId] = useState<OnboardingStepId>('business-info');
   const [completedStepIds, setCompletedStepIds] = useState<OnboardingStepId[]>([]);
@@ -56,6 +60,14 @@ export function OnboardingFlow() {
       completedStepIds,
     });
   }, [completedStepIds, currentStepId, draft, hydrated]);
+
+  if (resource.status === 'loading') {
+    return <RouteStateCard title="Loading onboarding" description="Preparing business, service, hours, and payment seed data." variant="loading" />;
+  }
+
+  if (resource.status === 'error') {
+    return <RouteStateCard title="Onboarding unavailable" description={resource.message} variant="error" />;
+  }
 
   const currentStepIndex = STEP_ORDER.findIndex((step) => step.id === currentStepId);
   const safeCurrentStepIndex = currentStepIndex >= 0 ? currentStepIndex : 0;
@@ -166,6 +178,9 @@ export function OnboardingFlow() {
           status: 'Active',
           bookings: 0,
           description: '',
+          staffSelectionMode: 'required',
+          staffIds: [],
+          leadNote: '',
         },
       ],
     }));
@@ -204,6 +219,8 @@ export function OnboardingFlow() {
           id: `tm-${current.team.length + 1}`,
           name: '',
           role: '',
+          bio: '',
+          badge: '',
           services: [],
           schedule: '',
           status: 'Invite pending',

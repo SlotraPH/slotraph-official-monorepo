@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, FormField, Select, Textarea } from '@slotra/ui';
+import { getOwnerBusinessSettingsResource } from '@/features/owner/data';
 import {
     BRAND_INDUSTRIES,
     getBusinessInitials,
@@ -8,12 +9,12 @@ import {
 } from './brandDetailsShared';
 
 export function BrandDetailsPage() {
-    const [name, setName] = useState("Dheyn's Barbershop");
-    const [slug, setSlug] = useState('dheyns-barbershop');
-    const [industry, setIndustry] = useState('Hair & Barbering');
-    const [about, setAbout] = useState(
-        'Premium grooming experience in the heart of Manila. Walk-ins welcome, appointments preferred.'
-    );
+    const resource = getOwnerBusinessSettingsResource();
+    const business = resource.status === 'ready' ? resource.data.business : null;
+    const [name, setName] = useState(() => business?.name ?? '');
+    const [slug, setSlug] = useState(() => business?.bookingSlug ?? '');
+    const [industry, setIndustry] = useState(() => business?.industry ?? '');
+    const [about, setAbout] = useState(() => business?.description ?? '');
     const [saved, setSaved] = useState(false);
 
     function handleSave(event: React.FormEvent) {

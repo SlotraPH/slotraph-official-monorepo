@@ -1,5 +1,5 @@
 import { Badge, Button, SectionCard } from '@slotra/ui';
-import type { CustomerRecord } from '../mockOwnerData';
+import type { CustomerRecord } from '@/domain/customer/types';
 
 interface CustomerDetailPanelProps {
   customer: CustomerRecord | null;

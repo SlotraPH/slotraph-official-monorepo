@@ -1,23 +1,37 @@
 import { useState } from 'react';
 import { Badge, Button, PageHeader } from '@slotra/ui';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { getOwnerCustomersResource } from '@/features/owner/data';
 import { CustomerDetailPanel } from './customers/CustomerDetailPanel';
 import { CustomerImportCallout } from './customers/CustomerImportCallout';
 import { CustomerList } from './customers/CustomerList';
 import { CustomerToolbar } from './customers/CustomerToolbar';
-import { OWNER_CUSTOMERS } from './mockOwnerData';
 
 export function CustomersPage() {
+  const resource = getOwnerCustomersResource();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('All');
-  const [selectedId, setSelectedId] = useState<string | null>(OWNER_CUSTOMERS[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => (resource.status === 'ready' ? resource.data.customers[0]?.id ?? null : null)
+  );
 
-  const filtered = OWNER_CUSTOMERS.filter((customer) => {
+  if (resource.status === 'loading') {
+    return <RouteStateCard title="Loading customers" description="Preparing owner customer records." variant="loading" />;
+  }
+
+  if (resource.status === 'error') {
+    return <RouteStateCard title="Customers unavailable" description={resource.message} variant="error" />;
+  }
+
+  const { customers } = resource.data;
+
+  const filtered = customers.filter((customer) => {
     const haystack = `${customer.name} ${customer.email} ${customer.tags.join(' ')}`.toLowerCase();
     return (status === 'All' || customer.status === status) && haystack.includes(query.toLowerCase());
   });
 
   const selectedCustomer = filtered.find((customer) => customer.id === selectedId)
-    ?? OWNER_CUSTOMERS.find((customer) => customer.id === selectedId)
+    ?? customers.find((customer) => customer.id === selectedId)
     ?? null;
 
   return (
@@ -28,9 +42,9 @@ export function CustomersPage() {
         actions={<Button variant="primary" size="sm">Add customer</Button>}
       />
       <div className="owner-inline-stats">
-        <Badge variant="success">{OWNER_CUSTOMERS.filter((customer) => customer.status === 'VIP').length} VIP</Badge>
-        <Badge variant="default">{OWNER_CUSTOMERS.filter((customer) => customer.status === 'New').length} new</Badge>
-        <Badge variant="default">{OWNER_CUSTOMERS.filter((customer) => customer.status === 'Needs follow-up').length} follow-up</Badge>
+        <Badge variant="success">{customers.filter((customer) => customer.status === 'VIP').length} VIP</Badge>
+        <Badge variant="default">{customers.filter((customer) => customer.status === 'New').length} new</Badge>
+        <Badge variant="default">{customers.filter((customer) => customer.status === 'Needs follow-up').length} follow-up</Badge>
       </div>
       <CustomerToolbar
         query={query}

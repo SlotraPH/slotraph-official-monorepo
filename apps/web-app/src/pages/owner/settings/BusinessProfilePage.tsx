@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { Button, FormField, SectionCard, Select, Textarea } from '@slotra/ui';
+import { getOwnerBusinessSettingsResource } from '@/features/owner/data';
 
 export function BusinessProfilePage() {
-  const [phone, setPhone] = useState('+63 917 555 1200');
-  const [email, setEmail] = useState('hello@dheynsbarbershop.com');
-  const [address, setAddress] = useState('Poblacion, Makati City');
-  const [timezone, setTimezone] = useState('Asia/Manila');
-  const [businessNotes, setBusinessNotes] = useState('Street parking is limited after 5 PM.');
+  const resource = getOwnerBusinessSettingsResource();
+  const business = resource.status === 'ready' ? resource.data.business : null;
+  const timezoneOptions = resource.status === 'ready' ? resource.data.timezoneOptions : ['Asia/Manila'];
+  const [phone, setPhone] = useState(() => business?.phone ?? '');
+  const [email, setEmail] = useState(() => business?.email ?? '');
+  const [address, setAddress] = useState(() => business?.address ?? '');
+  const [timezone, setTimezone] = useState(() => business?.timezone ?? 'Asia/Manila');
+  const [businessNotes, setBusinessNotes] = useState(() => business?.arrivalNotes ?? '');
 
   return (
     <SectionCard title="Business profile" description="Core contact and location details used across owner operations.">
@@ -21,8 +25,11 @@ export function BusinessProfilePage() {
           <input id="business-address" className="input" value={address} onChange={(event) => setAddress(event.target.value)} />
         </FormField>
         <Select id="business-timezone" label="Timezone" value={timezone} onChange={(event) => setTimezone(event.target.value)}>
-          <option value="Asia/Manila">Asia/Manila</option>
-          <option value="Asia/Singapore">Asia/Singapore</option>
+          {timezoneOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
         </Select>
       </div>
 
