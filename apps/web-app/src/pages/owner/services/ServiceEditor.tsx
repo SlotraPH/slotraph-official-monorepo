@@ -29,7 +29,7 @@ export function ServiceEditor({
   return (
     <SectionCard
       title={mode === 'create' ? 'Create service' : 'Edit service'}
-      description="These fields stay local for now, but match the shape needed for backend CRUD later."
+      description="Keep the catalog accurate for MVP testing. Changes stay inside the current web session."
     >
       <div className="owner-form-grid">
         <FormField label="Service name" htmlFor="service-name">

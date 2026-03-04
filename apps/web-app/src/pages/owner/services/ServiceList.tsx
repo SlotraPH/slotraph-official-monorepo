@@ -42,7 +42,7 @@ export function ServiceList({
                   <div>
                     <p className="service-list__title">{service.name}</p>
                     <p className="service-list__subtitle">
-                      {service.category} · {formatDuration(service.durationMinutes)}
+                      {service.category} | {formatDuration(service.durationMinutes)}
                     </p>
                   </div>
                   <Badge variant={service.status === 'Active' ? 'success' : 'default'}>

@@ -159,7 +159,7 @@ export function ServicesPage() {
           </>
         )}
         subtitle="Manage the services customers can book."
-        actions={<Badge variant="default">Local mock state only</Badge>}
+        actions={<Badge variant="default">Session-only changes</Badge>}
       />
       <div className="owner-inline-stats">
         <Badge variant="success">{activeCount} active</Badge>

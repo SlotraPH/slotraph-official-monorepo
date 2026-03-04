@@ -16,8 +16,8 @@ export function ConfirmationSummary({ confirmation }: ConfirmationSummaryProps) 
         </div>
         <h1>Booking request received</h1>
         <p>
-          {confirmation.businessName} has your selected slot saved in this mock booking flow. A
-          staff confirmation step can plug into backend messaging later.
+          {confirmation.businessName} has your request recorded. The team can now confirm the slot
+          and follow up using the contact details you provided.
         </p>
       </Card>
 

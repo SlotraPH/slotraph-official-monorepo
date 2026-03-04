@@ -21,7 +21,7 @@ export function StaffPicker({
       <EmptyState
         align="left"
         title="No staff available for this service"
-        description="Try another service. The current mock catalog has no matching team members."
+        description="Try another service or continue later after the team updates who can deliver this service."
       />
     );
   }

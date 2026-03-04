@@ -67,8 +67,8 @@ export function ReviewPanel({
       <div className="booking-review__policy">
         <p className="booking-review__eyebrow">Before you submit</p>
         <p>
-          This mock flow reserves the selection locally and routes to confirmation. Payments and
-          backend availability sync are deferred to later phases.
+          This preview records your request and moves to confirmation. Final appointment approval
+          still happens after the business reviews availability and payment instructions.
         </p>
       </div>
 

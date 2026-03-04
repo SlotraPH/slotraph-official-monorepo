@@ -15,7 +15,7 @@ export function BookingConfirmation() {
           <div className="booking-confirmation booking-confirmation--empty">
             <EmptyState
               title="No recent booking confirmation found"
-              description="Start from the booking flow to create a local confirmation state for this session."
+              description="Start from the booking flow to create a new confirmation for this browser session."
               actions={(
                 <Link className="button-link" to="/book">
                   Go to booking

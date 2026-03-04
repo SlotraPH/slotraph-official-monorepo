@@ -1,5 +1,6 @@
 import { Badge, Button, SectionCard } from '@slotra/ui';
 import type { CustomerRecord } from '@/domain/customer/types';
+import { Link } from 'react-router-dom';
 
 interface CustomerDetailPanelProps {
   customer: CustomerRecord | null;
@@ -57,8 +58,12 @@ export function CustomerDetailPanel({ customer }: CustomerDetailPanelProps) {
         </div>
 
         <div className="customer-panel__actions">
-          <Button size="sm" type="button">Create booking</Button>
-          <Button variant="outline" size="sm" type="button">Send reminder</Button>
+          <Link to="/book">
+            <Button size="sm" type="button">Create booking</Button>
+          </Link>
+          <Link to="/owner/calendar">
+            <Button variant="outline" size="sm" type="button">Review schedule</Button>
+          </Link>
         </div>
       </div>
     </SectionCard>

@@ -30,7 +30,7 @@ export function OnboardingFlow() {
   const [currentStepId, setCurrentStepId] = useState<OnboardingStepId>('business-info');
   const [completedStepIds, setCompletedStepIds] = useState<OnboardingStepId[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saveMessage, setSaveMessage] = useState('Autosaved in this session');
+  const [saveMessage, setSaveMessage] = useState('Autosaved in this browser session');
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function OnboardingFlow() {
       setDraft(persisted.draft);
       setCurrentStepId(persisted.currentStepId);
       setCompletedStepIds(persisted.completedStepIds);
-      setSaveMessage('Resumed from this session');
+      setSaveMessage('Resumed from this browser session');
     }
 
     setHydrated(true);
@@ -78,7 +78,7 @@ export function OnboardingFlow() {
       currentStepId,
       completedStepIds,
     });
-    setSaveMessage('Saved. You can continue later in this session');
+    setSaveMessage('Saved. You can continue later in this browser session');
   }
 
   function markStepComplete(stepId: OnboardingStepId) {
@@ -106,7 +106,7 @@ export function OnboardingFlow() {
 
     if (nextStep) {
       setCurrentStepId(nextStep.id);
-      setSaveMessage('Step saved in this session');
+      setSaveMessage('Step saved in this browser session');
       trackWebEvent('owner_onboarding_step_completed', {
         stepId: currentStepId,
         nextStepId: nextStep.id,
@@ -141,7 +141,7 @@ export function OnboardingFlow() {
         bookingSlug: shouldRefreshSlug ? sanitizeBookingSlug(String(value)) : current.bookingSlug,
       };
     });
-    setSaveMessage('Autosaved in this session');
+    setSaveMessage('Autosaved in this browser session');
   }
 
   function updateService<K extends keyof ServiceRecord>(serviceId: string, field: K, value: ServiceRecord[K]) {
@@ -156,7 +156,7 @@ export function OnboardingFlow() {
           : service
       ),
     }));
-    setSaveMessage('Autosaved in this session');
+    setSaveMessage('Autosaved in this browser session');
   }
 
   function addService() {
@@ -180,7 +180,7 @@ export function OnboardingFlow() {
         },
       ],
     }));
-    setSaveMessage('Autosaved in this session');
+    setSaveMessage('Autosaved in this browser session');
   }
 
   function removeService(serviceId: string) {
@@ -188,7 +188,7 @@ export function OnboardingFlow() {
       ...current,
       services: current.services.filter((service) => service.id !== serviceId),
     }));
-    setSaveMessage('Autosaved in this session');
+    setSaveMessage('Autosaved in this browser session');
   }
 
   function updateTeamMember<K extends keyof TeamMemberRecord>(memberId: string, field: K, value: TeamMemberRecord[K]) {
@@ -203,7 +203,7 @@ export function OnboardingFlow() {
           : member
       ),
     }));
-    setSaveMessage('Autosaved in this session');
+    setSaveMessage('Autosaved in this browser session');
   }
 
   function addTeamMember() {
@@ -223,7 +223,7 @@ export function OnboardingFlow() {
         },
       ],
     }));
-    setSaveMessage('Autosaved in this session');
+    setSaveMessage('Autosaved in this browser session');
   }
 
   function removeTeamMember(memberId: string) {
@@ -231,7 +231,7 @@ export function OnboardingFlow() {
       ...current,
       team: current.team.filter((member) => member.id !== memberId),
     }));
-    setSaveMessage('Autosaved in this session');
+    setSaveMessage('Autosaved in this browser session');
   }
 
   function updateBusinessHours(hourId: string, nextValue: Partial<OnboardingDraft['businessHours'][number]>) {
@@ -246,7 +246,7 @@ export function OnboardingFlow() {
           : slot
       ),
     }));
-    setSaveMessage('Autosaved in this session');
+    setSaveMessage('Autosaved in this browser session');
   }
 
   function updatePaymentField<K extends keyof OnboardingDraft['paymentPreferences']>(
@@ -260,7 +260,7 @@ export function OnboardingFlow() {
         [field]: value,
       },
     }));
-    setSaveMessage('Autosaved in this session');
+    setSaveMessage('Autosaved in this browser session');
   }
 
   function renderCurrentStep() {
@@ -286,7 +286,7 @@ export function OnboardingFlow() {
                 ...current,
                 bookingSlug: sanitizeBookingSlug(nextSlug),
               }));
-              setSaveMessage('Autosaved in this session');
+              setSaveMessage('Autosaved in this browser session');
             }}
           />
         );
@@ -398,7 +398,7 @@ export function OnboardingFlow() {
                 <p className="onboarding-stage-card__eyebrow">{currentStep.title}</p>
                 <h2 className="onboarding-stage-card__title">{currentStep.description}</h2>
               </div>
-              {currentStepId !== 'completion' && <Badge variant="default">Guarded step validation</Badge>}
+              {currentStepId !== 'completion' && <Badge variant="default">Step-by-step setup</Badge>}
             </div>
 
             {renderCurrentStep()}

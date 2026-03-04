@@ -14,20 +14,20 @@ export function CompletionStep({ draft }: CompletionStepProps) {
     <div className="owner-settings-stack">
       <SectionCard
         title="Onboarding complete"
-        description="The owner flow is ready end to end at the UI level. The next step is moving into daily operations and later wiring persistence."
+        description="The core owner setup is complete. Review operations, settings, and the booking preview before broader testing."
       >
         <div className="onboarding-complete-banner">
           <Badge variant="success">Ready for next action</Badge>
           <h2>{draft.businessInfo.name || 'Your business'} is prepared for owner setup.</h2>
           <p>
-            {activeServices} active services, {draft.team.length} team members, and {openDays} open business days are staged in local onboarding state.
+            {activeServices} active services, {draft.team.length} team members, and {openDays} open business days are prepared in this browser session.
           </p>
         </div>
 
         <div className="onboarding-summary-grid">
           <div className="owner-status-card">
-            <span className="owner-status-card__label">Booking link</span>
-            <p>slotra.app/book/{draft.bookingSlug}</p>
+            <span className="owner-status-card__label">Booking preview</span>
+            <p>/book</p>
           </div>
           <div className="owner-status-card">
             <span className="owner-status-card__label">Deposit policy</span>
@@ -43,8 +43,11 @@ export function CompletionStep({ draft }: CompletionStepProps) {
           <Link to="/owner/dashboard">
             <Button type="button">Go to dashboard</Button>
           </Link>
+          <Link to="/book">
+            <Button type="button" variant="outline">Preview booking flow</Button>
+          </Link>
           <Link to="/owner/settings/brand">
-            <Button type="button" variant="outline">Review brand details</Button>
+            <Button type="button" variant="ghost">Review brand details</Button>
           </Link>
         </div>
       </SectionCard>

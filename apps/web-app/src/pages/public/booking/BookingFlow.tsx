@@ -50,10 +50,10 @@ const STAGE_TITLES: Record<BookingStepId, string> = {
 const STAGE_DESCRIPTIONS: Record<BookingStepId, string> = {
   service: 'Start with the service so the booking flow can filter staff and availability.',
   staff: 'Staff selection is only shown when the selected service needs a named specialist.',
-  date: 'Availability is mocked locally for now, but structured to be replaced with API data later.',
+  date: 'Choose from the currently prepared availability for this booking preview.',
   time: 'Unavailable slots stay visible so the current state is honest.',
   details: 'Capture the minimum customer details needed for confirmation follow-up.',
-  review: 'Verify the final selection before creating the local confirmation record.',
+  review: 'Verify the final selection before sending the booking request.',
 };
 
 function createReference() {
@@ -277,12 +277,12 @@ export function BookingFlow() {
       serviceName: selectedService.name,
       serviceDurationLabel: formatDuration(selectedService.durationMinutes),
       servicePriceLabel: formatCurrency(selectedService.price),
-      staffName: selectedStaff?.name ?? 'Next available therapist',
+      staffName: selectedStaff?.name ?? 'Next available staff member',
       dateLabel: formatSelectedDate(draft.date),
       timeLabel: `${selectedSlot.startLabel} to ${selectedSlot.endLabel}`,
       customer: draft.customer,
       followUpNote:
-        'A backend confirmation, reminders, and payment collection flow are intentionally deferred to later phases.',
+        'Staff still confirms the appointment manually after reviewing availability and payment instructions.',
     };
 
     savePublicBookingConfirmation(confirmation);
@@ -306,7 +306,7 @@ export function BookingFlow() {
       value: staffRequired
         ? selectedStaff?.name ?? 'Choose a staff member'
         : selectedService
-          ? 'Next available therapist'
+          ? 'Next available staff member'
           : 'Depends on service',
     },
     {
@@ -337,7 +337,7 @@ export function BookingFlow() {
                   <p className="booking-progress-card__eyebrow">Public booking</p>
                   <h2>Finish the booking in clear stages</h2>
                 </div>
-                <Badge variant="default">Local mock flow</Badge>
+                <Badge variant="default">Guided booking preview</Badge>
               </div>
               <BookingProgress
                 steps={steps}
@@ -446,7 +446,7 @@ export function BookingFlow() {
             <SectionCard
               className="booking-summary-card"
               title="Booking summary"
-              description="Selections stay local but follow a clean draft structure for later API work."
+              description="Track the current booking request as the customer moves through each stage."
             >
               <div className="booking-summary-list">
                 {summaryItems.map((item) => (

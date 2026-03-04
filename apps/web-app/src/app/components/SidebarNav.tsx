@@ -1,6 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
-// ── Icons (inline SVG, no icon-lib dependency) ──────────────────────
+// Icons stay local to avoid pulling another dependency into the owner shell.
 function CalendarIcon() {
   return (
     <svg className="sidebar__nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -9,6 +9,7 @@ function CalendarIcon() {
     </svg>
   );
 }
+
 function ServicesIcon() {
   return (
     <svg className="sidebar__nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -16,6 +17,7 @@ function ServicesIcon() {
     </svg>
   );
 }
+
 function CustomersIcon() {
   return (
     <svg className="sidebar__nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -25,6 +27,7 @@ function CustomersIcon() {
     </svg>
   );
 }
+
 function PaymentsIcon() {
   return (
     <svg className="sidebar__nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -34,6 +37,7 @@ function PaymentsIcon() {
     </svg>
   );
 }
+
 function IntegrationsIcon() {
   return (
     <svg className="sidebar__nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -44,6 +48,7 @@ function IntegrationsIcon() {
     </svg>
   );
 }
+
 function SettingsIcon() {
   return (
     <svg className="sidebar__nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -55,6 +60,7 @@ function SettingsIcon() {
     </svg>
   );
 }
+
 function GettingStartedIcon() {
   return (
     <svg className="sidebar__nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -62,6 +68,7 @@ function GettingStartedIcon() {
     </svg>
   );
 }
+
 function HelpIcon() {
   return (
     <svg className="sidebar__nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -71,6 +78,7 @@ function HelpIcon() {
     </svg>
   );
 }
+
 function ShareIcon() {
   return (
     <svg
@@ -84,6 +92,7 @@ function ShareIcon() {
     </svg>
   );
 }
+
 function StarIcon() {
   return (
     <svg
@@ -96,7 +105,6 @@ function StarIcon() {
   );
 }
 
-// ── Nav items config ────────────────────────────────────────────────
 const mainNavItems = [
   { label: 'Calendar', to: '/owner/calendar', Icon: CalendarIcon },
   { label: 'Services', to: '/owner/services', Icon: ServicesIcon },
@@ -106,18 +114,15 @@ const mainNavItems = [
   { label: 'Settings', to: '/owner/settings', Icon: SettingsIcon },
 ];
 
-// ── Component ───────────────────────────────────────────────────────
 export function SidebarNav() {
   return (
     <aside className="owner-shell__sidebar">
       <div className="sidebar">
-        {/* Logo */}
         <div className="sidebar__logo">
           <div className="sidebar__logo-mark">S</div>
           <span className="sidebar__logo-name">Slotra</span>
         </div>
 
-        {/* Main Nav */}
         <nav aria-label="Owner navigation" className="sidebar__nav">
           <ul className="sidebar__nav-list">
             {mainNavItems.map(({ label, to, Icon }) => (
@@ -136,37 +141,33 @@ export function SidebarNav() {
           </ul>
         </nav>
 
-        {/* Share link */}
         <div className="sidebar__share-link">
-          <button className="sidebar__share-btn" type="button">
-            Share your Booking Page link
+          <Link className="sidebar__share-btn" to="/book">
+            Open your booking page preview
             <ShareIcon />
-          </button>
+          </Link>
         </div>
 
-        {/* Get Pro Card */}
         <div className="sidebar__pro-card">
-          <p className="sidebar__pro-card-title">Unlock next-level booking</p>
-          <button className="sidebar__pro-btn" type="button">
+          <p className="sidebar__pro-card-title">Finish your core setup first</p>
+          <Link className="sidebar__pro-btn" to="/owner/onboarding">
             <StarIcon />
-            Get Pro
-          </button>
-          <a href="#" className="sidebar__pro-link">Learn more</a>
+            Review onboarding
+          </Link>
+          <Link className="sidebar__pro-link" to="/owner/settings/booking">Review booking settings</Link>
         </div>
 
-        {/* Utility links */}
         <div className="sidebar__bottom">
-          <div className="sidebar__util-item">
+          <Link className="sidebar__util-item" to="/owner/onboarding">
             <GettingStartedIcon />
             Getting started
-          </div>
-          <div className="sidebar__util-item">
+          </Link>
+          <Link className="sidebar__util-item" to="/owner/settings">
             <HelpIcon />
             Help &amp; Support
-          </div>
+          </Link>
         </div>
 
-        {/* User profile row */}
         <div className="sidebar__user">
           <div className="sidebar__avatar">
             D

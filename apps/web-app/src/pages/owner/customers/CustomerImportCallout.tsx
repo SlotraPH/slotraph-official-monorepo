@@ -4,8 +4,8 @@ export function CustomerImportCallout() {
   return (
     <SectionCard
       title="Import options"
-      description="These are still mock affordances for MVP planning and are not connected to live providers yet."
-      actions={<Badge variant="warning">Mock only</Badge>}
+      description="Imports are intentionally deferred until authentication and sync rules are in place."
+      actions={<Badge variant="warning">Planned later</Badge>}
     >
       <div className="customer-import-grid">
         <div className="customer-import-card">

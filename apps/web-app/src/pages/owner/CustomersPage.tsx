@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Badge, Button, PageHeader } from '@slotra/ui';
+import { Badge, PageHeader } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { getOwnerCustomersResource } from '@/features/owner/data';
+import { Link } from 'react-router-dom';
 import { CustomerDetailPanel } from './customers/CustomerDetailPanel';
 import { CustomerImportCallout } from './customers/CustomerImportCallout';
 import { CustomerList } from './customers/CustomerList';
@@ -39,7 +40,7 @@ export function CustomersPage() {
       <PageHeader
         title="Customers"
         subtitle="View and manage your customer base."
-        actions={<Button variant="primary" size="sm">Add customer</Button>}
+        actions={<Link className="button-link" to="/book">Open booking form</Link>}
       />
       <div className="owner-inline-stats">
         <Badge variant="success">{customers.filter((customer) => customer.status === 'VIP').length} VIP</Badge>
