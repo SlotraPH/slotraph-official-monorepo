@@ -1,7 +1,10 @@
 import { Lock, Plus, Save, Shield, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { getOwnerTeamResource } from '@/features/owner/data';
-import { BrandButton, BrandInput, BrandSelect, Card, useBrandToast } from '@/ui';
+import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
+import { ownerSettingsPersistenceClient } from '@/features/owner/settings/persistenceClient';
+import { BrandButton, BrandInput, BrandSelect, Card, SaveStateIndicator, useBrandToast, type SaveStateStatus } from '@/ui';
 
 export function TeamSettingsPage() {
   const toast = useBrandToast();
@@ -13,21 +16,115 @@ export function TeamSettingsPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [sessionTimeout, setSessionTimeout] = useState('30 minutes');
   const [require2fa, setRequire2fa] = useState(true);
+  const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
+  const [lastSaved, setLastSaved] = useState('Waiting for first save');
+  const [loading, setLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState('');
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const activeMembers = teamMembers.filter((member) => member.status === 'Active').length;
+  const inviteEmailError = useMemo(() => {
+    if (!inviteEmail.trim()) {
+      return 'Work email is required.';
+    }
+    if (!/^\S+@\S+\.\S+$/.test(inviteEmail.trim())) {
+      return 'Use a valid email format.';
+    }
+    return '';
+  }, [inviteEmail]);
 
-  function handleSaveInvite() {
+  useUnsavedChangesGuard(saveState === 'idle' || saveState === 'failed');
+
+  function markDirty() {
+    setSaveState('idle');
+  }
+
+  async function loadTeamDraft() {
+    setLoading(true);
+    setLoadingError('');
+
+    try {
+      const snapshot = await ownerSettingsPersistenceClient.loadSnapshot();
+      setInviteName(snapshot.team.invite.name);
+      setInviteRole(snapshot.team.invite.role);
+      setInviteEmail(snapshot.team.invite.email);
+      setSessionTimeout(snapshot.team.security.sessionTimeout);
+      setRequire2fa(snapshot.team.security.require2fa);
+      setSaveState('saved');
+      setLastSaved('Draft restored');
+      setSubmitAttempted(false);
+    } catch {
+      setLoadingError('Could not load team settings draft. Retry to continue.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadTeamDraft();
+  }, []);
+
+  async function persistTeamSettings() {
+    setSaveState('saving');
+    try {
+      await ownerSettingsPersistenceClient.saveTeam({
+        invite: {
+          name: inviteName.trim(),
+          role: inviteRole,
+          email: inviteEmail.trim(),
+        },
+        security: {
+          sessionTimeout,
+          require2fa,
+        },
+      });
+      setSaveState('saved');
+      setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      return true;
+    } catch {
+      setSaveState('failed');
+      toast.error({
+        title: 'Save failed',
+        description: 'Team settings were not saved. Retry to keep your latest changes.',
+      });
+      return false;
+    }
+  }
+
+  async function handleSaveInvite() {
+    setSubmitAttempted(true);
+    if (inviteEmailError) {
+      setSaveState('failed');
+      return;
+    }
+
+    const saved = await persistTeamSettings();
+    if (!saved) {
+      return;
+    }
     toast.success({
       title: 'Invite draft saved',
       description: 'Teammate draft was captured for later invite delivery flow.',
     });
   }
 
-  function handleSaveSecurity() {
+  async function handleSaveSecurity() {
+    const saved = await persistTeamSettings();
+    if (!saved) {
+      return;
+    }
     toast.success({
       title: 'Security settings saved',
       description: 'Session timeout and authentication requirements were updated in preview state.',
     });
+  }
+
+  if (loading) {
+    return <RouteStateCard title="Loading team settings" description="Preparing team invite and security drafts." variant="loading" />;
+  }
+
+  if (loadingError) {
+    return <RouteStateCard title="Team settings unavailable" description={loadingError} variant="error" onRetry={() => void loadTeamDraft()} />;
   }
 
   return (
@@ -71,16 +168,17 @@ export function TeamSettingsPage() {
           <BrandInput
             label="Name"
             value={inviteName}
-            onChange={(event) => setInviteName(event.target.value)}
+            onChange={(event) => { setInviteName(event.target.value); markDirty(); }}
             helperText="Display name shown in schedule assignment."
           />
           <BrandInput
             label="Work email"
             value={inviteEmail}
-            onChange={(event) => setInviteEmail(event.target.value)}
+            error={submitAttempted ? inviteEmailError || undefined : undefined}
+            onChange={(event) => { setInviteEmail(event.target.value); markDirty(); }}
             helperText="Used for invite delivery and login."
           />
-          <BrandSelect label="Role" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}>
+          <BrandSelect label="Role" value={inviteRole} onChange={(event) => { setInviteRole(event.target.value); markDirty(); }}>
             <option value="Owner assistant">Owner assistant</option>
             <option value="Front desk">Front desk</option>
             <option value="Senior staff">Senior staff</option>
@@ -88,7 +186,8 @@ export function TeamSettingsPage() {
         </div>
 
         <div className="settings-button-row settings-button-row--end">
-          <BrandButton startIcon={<Plus size={14} />} onClick={handleSaveInvite}>Save invite draft</BrandButton>
+          <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={() => void persistTeamSettings()} />
+          <BrandButton startIcon={<Plus size={14} />} onClick={() => void handleSaveInvite()} disabled={saveState === 'saving'}>Save invite draft</BrandButton>
         </div>
       </Card>
 
@@ -105,7 +204,7 @@ export function TeamSettingsPage() {
           <BrandSelect
             label="Session timeout"
             value={sessionTimeout}
-            onChange={(event) => setSessionTimeout(event.target.value)}
+            onChange={(event) => { setSessionTimeout(event.target.value); markDirty(); }}
             helperText="Auto-sign out idle sessions for shared devices."
             leadingIcon={Lock}
           >
@@ -118,7 +217,10 @@ export function TeamSettingsPage() {
               checked={require2fa}
               className="settings-checkbox"
               type="checkbox"
-              onChange={(event) => setRequire2fa(event.target.checked)}
+              onChange={(event) => {
+                setRequire2fa(event.target.checked);
+                markDirty();
+              }}
             />
             <span>
               <strong>Require 2-step verification</strong>
@@ -128,7 +230,7 @@ export function TeamSettingsPage() {
         </div>
 
         <div className="settings-button-row settings-button-row--end">
-          <BrandButton startIcon={<Save size={14} />} onClick={handleSaveSecurity}>Save security controls</BrandButton>
+          <BrandButton startIcon={<Save size={14} />} onClick={() => void handleSaveSecurity()} disabled={saveState === 'saving'}>Save security controls</BrandButton>
         </div>
       </Card>
 

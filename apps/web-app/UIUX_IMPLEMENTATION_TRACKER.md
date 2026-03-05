@@ -427,3 +427,56 @@ No edits to mobile and landing; web-app only.
 - `pnpm --filter @slotra/web-app lint`: Pass
 - `pnpm --filter @slotra/web-app test`: Failed (unchanged environment dependency issue: `undici` missing `./lib/dispatcher/retry-agent` during Vitest worker startup)
 - `pnpm --filter @slotra/web-app build`: Pass
+
+## Phase 2 Onboarding + Settings Persistence UX Wiring (March 6, 2026)
+- Added typed frontend persistence clients for onboarding and owner settings sections:
+  - `src/features/owner/onboarding/persistenceClient.ts`
+  - `src/features/owner/settings/persistenceClient.ts`
+- Added unsaved-changes browser leave guard shared by onboarding/settings form surfaces:
+  - `src/features/forms/useUnsavedChangesGuard.ts`
+- Onboarding (`/owner/onboarding`) persistence UX upgrades:
+  - async draft load + route-safe loading/error copy
+  - explicit save lifecycle (`saving`, `saved`, `failed`, retry) with inline state indicator
+  - partial-save messaging for autosave versus manual full save
+  - retry affordance for both save failure and draft-load failure
+  - file:
+    - `src/pages/owner/onboarding/OnboardingFlow.tsx`
+- Settings route persistence wiring upgrades:
+  - `/owner/settings/brand`:
+    - persisted draft load/save, dirty-state indicator, submit-timed inline validation
+    - file: `src/pages/owner/settings/BrandDetailsPage.tsx`
+  - `/owner/settings/business`:
+    - persisted draft load/save, save retry, submit-timed validation
+    - file: `src/pages/owner/settings/BusinessProfilePage.tsx`
+  - `/owner/settings/team`:
+    - persisted invite/security draft load/save, dirty-state and retry model
+    - file: `src/pages/owner/settings/TeamSettingsPage.tsx`
+  - `/owner/settings/notifications`:
+    - persisted trigger/template draft load/save, touched/submit validation timing, retry
+    - file: `src/pages/owner/settings/NotificationsSettingsPage.tsx`
+  - `/owner/settings/domain`:
+    - persisted subdomain/troubleshooting draft load/save, touched/submit validation timing, retry
+    - file: `src/pages/owner/settings/DomainSettingsPage.tsx`
+  - `/owner/settings/booking`:
+    - persisted booking-builder draft load/save, touched/submit validation timing, retry
+    - file: `src/pages/owner/settings/BookingPreferencesPage.tsx`
+  - `/owner/settings/publish`:
+    - persisted publish-state draft load/save, save retry indicator for go-live persistence
+    - file: `src/pages/owner/settings/PublishSettingsPage.tsx`
+
+### Phase 2 Acceptance Matrix (Onboarding + Settings Routes)
+| Surface | Status | Notes |
+| --- | --- | --- |
+| `/owner/onboarding` | Done | Typed persistence client wired with async load/save/retry and partial-save UX states. |
+| `/owner/settings/brand` | Done | Persisted brand draft + dirty/unsaved and validation timing standardization. |
+| `/owner/settings/business` | Done | Persisted business draft + save lifecycle and inline submit-timed validation. |
+| `/owner/settings/team` | Done | Persisted invite/security drafts + dirty/save/retry interaction model. |
+| `/owner/settings/notifications` | Done | Persisted trigger/template drafts + touched/submit validation timing. |
+| `/owner/settings/domain` | Done | Persisted domain draft + validation timing + retry/save feedback. |
+| `/owner/settings/booking` | Done | Persisted booking builder draft + dirty/save/retry and validation alignment. |
+| `/owner/settings/publish` | Done | Persisted publish state + save confirmation and failure recovery path. |
+
+### Phase 2 Known Gaps (Non-Blocking for Frontend Contract Scope)
+- Persistence remains browser-session scoped (`sessionStorage`) and intentionally does not call backend APIs.
+- Cross-route dirty aggregation (for global settings-tab unsaved badges) is not yet centralized; indicators are route-local.
+- In-app route-navigation blocking for unsaved changes is not implemented yet; current guard covers browser leave/refresh.

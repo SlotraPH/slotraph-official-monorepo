@@ -1,6 +1,9 @@
 import { CheckCircle2, Circle, ExternalLink, Rocket, Share2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { BrandButton, Card, useBrandToast } from '@/ui';
+import { useEffect, useMemo, useState } from 'react';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
+import { ownerSettingsPersistenceClient } from '@/features/owner/settings/persistenceClient';
+import { BrandButton, Card, SaveStateIndicator, useBrandToast, type SaveStateStatus } from '@/ui';
 
 interface ReadinessItem {
   id: string;
@@ -40,10 +43,35 @@ export function PublishSettingsPage() {
   const toast = useBrandToast();
   const [published, setPublished] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState('');
+  const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
+  const [lastSaved, setLastSaved] = useState('Waiting for first publish save');
   const shareLink = 'https://businessname.slotraph.com';
 
   const blockers = useMemo(() => READINESS_ITEMS.filter((item) => item.status === 'blocked'), []);
   const completed = READINESS_ITEMS.length - blockers.length;
+  useUnsavedChangesGuard(saveState === 'idle' || saveState === 'failed');
+
+  async function loadPublishDraft() {
+    setLoading(true);
+    setLoadingError('');
+
+    try {
+      const snapshot = await ownerSettingsPersistenceClient.loadSnapshot();
+      setPublished(snapshot.publish.published);
+      setSaveState('saved');
+      setLastSaved('Draft restored');
+    } catch {
+      setLoadingError('Could not load publish settings draft. Retry to continue.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadPublishDraft();
+  }, []);
 
   function handleCopyShareLink() {
     void navigator.clipboard?.writeText(shareLink);
@@ -55,12 +83,34 @@ export function PublishSettingsPage() {
     setTimeout(() => setShareCopied(false), 2000);
   }
 
-  function handleGoLive() {
-    setPublished(true);
-    toast.success({
-      title: 'Workspace published',
-      description: 'Your booking page is now marked as live in this workspace preview.',
-    });
+  async function handleGoLive() {
+    setSaveState('saving');
+    try {
+      await ownerSettingsPersistenceClient.savePublish({
+        published: true,
+      });
+      setPublished(true);
+      setSaveState('saved');
+      setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      toast.success({
+        title: 'Workspace published',
+        description: 'Your booking page is now marked as live in this workspace preview.',
+      });
+    } catch {
+      setSaveState('failed');
+      toast.error({
+        title: 'Publish save failed',
+        description: 'Publish status was not saved. Retry to keep your latest changes.',
+      });
+    }
+  }
+
+  if (loading) {
+    return <RouteStateCard title="Loading publish settings" description="Preparing release checklist and publish state." variant="loading" />;
+  }
+
+  if (loadingError) {
+    return <RouteStateCard title="Publish settings unavailable" description={loadingError} variant="error" onRetry={() => void loadPublishDraft()} />;
   }
 
   function handleReviewBlockers() {
@@ -104,8 +154,9 @@ export function PublishSettingsPage() {
         </div>
 
         <div className="settings-button-row">
+          <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={() => void handleGoLive()} />
           {blockers.length === 0 ? (
-            <BrandButton startIcon={<Rocket size={14} />} onClick={handleGoLive}>Go live now</BrandButton>
+            <BrandButton startIcon={<Rocket size={14} />} onClick={() => void handleGoLive()} disabled={saveState === 'saving'}>Go live now</BrandButton>
           ) : (
             <BrandButton startIcon={<Rocket size={14} />} onClick={handleReviewBlockers}>Review blockers</BrandButton>
           )}

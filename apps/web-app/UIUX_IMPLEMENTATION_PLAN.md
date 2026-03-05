@@ -166,3 +166,33 @@ No edits to mobile and landing; web-app only.
 1. Replace mock route client internals with real typed API adapters without changing route component contracts.
 2. Introduce request lifecycle controls per client method (abort, stale-response guards, retry/backoff) while preserving route-state API shape.
 3. Expand save-state adapter usage to remaining settings/forms so all owner editors share one async feedback contract.
+
+## Phase 2 Persistence UX Architecture Notes (March 6, 2026)
+- Added explicit frontend persistence client boundaries for onboarding/settings UX contracts:
+  - onboarding client:
+    - `src/features/owner/onboarding/persistenceClient.ts`
+    - contract: async `load()` and `save(state, { partial })`
+    - intent: support launchpad/setup autosave + manual save without changing route component topology
+  - settings client:
+    - `src/features/owner/settings/persistenceClient.ts`
+    - contract: typed section save methods (`brand`, `business`, `team`, `notifications`, `domain`, `booking`, `publish`)
+    - intent: isolate section-level persistence semantics from page UI composition
+- Persistence state model now shared across onboarding/settings interactions:
+  - lifecycle statuses: `idle | saving | saved | failed`
+  - UX pattern: inline save indicator + explicit retry callback + toast confirmation/error pairing
+- Added browser leave guard for unsaved work:
+  - `src/features/forms/useUnsavedChangesGuard.ts`
+  - scope: guards page refresh/tab close while form state is `idle` or `failed`.
+
+### Validation and Feedback Standardization (Phase 2)
+- Shifted validation UX timing toward touched/submit-gated rendering on settings forms to reduce immediate-error noise while typing.
+- Save CTA behavior now aligns to persistence lifecycle:
+  - disabled during `saving`
+  - explicit `failed` + retry state
+  - route-level loading/error cards for initial persisted draft load failures.
+
+### Known Tradeoffs (Phase 2)
+1. Session-scoped persistence (`sessionStorage`) was selected for safety and frontend-only scope; durability across devices/sessions is intentionally deferred to backend integration.
+2. Retry behavior currently retries the same local persistence client operation; no backoff/network-classification yet because there is no remote transport in this phase.
+3. Unsaved-change protection is browser-leave focused; in-app route transition blocking remains a follow-up to avoid introducing router-level behavioral risk in this iteration.
+4. Centralized cross-route dirty aggregation was deferred to keep per-route contracts explicit and minimize coupling before real API adapters are introduced.

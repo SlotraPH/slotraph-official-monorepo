@@ -5,9 +5,11 @@ import { OwnerPageScaffold } from '@/app/components/PageTemplates';
 import type { ServiceRecord } from '@/domain/service/types';
 import type { TeamMemberRecord } from '@/domain/staff/types';
 import { trackWebEvent } from '@/features/analytics/trackWebEvent';
+import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
 import { mockOwnerRouteClient } from '@/features/owner/routeClient';
-import { mockOnboardingRepository } from '@/features/owner/onboarding/mockOnboardingRepository';
-import { BrandButton, Card, colors, typography } from '@/ui';
+import { ownerOnboardingPersistenceClient } from '@/features/owner/onboarding/persistenceClient';
+import type { PersistedOnboardingState } from '@/features/owner/onboarding/contracts';
+import { BrandButton, Card, SaveStateIndicator, colors, typography, type SaveStateStatus } from '@/ui';
 import { sanitizeBookingSlug } from '../settings/brandDetailsShared';
 import { createDefaultOnboardingDraft } from './mockData';
 import {
@@ -52,20 +54,57 @@ export function OnboardingFlow() {
   const [completedStepIds, setCompletedStepIds] = useState<OnboardingStepId[]>([]);
   const [showStepEditor, setShowStepEditor] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saveMessage, setSaveMessage] = useState('Autosaved in this browser session');
+  const [saveMessage, setSaveMessage] = useState('Draft changes are saved to this browser session');
   const [hydrated, setHydrated] = useState(false);
+  const [sessionStatus, setSessionStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [sessionMessage, setSessionMessage] = useState('Loading your onboarding draft...');
+  const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
+  const [lastSavedLabel, setLastSavedLabel] = useState('Waiting for first save');
+  const [pendingSavePayload, setPendingSavePayload] = useState<PersistedOnboardingState | null>(null);
+  const [pendingSavePartial, setPendingSavePartial] = useState(true);
+
+  useUnsavedChangesGuard(saveState === 'idle' || saveState === 'failed');
 
   useEffect(() => {
-    const persisted = mockOnboardingRepository.loadSession();
+    let canceled = false;
 
-    if (persisted) {
-      setDraft(persisted.draft);
-      setCurrentStepId(persisted.currentStepId);
-      setCompletedStepIds(persisted.completedStepIds);
-      setSaveMessage('Resumed from this browser session');
+    async function loadPersistedDraft() {
+      setSessionStatus('loading');
+      setSessionMessage('Loading your onboarding draft...');
+
+      try {
+        const persisted = await ownerOnboardingPersistenceClient.load();
+
+        if (canceled) {
+          return;
+        }
+
+        if (persisted) {
+          setDraft(persisted.draft);
+          setCurrentStepId(persisted.currentStepId);
+          setCompletedStepIds(persisted.completedStepIds);
+          setSaveMessage('Resumed your saved onboarding draft');
+          setLastSavedLabel('Draft restored');
+        }
+
+        setSessionStatus('ready');
+        setHydrated(true);
+      } catch {
+        if (canceled) {
+          return;
+        }
+
+        setSessionStatus('error');
+        setSessionMessage('Could not load your onboarding draft. Retry to restore saved progress.');
+        setHydrated(true);
+      }
     }
 
-    setHydrated(true);
+    void loadPersistedDraft();
+
+    return () => {
+      canceled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -73,11 +112,17 @@ export function OnboardingFlow() {
       return;
     }
 
-    mockOnboardingRepository.saveSession({
-      draft,
-      currentStepId,
-      completedStepIds,
-    });
+    const timeoutId = window.setTimeout(() => {
+      void persistState({
+        draft,
+        currentStepId,
+        completedStepIds,
+      }, true);
+    }, 450);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [completedStepIds, currentStepId, draft, hydrated]);
 
   if (resource.status === 'loading') {
@@ -178,7 +223,7 @@ export function OnboardingFlow() {
   ];
   const completedChecklistCount = checklistItems.filter((item) => item.status === 'done').length;
   const progressPercent = Math.round((completedChecklistCount / checklistItems.length) * 100);
-  const setupState = !hydrated
+  const setupState = sessionStatus === 'loading' || !hydrated
     ? 'loading'
     : completedChecklistCount === 0
       ? 'empty'
@@ -188,13 +233,53 @@ export function OnboardingFlow() {
   const unresolvedItems = checklistItems.filter((item) => item.status !== 'done');
   const blockerMessages = unresolvedItems.map((item) => item.blocker);
 
+  async function persistState(nextState: PersistedOnboardingState, partial: boolean) {
+    setSaveState('saving');
+    setPendingSavePayload(nextState);
+    setPendingSavePartial(partial);
+
+    try {
+      const result = await ownerOnboardingPersistenceClient.save(nextState, { partial });
+      const savedTimeLabel = new Date(result.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      setPendingSavePayload(null);
+      setSaveState('saved');
+      setLastSavedLabel(result.partial ? `Partial draft saved at ${savedTimeLabel}` : `Saved at ${savedTimeLabel}`);
+      setSaveMessage(result.partial ? 'Partial progress saved so you can continue later' : 'Saved. You can continue later from this browser');
+    } catch {
+      setSaveState('failed');
+      setSaveMessage('Save failed. Retry to keep your latest onboarding progress.');
+    }
+  }
+
   function persistManually() {
-    mockOnboardingRepository.saveSession({
+    void persistState({
       draft,
       currentStepId,
       completedStepIds,
-    });
-    setSaveMessage('Saved. You can continue later in this browser session');
+    }, false);
+  }
+
+  function retrySave() {
+    if (!pendingSavePayload) {
+      return;
+    }
+
+    void persistState(pendingSavePayload, pendingSavePartial);
+  }
+
+  function retrySessionLoad() {
+    setSessionStatus('loading');
+    setSessionMessage('Retrying onboarding draft load...');
+    setHydrated(false);
+    setTimeout(() => {
+      window.location.reload();
+    }, 10);
+  }
+
+  function markDraftDirty(message = 'Unsaved changes in this step') {
+    setSaveState('idle');
+    setSaveMessage(message);
   }
 
   function markStepComplete(stepId: OnboardingStepId) {
@@ -229,7 +314,8 @@ export function OnboardingFlow() {
 
     if (nextStep) {
       setCurrentStepId(nextStep.id);
-      setSaveMessage('Step saved in this browser session');
+      setSaveState('saved');
+      setSaveMessage('Step complete. Continue to the next setup task.');
       trackWebEvent('owner_onboarding_step_completed', {
         stepId: currentStepId,
         nextStepId: nextStep.id,
@@ -269,7 +355,7 @@ export function OnboardingFlow() {
         bookingSlug: shouldRefreshSlug ? sanitizeBookingSlug(String(value)) : current.bookingSlug,
       };
     });
-    setSaveMessage('Autosaved in this browser session');
+    markDraftDirty('Unsaved business profile updates');
   }
 
   function updateService<K extends keyof ServiceRecord>(serviceId: string, field: K, value: ServiceRecord[K]) {
@@ -284,7 +370,7 @@ export function OnboardingFlow() {
           : service
       ),
     }));
-    setSaveMessage('Autosaved in this browser session');
+    markDraftDirty('Unsaved service edits');
   }
 
   function addService() {
@@ -308,7 +394,7 @@ export function OnboardingFlow() {
         },
       ],
     }));
-    setSaveMessage('Autosaved in this browser session');
+    markDraftDirty('Unsaved service updates');
   }
 
   function removeService(serviceId: string) {
@@ -316,7 +402,7 @@ export function OnboardingFlow() {
       ...current,
       services: current.services.filter((service) => service.id !== serviceId),
     }));
-    setSaveMessage('Autosaved in this browser session');
+    markDraftDirty('Unsaved service updates');
   }
 
   function updateTeamMember<K extends keyof TeamMemberRecord>(memberId: string, field: K, value: TeamMemberRecord[K]) {
@@ -331,7 +417,7 @@ export function OnboardingFlow() {
           : member
       ),
     }));
-    setSaveMessage('Autosaved in this browser session');
+    markDraftDirty('Unsaved team updates');
   }
 
   function addTeamMember() {
@@ -351,7 +437,7 @@ export function OnboardingFlow() {
         },
       ],
     }));
-    setSaveMessage('Autosaved in this browser session');
+    markDraftDirty('Unsaved team updates');
   }
 
   function removeTeamMember(memberId: string) {
@@ -359,7 +445,7 @@ export function OnboardingFlow() {
       ...current,
       team: current.team.filter((member) => member.id !== memberId),
     }));
-    setSaveMessage('Autosaved in this browser session');
+    markDraftDirty('Unsaved team updates');
   }
 
   function updateBusinessHours(hourId: string, nextValue: Partial<OnboardingDraft['businessHours'][number]>) {
@@ -374,7 +460,7 @@ export function OnboardingFlow() {
           : slot
       ),
     }));
-    setSaveMessage('Autosaved in this browser session');
+    markDraftDirty('Unsaved availability updates');
   }
 
   function updatePaymentField<K extends keyof OnboardingDraft['paymentPreferences']>(
@@ -388,7 +474,7 @@ export function OnboardingFlow() {
         [field]: value,
       },
     }));
-    setSaveMessage('Autosaved in this browser session');
+    markDraftDirty('Unsaved payment preference changes');
   }
 
   function renderCurrentStep() {
@@ -414,7 +500,7 @@ export function OnboardingFlow() {
                 ...current,
                 bookingSlug: sanitizeBookingSlug(nextSlug),
               }));
-              setSaveMessage('Autosaved in this browser session');
+              markDraftDirty('Unsaved booking slug updates');
             }}
           />
         );
@@ -470,7 +556,13 @@ export function OnboardingFlow() {
         actions={(
           <>
             <Badge variant="info">{progressPercent}% complete</Badge>
-            <Button type="button" variant="outline" onClick={persistManually}>
+            <SaveStateIndicator
+              status={saveState}
+              savedLabel={lastSavedLabel}
+              idleLabel="Unsaved onboarding changes"
+              onRetry={retrySave}
+            />
+            <Button type="button" variant="outline" onClick={persistManually} disabled={saveState === 'saving'}>
               Save & continue later
             </Button>
           </>
@@ -497,10 +589,20 @@ export function OnboardingFlow() {
             <SetupProgressRing percentage={progressPercent} />
           </Card>
 
+          {sessionStatus === 'error' ? (
+            <Card className="setup-state-card setup-state-card--empty">
+              <p className="setup-state-card__title">Onboarding draft unavailable</p>
+              <p className="setup-state-card__description">{sessionMessage}</p>
+              <div className="settings-button-row">
+                <BrandButton variant="secondary" onClick={retrySessionLoad}>Retry loading draft</BrandButton>
+              </div>
+            </Card>
+          ) : null}
+
           {setupState === 'loading' ? (
             <Card className="setup-state-card setup-state-card--loading">
               <p className="setup-state-card__title">Loading setup progress...</p>
-              <p className="setup-state-card__description">Preparing your mocked setup snapshot for this session.</p>
+              <p className="setup-state-card__description">{sessionMessage}</p>
             </Card>
           ) : null}
 
@@ -570,7 +672,7 @@ export function OnboardingFlow() {
                     Revisit setup
                   </Button>
                 )}
-                <Button type="button" variant="outline" onClick={persistManually}>
+                <Button type="button" variant="outline" onClick={persistManually} disabled={saveState === 'saving'}>
                   Save now
                 </Button>
               </div>
