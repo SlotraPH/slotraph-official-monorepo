@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Check, User, Mail, AlertCircle } from 'lucide-react';
 import { AppIcon } from '@slotra/branding';
 import { sileo } from 'sileo';
-import { supabase } from '../lib/supabase';
+import { Turnstile } from '@marsidev/react-turnstile';
+
+declare const __SUPABASE_URL__: string;
+declare const __TURNSTILE_SITE_KEY__: string;
 
 // ── Interactive Grid Pattern ───────────────────────────────
 
@@ -71,7 +74,7 @@ function validateEmail(v: string): string {
     return '';
 }
 
-export function WaitlistSection() {
+export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string }) {
     const [fields, setFields] = useState<Fields>({ name: '', email: '' });
     const [errors, setErrors] = useState<FieldErrors>({});
     const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
@@ -79,6 +82,8 @@ export function WaitlistSection() {
     const [loading, setLoading] = useState(false);
     const [btnHovered, setBtnHovered] = useState(false);
     const [tilt, setTilt] = useState({ x: 0, y: 0 });
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+    const [turnstileStatus, setTurnstileStatus] = useState<'loading' | 'ready' | 'error'>('loading');
     const sectionRef = useRef<HTMLElement>(null);
 
     // Global cursor-following tilt for the 3D symbol
@@ -128,39 +133,67 @@ export function WaitlistSection() {
         const fieldErrors = validate(fields);
         setErrors(fieldErrors);
         if (fieldErrors.name || fieldErrors.email) return;
-        if (!supabase) {
-            sileo.error({
-                title: 'Waitlist is unavailable',
-                description: 'Supabase environment variables are missing for this app.',
-            });
+        if (!turnstileToken) {
+            sileo.error(
+                turnstileStatus === 'loading'
+                    ? { title: 'Still verifying', description: 'Please wait a moment and try again.' }
+                    : { title: 'Bot check failed', description: 'Please refresh and try again.' }
+            );
             return;
         }
 
         setLoading(true);
-        const { error } = await supabase
-            .from('waitlist_entries')
-            .insert({ name: fields.name.trim(), email: fields.email.trim().toLowerCase() });
+        let res: Response;
+        try {
+            res = await fetch(
+                `${__SUPABASE_URL__}/functions/v1/join-waitlist`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: fields.name.trim(),
+                        email: fields.email.trim().toLowerCase(),
+                        token: turnstileToken,
+                    }),
+                }
+            );
+        } catch {
+            setLoading(false);
+            sileo.error({ title: 'Something went wrong', description: 'Please try again in a moment.' });
+            return;
+        }
         setLoading(false);
 
-        if (error) {
-            if (error.code === '23505') {
-                // Duplicate email — show inline field error
-                setTouched(t => ({ ...t, email: true }));
-                setErrors(e => ({ ...e, email: 'This email is already on the waitlist.' }));
-            } else {
-                sileo.error({
-                    title: 'Something went wrong',
-                    description: 'Please try again in a moment.',
-                });
-            }
+        if (res.ok) {
+            setSubmitted(true);
+            sileo.success({
+                title: "You're on the list!",
+                description: "We'll notify you when Slotra is ready to use.",
+            });
             return;
         }
 
-        setSubmitted(true);
-        sileo.success({
-            title: "You're on the list!",
-            description: "We'll notify you when Slotra is ready to use.",
-        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.status === 409 && data.error === 'duplicate_email') {
+            setTouched(t => ({ ...t, email: true }));
+            setErrors(e => ({ ...e, email: 'This email is already on the waitlist.' }));
+        } else if (res.status === 429) {
+            sileo.error({
+                title: 'Too many attempts',
+                description: 'Please try again in a few minutes.',
+            });
+        } else if (res.status === 403) {
+            sileo.error({
+                title: 'Bot check failed',
+                description: 'Please refresh and try again.',
+            });
+        } else {
+            sileo.error({
+                title: 'Something went wrong',
+                description: 'Please try again in a moment.',
+            });
+        }
     };
 
     // Per-field input style helpers
@@ -369,7 +402,7 @@ export function WaitlistSection() {
                                 {/* Submit */}
                                 <button
                                     type="submit"
-                                    disabled={loading}
+                                    disabled={loading || turnstileStatus === 'loading'}
                                     onMouseEnter={() => setBtnHovered(true)}
                                     onMouseLeave={() => setBtnHovered(false)}
                                     className="w-full h-[44px] rounded-lg text-[14px] font-semibold transition-all duration-150"
@@ -377,21 +410,29 @@ export function WaitlistSection() {
                                         marginTop: 6,
                                         color: '#ffffff',
                                         border: '1px solid rgba(0,0,0,0.18)',
-                                        background: loading
+                                        background: loading || turnstileStatus === 'loading'
                                             ? 'linear-gradient(180deg, #3336a4 0%, #2a2d8c 100%)'
                                             : btnHovered
                                                 ? 'linear-gradient(180deg, #3538b5 0%, #272a86 100%)'
                                                 : 'linear-gradient(180deg, #3336a4 0%, #2a2d8c 100%)',
-                                        boxShadow: btnHovered && !loading
+                                        boxShadow: btnHovered && !loading && turnstileStatus !== 'loading'
                                             ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 3px 10px rgba(46,49,146,0.4)'
                                             : 'inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 6px rgba(46,49,146,0.25)',
-                                        opacity: loading ? 0.75 : 1,
-                                        cursor: loading ? 'not-allowed' : 'pointer',
+                                        opacity: loading || turnstileStatus === 'loading' ? 0.75 : 1,
+                                        cursor: loading || turnstileStatus === 'loading' ? 'not-allowed' : 'pointer',
                                     }}
                                 >
-                                    {loading ? 'Joining…' : 'Join the Waitlist'}
+                                    {loading ? 'Joining…' : turnstileStatus === 'loading' ? 'Verifying…' : 'Join the Waitlist'}
                                 </button>
                             </form>
+
+                            <Turnstile
+                                siteKey={turnstileSiteKey}
+                                onSuccess={(token) => { setTurnstileToken(token); setTurnstileStatus('ready'); }}
+                                onError={() => { setTurnstileToken(null); setTurnstileStatus('error'); }}
+                                onExpire={() => { setTurnstileToken(null); setTurnstileStatus('loading'); }}
+                                options={{ size: 'invisible' }}
+                            />
 
                             <p className="text-[12px]" style={{ color: '#a0aab4' }}>
                                 No spam. We'll notify you when Slotra is ready to use.
