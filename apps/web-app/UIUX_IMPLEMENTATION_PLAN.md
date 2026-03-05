@@ -86,6 +86,21 @@ No edits to mobile and landing; web-app only.
 6. Decommission or formally reintroduce currently inactive shell artifacts (`TopBar`).
 7. Run cross-route responsive QA and visual regression checks.
 
+## Phase 4 Delivery Notes (March 5, 2026)
+- Setup route (`/owner/onboarding`) now prioritizes a launchpad-first experience.
+- Launchpad includes:
+  - progress ring and setup completion summary
+  - checklist cards for Branding, Services, Availability, Domain, and Publish
+  - status chips (`Not started`, `In progress`, `Done`)
+  - primary CTA to continue setup
+  - right rail readiness module with blockers and next action
+- Step-by-step setup editor remains available behind launchpad actions for continuity.
+- Setup progress UX states (loading, empty, success) are implemented with mocked local/session data.
+- New reusable onboarding UI modules introduced in `src/pages/owner/onboarding/components/*`.
+- Remaining follow-up:
+  - capture phase screenshots
+  - run full responsive verification matrix and document outcomes in tracker
+
 ## Implementation Guardrails
 - Do not change backend/data contracts in this phase.
 - Do not alter mobile or landing apps.

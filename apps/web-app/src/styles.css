@@ -2552,6 +2552,186 @@ select.input {
    OWNER ONBOARDING
    =================================================================== */
 
+.setup-launchpad-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-6);
+  align-items: flex-start;
+}
+
+.setup-launchpad-main {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.setup-launchpad-rail {
+  position: sticky;
+  top: calc(var(--app-shell-offset) + var(--space-3));
+}
+
+.setup-launchpad-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-5);
+  align-items: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 248, 250, 0.95) 100%);
+}
+
+.setup-launchpad-hero__copy {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.setup-launchpad-hero__eyebrow {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.setup-launchpad-hero__title {
+  color: #0f1f2e;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: clamp(24px, 2.3vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.setup-launchpad-hero__actions,
+.onboarding-stage-card__footer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.setup-state-card {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.setup-state-card__title {
+  color: #0f1f2e;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.setup-state-card__description {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.setup-state-card--loading {
+  background: linear-gradient(180deg, rgba(236, 237, 249, 0.5) 0%, rgba(255, 255, 255, 0.96) 100%);
+}
+
+.setup-state-card--empty {
+  background: linear-gradient(180deg, rgba(255, 249, 239, 0.55) 0%, rgba(255, 255, 255, 0.96) 100%);
+}
+
+.setup-state-card--success {
+  background: linear-gradient(180deg, rgba(237, 248, 242, 0.65) 0%, rgba(255, 255, 255, 0.96) 100%);
+}
+
+.setup-checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.setup-checklist-card {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%);
+}
+
+.setup-checklist-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.setup-checklist-card__title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.setup-checklist-card__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #ecedf9;
+  color: #2e3192;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.setup-checklist-card__title {
+  margin: 0;
+  color: #0f1f2e;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.setup-checklist-card__meta {
+  display: grid;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.setup-readiness-card {
+  display: grid;
+  gap: var(--space-4);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 248, 250, 0.95) 100%);
+}
+
+.setup-readiness-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  color: #2e3192;
+}
+
+.setup-readiness-card__eyebrow {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.setup-readiness-card__title {
+  color: #0f1f2e;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.setup-readiness-card__list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+}
+
+.setup-readiness-card__footer {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
 .onboarding-layout {
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
@@ -2834,16 +3014,19 @@ select.input {
 }
 
 @media (max-width: 1100px) {
+  .setup-launchpad-layout,
   .onboarding-layout {
     grid-template-columns: 1fr;
   }
 
+  .setup-launchpad-rail,
   .onboarding-sidebar {
     position: static;
   }
 }
 
 @media (max-width: 900px) {
+  .setup-checklist-grid,
   .onboarding-step-grid,
   .onboarding-choice-grid,
   .onboarding-summary-grid,
@@ -2853,6 +3036,16 @@ select.input {
 }
 
 @media (max-width: 768px) {
+  .setup-launchpad-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .setup-launchpad-hero__actions,
+  .onboarding-stage-card__footer-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .onboarding-stage-card__header,
   .onboarding-stage-card__footer,
   .onboarding-progress-card__top,

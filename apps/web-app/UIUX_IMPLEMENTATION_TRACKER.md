@@ -109,6 +109,35 @@ No edits to mobile and landing; web-app only.
   - `src/modules/billing/BillingWorkspace.tsx`
   - `src/pages/owner/onboarding/OnboardingFlow.tsx`
 
+## Phase 4 Setup Launchpad Build (March 5, 2026)
+- Replaced setup page behavior with a launchpad-first workspace surface (progress ring, setup summary, and setup CTA).
+  - `src/pages/owner/onboarding/OnboardingFlow.tsx`
+  - `src/styles.css`
+- Added reusable setup primitives for checklist/status/readiness UI.
+  - `src/pages/owner/onboarding/components/setupTypes.ts`
+  - `src/pages/owner/onboarding/components/SetupStatusChip.tsx`
+  - `src/pages/owner/onboarding/components/SetupChecklistCard.tsx`
+  - `src/pages/owner/onboarding/components/SetupProgressRing.tsx`
+  - `src/pages/owner/onboarding/components/SetupReadinessPanel.tsx`
+- Added setup progress UX states with mocked data path:
+  - `loading` placeholder (pre-hydration state)
+  - `empty` placeholder (no checklist progress)
+  - `success` placeholder (all launch checks complete)
+- Right rail readiness block added with blocker list and next-action CTA.
+- Existing step editor retained and now opened from launchpad CTAs/checklist actions.
+
+## Phase 4 Screenshot / Notes Placeholders
+- [ ] Desktop: setup launchpad (checklist + readiness rail)
+- [ ] Tablet: launchpad stacked layout
+- [ ] Mobile: launchpad + step editor controls
+- [ ] Step editor opened from launchpad CTA
+- [ ] Loading placeholder state capture
+- [ ] Empty placeholder state capture
+- [ ] Success placeholder state capture
+- Notes:
+  - Add final screenshots after responsive QA pass.
+  - Verify visual parity against `brand.md` gradients and button treatment in each capture.
+
 ## Known UI Bugs / Risks (Overlap + Responsive)
 - Token drift risk from duplicate root token blocks in one stylesheet.
   - `src/styles.css:10`
