@@ -1,4 +1,4 @@
-import { PageIntro } from '@/app/components/PageTemplates';
+import { OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { NavLink, Outlet } from 'react-router-dom';
 
 const SETTINGS_TABS = [
@@ -11,7 +11,7 @@ const SETTINGS_TABS = [
 
 export function SettingsPage() {
   return (
-    <div className="owner-page-stack">
+    <OwnerPageScaffold>
       <PageIntro
         eyebrow="Settings"
         title="Brand and operational preferences"
@@ -41,6 +41,6 @@ export function SettingsPage() {
       <div className="settings-panel">
         <Outlet />
       </div>
-    </div>
+    </OwnerPageScaffold>
   );
 }

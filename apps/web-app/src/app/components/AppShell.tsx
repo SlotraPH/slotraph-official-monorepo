@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import wordmark from '@slotra/branding/assets/slotra_symbol_wordmark.png';
 import { appConfig } from '@/config/env';
-import { BrandButton, colors, layout, spacing, typography } from '@/ui';
+import { BrandButton, colors, spacing, typography } from '@/ui';
 
 interface AppShellProps {
   children: ReactNode;
@@ -127,7 +127,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
           </nav>
 
           <div className="app-shell__actions">
-            <a className="app-shell__action-link" href="mailto:hello@slotra.ph?subject=Book%20a%20Demo">
+            <a className="app-shell__action-link app-shell__action-link--demo" href="mailto:hello@slotra.ph?subject=Book%20a%20Demo">
               <BrandButton
                 size="nav"
                 startIcon={<CalendarDays size={15} />}
@@ -137,7 +137,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
               </BrandButton>
             </a>
             {!appConfig.inDevelopment ? (
-              <Link className="app-shell__action-link" to="/owner/onboarding">
+              <Link className="app-shell__action-link app-shell__action-link--start" to="/owner/onboarding">
                 <BrandButton size="nav" endIcon={<ArrowRight size={15} />}>
                   Get Started
                 </BrandButton>
@@ -192,15 +192,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
 
 export function AppShellContainer({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div
-      className={className}
-      style={{
-        margin: '0 auto',
-        maxWidth: layout.maxWidth,
-        paddingInline: spacing[8],
-        width: '100%',
-      }}
-    >
+    <div className={['app-shell__container', className].filter(Boolean).join(' ')}>
       {children}
     </div>
   );

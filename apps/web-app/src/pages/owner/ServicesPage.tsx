@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
-import { AppPill, PageIntro } from '@/app/components/PageTemplates';
+import { AppPill, OwnerContentGrid, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import type { ServiceRecord } from '@/domain/service/types';
 import { getOwnerServicesResource } from '@/features/owner/data';
 import { ServiceEditor, type ServiceDraft } from './services/ServiceEditor';
@@ -150,7 +150,7 @@ export function ServicesPage() {
   const archivedCount = services.filter((service) => service.status === 'Archived').length;
 
   return (
-    <div className="owner-page-stack">
+    <OwnerPageScaffold>
       <PageIntro
         eyebrow="Services"
         title={(
@@ -175,7 +175,7 @@ export function ServicesPage() {
         onStatusChange={setStatus}
         onAddService={handleAddService}
       />
-      <div className="owner-two-column-layout owner-two-column-layout--wide">
+      <OwnerContentGrid density="wide">
         <ServiceList
           items={filtered}
           selectedId={selectedId}
@@ -189,7 +189,7 @@ export function ServicesPage() {
           onSave={handleSave}
           onCancel={handleCancel}
         />
-      </div>
-    </div>
+      </OwnerContentGrid>
+    </OwnerPageScaffold>
   );
 }

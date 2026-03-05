@@ -1,4 +1,4 @@
-import { PageIntro } from '@/app/components/PageTemplates';
+import { OwnerContentGrid, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { getOwnerDashboardResource } from '@/features/owner/data';
 import { DashboardActivityFeed } from './dashboard/DashboardActivityFeed';
@@ -20,18 +20,18 @@ export function DashboardPage() {
   const { activity, bookings, quickActions, summary } = resource.data;
 
   return (
-    <div className="owner-page-stack">
+    <OwnerPageScaffold>
       <PageIntro
         eyebrow="Owner dashboard"
         title="Business overview"
         description="Track upcoming bookings, recent activity, and the current setup posture from one branded workspace shell."
       />
       <DashboardSummaryCards items={summary} />
-      <div className="owner-two-column-layout">
+      <OwnerContentGrid>
         <DashboardUpcomingBookings bookings={bookings} />
         <DashboardQuickActions actions={quickActions} />
-      </div>
+      </OwnerContentGrid>
       <DashboardActivityFeed items={activity} />
-    </div>
+    </OwnerPageScaffold>
   );
 }

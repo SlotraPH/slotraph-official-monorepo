@@ -43,6 +43,16 @@ interface PageIntroProps {
   pills?: ReactNode;
 }
 
+interface OwnerPageScaffoldProps {
+  children: ReactNode;
+  className?: string;
+}
+
+interface OwnerContentGridProps {
+  children: ReactNode;
+  density?: 'default' | 'wide';
+}
+
 export function PageSection({
   children,
   className,
@@ -196,6 +206,14 @@ export function PageIntro({ actions, description, eyebrow, pills, title }: PageI
       {actions ? <div className="owner-page-intro__actions">{actions}</div> : null}
     </div>
   );
+}
+
+export function OwnerPageScaffold({ children, className }: OwnerPageScaffoldProps) {
+  return <div className={['owner-page-stack', className].filter(Boolean).join(' ')}>{children}</div>;
+}
+
+export function OwnerContentGrid({ children, density = 'default' }: OwnerContentGridProps) {
+  return <div className={density === 'wide' ? 'owner-two-column-layout owner-two-column-layout--wide' : 'owner-two-column-layout'}>{children}</div>;
 }
 
 export function AppPill({

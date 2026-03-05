@@ -87,6 +87,28 @@ No edits to mobile and landing; web-app only.
 9. [ ] Execute page-by-page redesign rollout with shared primitives first.
 10. [ ] Run final responsive QA matrix and cross-route visual consistency pass.
 
+## Phase 3 Resolved Overlap / Shell Stability (March 5, 2026)
+- Unified shell container width + gutter math so navbar/banner/footer and page containers no longer shift across breakpoints.
+  - `src/styles.css`
+  - `src/app/components/AppShell.tsx`
+- Fixed fixed-header collision risk by making owner/public content offset deterministic from `--app-shell-offset`.
+  - `src/styles.css`
+- Fixed mobile navbar overlap bug where actions stacked vertically at `<=640px` while offset still assumed `62px`.
+  - `src/styles.css`
+  - `src/app/components/AppShell.tsx`
+- Reduced medium-width owner shell collision risk by tightening sidebar column sizing and sticky offset behavior.
+  - `src/styles.css`
+- Standardized owner page scaffolds (stack + two-column grid variants) through reusable primitives to remove per-page wrapper drift.
+  - `src/app/components/PageTemplates.tsx`
+  - `src/pages/owner/DashboardPage.tsx`
+  - `src/pages/owner/ServicesPage.tsx`
+  - `src/pages/owner/SettingsPage.tsx`
+  - `src/pages/owner/IntegrationsPage.tsx`
+  - `src/modules/scheduling/SchedulingWorkspace.tsx`
+  - `src/modules/clients/CustomerWorkspace.tsx`
+  - `src/modules/billing/BillingWorkspace.tsx`
+  - `src/pages/owner/onboarding/OnboardingFlow.tsx`
+
 ## Known UI Bugs / Risks (Overlap + Responsive)
 - Token drift risk from duplicate root token blocks in one stylesheet.
   - `src/styles.css:10`

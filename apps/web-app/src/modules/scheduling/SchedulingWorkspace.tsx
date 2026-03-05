@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3, Plus } from 'lucide-react';
-import { AppPill, PageIntro } from '@/app/components/PageTemplates';
+import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { getOwnerBusinessSettingsResource, getOwnerDashboardResource } from '@/features/owner/data';
 import { FlowLayout, FlowSection, ReviewBlock } from '@/modules/shared/flow/FlowScaffolds';
@@ -93,7 +93,7 @@ export function SchedulingWorkspace() {
   }
 
   return (
-    <div className="owner-page-stack">
+    <OwnerPageScaffold>
       <PageIntro
         eyebrow="Scheduling"
         title="Availability management"
@@ -189,7 +189,7 @@ export function SchedulingWorkspace() {
           </div>
         </FlowSection>
       </FlowLayout>
-    </div>
+    </OwnerPageScaffold>
   );
 }
 

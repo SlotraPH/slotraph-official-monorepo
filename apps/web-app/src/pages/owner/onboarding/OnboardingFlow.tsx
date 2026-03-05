@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Badge, Button, Card, PageHeader } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { OwnerPageScaffold } from '@/app/components/PageTemplates';
 import type { ServiceRecord } from '@/domain/service/types';
 import type { TeamMemberRecord } from '@/domain/staff/types';
 import { trackWebEvent } from '@/features/analytics/trackWebEvent';
@@ -335,7 +336,7 @@ export function OnboardingFlow() {
   }
 
   return (
-    <div className="owner-page-stack">
+    <OwnerPageScaffold>
       <PageHeader
         title="Owner onboarding"
         subtitle="Complete the initial business setup before accepting bookings."
@@ -420,6 +421,6 @@ export function OnboardingFlow() {
           </Card>
         </div>
       </div>
-    </div>
+    </OwnerPageScaffold>
   );
 }

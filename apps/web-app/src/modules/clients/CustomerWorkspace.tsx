@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Compass, Mail, Phone, Search, UserPlus, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PageIntro, AppPill } from '@/app/components/PageTemplates';
+import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { CustomerRecord } from '@/domain/customer/types';
 import { getOwnerCustomersResource } from '@/features/owner/data';
@@ -90,7 +90,7 @@ export function CustomerWorkspace() {
   ];
 
   return (
-    <div className="owner-page-stack">
+    <OwnerPageScaffold>
       <PageIntro
         eyebrow="Clients"
         title="Client intake and relationship workspace"
@@ -226,7 +226,7 @@ export function CustomerWorkspace() {
           </FlowSection>
         </FlowLayout>
       </FlowLayout>
-    </div>
+    </OwnerPageScaffold>
   );
 }
 
