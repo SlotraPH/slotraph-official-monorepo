@@ -11,6 +11,7 @@ import {
   type SchedulingOverrideStatus,
   type SchedulingPersistenceSnapshot,
 } from '@/features/owner/scheduling/persistenceClient';
+import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { FlowSection, ReviewBlock } from '@/modules/shared/flow/FlowScaffolds';
 import {
   BrandButton,
@@ -39,6 +40,18 @@ export function SchedulingWorkspace() {
   const dashboardResource = mockOwnerRouteClient.getDashboardQuery();
   const businessResource = mockOwnerRouteClient.getBusinessSettingsQuery();
   const toast = useBrandToast();
+  const [selectedDayId, setSelectedDayId] = useState<string | null>(
+    () => (businessResource.status === 'success' ? businessResource.data.businessHours[0]?.id ?? null : null),
+  );
+  const [draft, setDraft] = useState<AvailabilityDraft>(() => {
+    if (businessResource.status !== 'success') {
+      return {
+        day: '',
+        isOpen: true,
+        openTime: '09:00',
+        closeTime: '18:00',
+      };
+    }
 
   const [sessionStatus, setSessionStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [sessionMessage, setSessionMessage] = useState('Loading scheduling data contracts...');
@@ -54,6 +67,24 @@ export function SchedulingWorkspace() {
   const [timezone, setTimezone] = useState(() => businessResource.status === 'success' ? businessResource.data.business.timezone : 'Asia/Manila');
   const [dateOverrides, setDateOverrides] = useState<SchedulingOverrideDraft[]>([]);
   const [blackoutDates, setBlackoutDates] = useState<string[]>([]);
+  const [dateOverrides, setDateOverrides] = useState<DateOverride[]>([
+    {
+      id: 'ovr-holiday',
+      date: '2026-03-29',
+      status: 'closed',
+      openTime: '10:00',
+      closeTime: '19:00',
+      note: 'Staff planning day',
+    },
+    {
+      id: 'ovr-sale',
+      date: '2026-03-15',
+      status: 'extended',
+      openTime: '09:00',
+      closeTime: '21:00',
+      note: 'Weekend promo window',
+    },
+  ]);
   const [newOverrideDate, setNewOverrideDate] = useState('');
   const [newOverrideStatus, setNewOverrideStatus] = useState<SchedulingOverrideStatus>('closed');
   const [newOverrideOpenTime, setNewOverrideOpenTime] = useState('10:00');
@@ -62,6 +93,7 @@ export function SchedulingWorkspace() {
   const [newBlackoutDate, setNewBlackoutDate] = useState('');
   const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
   const [lastSavedLabel, setLastSavedLabel] = useState('Waiting for first save');
+  const [lastSavedLabel, setLastSavedLabel] = useState('Auto-saved 2m ago');
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [pendingSavePayload, setPendingSavePayload] = useState<SchedulingPersistenceSnapshot | null>(null);
 
@@ -162,6 +194,25 @@ export function SchedulingWorkspace() {
         actions={<BrandButton variant="secondary" onClick={restoreDefaults}>Load default schedule</BrandButton>}
       />
     );
+  if (dashboardResource.status === 'loading' || businessResource.status === 'loading') {
+    return <RouteStateCard title="Loading calendar" description="Preparing the weekly calendar and availability defaults." variant="loading" />;
+  }
+
+  if (dashboardResource.status === 'error' || businessResource.status === 'error') {
+    const errorMessage = dashboardResource.status === 'error'
+      ? dashboardResource.message
+      : businessResource.status === 'error'
+        ? businessResource.message
+        : 'Unable to load calendar data.';
+
+    return (
+      <RouteStateCard
+        title="Calendar unavailable"
+        description={errorMessage}
+        variant="error"
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   const { bookings } = dashboardResource.data;
@@ -228,6 +279,7 @@ export function SchedulingWorkspace() {
     const nextDraft = { ...draft, [field]: value };
     setDraft(nextDraft);
     markDirty();
+    setSaveState('idle');
     setErrors((currentErrors) => ({
       ...currentErrors,
       [field]: validateAvailabilityField(nextDraft, field),
@@ -284,6 +336,13 @@ export function SchedulingWorkspace() {
       getCurrentSnapshot(dateOverrides, blackoutDates, nextWeeklyHours, timezone),
       `${draft.day} now runs ${draft.isOpen ? `${draft.openTime} to ${draft.closeTime}` : 'as closed'} in ${timezone}.`,
     );
+    setSaveState('saving');
+    setSaveState('saved');
+    setLastSavedLabel(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+    toast.success({
+      title: 'Availability rules updated',
+      description: `${draft.day} now runs ${draft.isOpen ? `${draft.openTime} to ${draft.closeTime}` : 'as closed'} in the local preview.`,
+    });
   }
 
   function handleAddOverride() {
@@ -313,6 +372,7 @@ export function SchedulingWorkspace() {
     setNewOverrideDate('');
     setNewOverrideNote('');
     markDirty();
+    setSaveState('idle');
     toast.info({
       title: 'Override draft added',
       description: `${formatDateLabel(nextOverride.date)} is queued and ready to save.`,
@@ -334,6 +394,7 @@ export function SchedulingWorkspace() {
     setBlackoutDates(nextDates);
     setNewBlackoutDate('');
     markDirty();
+    setSaveState('idle');
   }
 
   function handleRemoveBlackoutDate(date: string) {
@@ -405,6 +466,7 @@ export function SchedulingWorkspace() {
             <AppPill>{teamMembers.length} staff scheduled</AppPill>
             <AppPill>Timezone: {timezone}</AppPill>
             <SaveStateIndicator status={saveState} savedLabel={lastSavedLabel} onRetry={retrySave} />
+            <SaveStateIndicator status={saveState} savedLabel={lastSavedLabel} onRetry={handleSave} />
           </>
         )}
       />

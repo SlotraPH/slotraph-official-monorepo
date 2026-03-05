@@ -169,6 +169,14 @@ export function BookingPreferencesPage() {
 
   if (loadingError) {
     return <RouteStateCard title="Booking settings unavailable" description={loadingError} variant="error" onRetry={() => void loadBookingDraft()} />;
+  function handleSave() {
+    setSaveState('saving');
+    setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+    setSaveState('saved');
+    toast.success({
+      title: 'Booking page draft saved',
+      description: 'Section order, intake fields, and preview copy were saved in this local workspace.',
+    });
   }
 
   return (
@@ -184,6 +192,7 @@ export function BookingPreferencesPage() {
               </p>
             </div>
             <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={() => void handleSave()} />
+            <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={handleSave} />
           </div>
           <div className="booking-builder-section-list">
             {sections.map((section, index) => (

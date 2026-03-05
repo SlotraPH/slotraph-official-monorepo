@@ -25,6 +25,56 @@ const { title, description = 'Welcome to Slotra' } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
+    <!-- Preloader -->
+    <div id="preloader" style="
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    ">
+      <video
+        id="preloader-video"
+        src="/slotraph-loader.mp4"
+        autoplay
+        muted
+        playsinline
+        style="width: 220px; height: auto;"
+      ></video>
+    </div>
+
+    <script is:inline>
+      (function () {
+        var preloader = document.getElementById('preloader');
+        var video = document.getElementById('preloader-video');
+        var dismissed = false;
+
+        function dismiss() {
+          if (dismissed) return;
+          dismissed = true;
+          preloader.style.opacity = '0';
+          preloader.style.pointerEvents = 'none';
+          setTimeout(function () { preloader.style.display = 'none'; }, 650);
+        }
+
+        // Dismiss when video ends, with a short grace delay
+        video.addEventListener('ended', function () {
+          setTimeout(dismiss, 150);
+        });
+
+        // Safety fallback: dismiss after 4s even if video stalls
+        setTimeout(dismiss, 4000);
+
+        // Also dismiss once the page is fully loaded (whichever is later)
+        window.addEventListener('load', function () {
+          if (video.ended) dismiss();
+        });
+      })();
+    </script>
+
     <slot />
   </body>
 </html>

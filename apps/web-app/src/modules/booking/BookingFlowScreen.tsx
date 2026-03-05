@@ -24,6 +24,9 @@ import { formatCurrency, formatDuration } from '@/domain/service/formatters';
 import { trackWebEvent } from '@/features/analytics/trackWebEvent';
 import { publicBookingIntegrationClient } from '@/features/public-booking/integrationClient';
 import { mockPublicBookingRouteClient } from '@/features/public-booking/routeClient';
+import {
+  mockPublicBookingRouteClient,
+} from '@/features/public-booking/routeClient';
 import { FlowActions, FlowLayout, FlowSection, FlowStepper, ReviewBlock } from '@/modules/shared/flow/FlowScaffolds';
 import { formatSelectedDate } from '@/pages/public/booking/availability';
 import {
@@ -127,6 +130,34 @@ export function BookingFlowScreen() {
     ? bookingData.staff.filter((member) => selectedService.staffIds.includes(member.id))
     : [];
   const slots = slotState.data;
+  const [draft, setDraft] = useState<BookingDraft>(() =>
+    resource.status === 'success' ? mockPublicBookingRouteClient.createDraft(resource.data.business.id) : mockPublicBookingRouteClient.createDraft('')
+  );
+  const [currentStep, setCurrentStep] = useState<BookingStepId>('service');
+  const [customerErrors, setCustomerErrors] = useState<Record<string, string | undefined>>({});
+  const [stepError, setStepError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (resource.status === 'loading') {
+    return <RouteStateCard title="Loading booking flow" description="Preparing the public business profile, services, and staff." variant="loading" />;
+  }
+
+  if (resource.status === 'error') {
+    return <RouteStateCard title="Booking flow unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
+  }
+
+  const { bookingEnabled, business, services, servicesById, staff, staffById } = resource.data;
+
+  if (!bookingEnabled) {
+    return <RouteStateCard title="Booking not enabled" description="This public route is still guarded until the booking experience is ready to open." variant="empty" />;
+  }
+
+  const selectedService = draft.serviceId ? servicesById[draft.serviceId] ?? null : null;
+  const selectedStaff = draft.staffId ? staffById[draft.staffId] ?? null : null;
+  const staffRequired = selectedService?.staffSelectionMode === 'required';
+  const availableStaff = selectedService ? staff.filter((member) => selectedService.staffIds.includes(member.id)) : [];
+  const dateOptions = selectedService ? mockPublicBookingRouteClient.getDateOptions(selectedService, staffRequired ? draft.staffId : null) : [];
+  const slots = selectedService && draft.date ? mockPublicBookingRouteClient.getSlots(selectedService, draft.date, staffRequired ? draft.staffId : null) : [];
   const selectedSlot = slots.find((slot) => slot.id === draft.slotId) ?? null;
 
   const steps = getBookingSteps(selectedService).map((step) => ({
@@ -412,6 +443,13 @@ export function BookingFlowScreen() {
     };
 
     void commitConfirmation(confirmation);
+    mockPublicBookingRouteClient.saveConfirmation(confirmation);
+    trackWebEvent('booking_confirmation_saved', {
+      reference: confirmation.reference,
+      serviceId: selectedService.id,
+      staffId: selectedStaff?.id ?? 'next-available',
+    });
+    navigate('/book/confirmation');
   }
 
   function retrySubmit() {
