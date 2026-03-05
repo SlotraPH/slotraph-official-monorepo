@@ -3,7 +3,7 @@ import { AlertTriangle, CalendarDays, ChevronLeft, ChevronRight, Clock3, Globe2,
 import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { getOwnerBusinessSettingsResource, getOwnerDashboardResource } from '@/features/owner/data';
-import { FlowLayout, FlowSection, ReviewBlock } from '@/modules/shared/flow/FlowScaffolds';
+import { FlowSection, ReviewBlock } from '@/modules/shared/flow/FlowScaffolds';
 import { BrandButton, BrandInput, BrandSelect, Card, colors, radii, spacing, typography, useBrandToast } from '@/ui';
 import { type AvailabilityDraft, validateAvailabilityField, validateAvailabilityForm } from './validation';
 
@@ -222,144 +222,7 @@ export function SchedulingWorkspace() {
         )}
       />
 
-      <FlowLayout
-        sidebar={(
-          <>
-            <FlowSection eyebrow="Availability rules" title="Daily operating window" description="Validation runs on blur for editable fields and save state updates consistently across this workspace.">
-              <div style={{ display: 'grid', gap: spacing[4] }}>
-                <BrandSelect
-                  error={errors.day}
-                  label="Day"
-                  value={selectedDayId ?? ''}
-                  onBlur={() => handleBlur('day')}
-                  onChange={(event) => syncDraft(event.target.value)}
-                >
-                  {weeklyHours.map((item) => (
-                    <option key={item.id} value={item.id}>{item.day}</option>
-                  ))}
-                </BrandSelect>
-                <BrandSelect
-                  label="Booking status"
-                  value={draft.isOpen ? 'open' : 'closed'}
-                  onChange={(event) => setField('isOpen', event.target.value === 'open')}
-                >
-                  <option value="open">Accept bookings</option>
-                  <option value="closed">Closed</option>
-                </BrandSelect>
-                <BrandSelect
-                  disabled={!draft.isOpen}
-                  error={errors.openTime}
-                  label="Open time"
-                  value={draft.openTime}
-                  onBlur={() => handleBlur('openTime')}
-                  onChange={(event) => setField('openTime', event.target.value)}
-                >
-                  {HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
-                </BrandSelect>
-                <BrandSelect
-                  disabled={!draft.isOpen}
-                  error={errors.closeTime}
-                  label="Close time"
-                  value={draft.closeTime}
-                  onBlur={() => handleBlur('closeTime')}
-                  onChange={(event) => setField('closeTime', event.target.value)}
-                >
-                  {HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
-                </BrandSelect>
-                <BrandButton startIcon={<Clock3 size={15} />} onClick={handleSave}>
-                  Save availability
-                </BrandButton>
-              </div>
-            </FlowSection>
-            <FlowSection eyebrow="Date overrides" title="Special date windows" description="Add one-off operating rules for holidays, promos, and exceptions.">
-              <div className="schedule-overrides-shell">
-                <div className="schedule-overrides-shell__form">
-                  <BrandInput label="Date" type="date" value={newOverrideDate} onChange={(event) => setNewOverrideDate(event.target.value)} />
-                  <BrandSelect label="Status" value={newOverrideStatus} onChange={(event) => setNewOverrideStatus(event.target.value as OverrideStatus)}>
-                    {OVERRIDE_STATUSES.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </BrandSelect>
-                  <BrandSelect
-                    disabled={newOverrideStatus === 'closed'}
-                    label="Open time"
-                    value={newOverrideOpenTime}
-                    onChange={(event) => setNewOverrideOpenTime(event.target.value)}
-                  >
-                    {HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
-                  </BrandSelect>
-                  <BrandSelect
-                    disabled={newOverrideStatus === 'closed'}
-                    label="Close time"
-                    value={newOverrideCloseTime}
-                    onChange={(event) => setNewOverrideCloseTime(event.target.value)}
-                  >
-                    {HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
-                  </BrandSelect>
-                </div>
-                <BrandInput
-                  helperText="Optional context for front desk handoff."
-                  label="Note"
-                  value={newOverrideNote}
-                  onChange={(event) => setNewOverrideNote(event.target.value)}
-                />
-                <BrandButton size="nav" startIcon={<Plus size={14} />} variant="secondary" onClick={handleAddOverride}>
-                  Add override
-                </BrandButton>
-                <div className="schedule-overrides-shell__list">
-                  {dateOverrides.map((override) => (
-                    <div key={override.id} className="schedule-overrides-shell__item">
-                      <div className="schedule-overrides-shell__item-top">
-                        <strong>{formatDateLabel(override.date)}</strong>
-                        <Tag text={override.status} />
-                      </div>
-                      <span>{override.status === 'closed' ? 'Closed all day' : `${override.openTime} - ${override.closeTime}`}</span>
-                      <span>{override.note}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </FlowSection>
-            <FlowSection eyebrow="Blackout dates" title="Block booking acceptance" description="Reserve dates where no public booking slots should appear.">
-              <div className="schedule-blackout-shell">
-                <div className="schedule-blackout-shell__form">
-                  <BrandInput label="Blackout date" type="date" value={newBlackoutDate} onChange={(event) => setNewBlackoutDate(event.target.value)} />
-                  <BrandButton size="nav" variant="secondary" onClick={handleAddBlackoutDate}>Add date</BrandButton>
-                </div>
-                <div className="schedule-blackout-shell__list">
-                  {blackoutDates.map((date) => (
-                    <span key={date} className="schedule-blackout-shell__tag">{formatDateLabel(date)}</span>
-                  ))}
-                </div>
-              </div>
-            </FlowSection>
-            <FlowSection eyebrow="Timezone and conflicts" title="Calendar safeguards" description="Use this rail to catch timezone drift and date policy conflicts before publish.">
-              <div className="schedule-conflict-shell">
-                <BrandSelect label="Booking timezone" value={timezone} onChange={(event) => setTimezone(event.target.value)}>
-                  {timezoneOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                </BrandSelect>
-                <ReviewBlock items={daySummary} title="Weekly baseline" />
-                {conflictMessages.length > 0 ? (
-                  <div className="schedule-conflict-shell__alerts" role="status">
-                    {conflictMessages.map((message) => (
-                      <div key={message} className="schedule-conflict-shell__alert">
-                        <AlertTriangle size={16} />
-                        <span>{message}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="schedule-conflict-shell__healthy">
-                    <Globe2 size={16} />
-                    <span>No scheduling conflicts detected in this local preview.</span>
-                  </div>
-                )}
-                <BrandButton startIcon={<Save size={14} />} onClick={handleSave}>Save all scheduling updates</BrandButton>
-              </div>
-            </FlowSection>
-          </>
-        )}
-      >
+      <div className="schedule-workspace-grid">
         <FlowSection eyebrow="Weekly schedule" title="Operations grid" description="Scan weekday windows and jump into any day editor without leaving this page.">
           <div className="schedule-grid">
             <div className="schedule-grid__header">
@@ -383,6 +246,52 @@ export function SchedulingWorkspace() {
             })}
           </div>
         </FlowSection>
+        <FlowSection eyebrow="Availability rules" title="Daily operating window" description="Validation runs on blur for editable fields and save state updates consistently across this workspace.">
+          <div style={{ display: 'grid', gap: spacing[4] }}>
+            <BrandSelect
+              error={errors.day}
+              label="Day"
+              value={selectedDayId ?? ''}
+              onBlur={() => handleBlur('day')}
+              onChange={(event) => syncDraft(event.target.value)}
+            >
+              {weeklyHours.map((item) => (
+                <option key={item.id} value={item.id}>{item.day}</option>
+              ))}
+            </BrandSelect>
+            <BrandSelect
+              label="Booking status"
+              value={draft.isOpen ? 'open' : 'closed'}
+              onChange={(event) => setField('isOpen', event.target.value === 'open')}
+            >
+              <option value="open">Accept bookings</option>
+              <option value="closed">Closed</option>
+            </BrandSelect>
+            <BrandSelect
+              disabled={!draft.isOpen}
+              error={errors.openTime}
+              label="Open time"
+              value={draft.openTime}
+              onBlur={() => handleBlur('openTime')}
+              onChange={(event) => setField('openTime', event.target.value)}
+            >
+              {HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
+            </BrandSelect>
+            <BrandSelect
+              disabled={!draft.isOpen}
+              error={errors.closeTime}
+              label="Close time"
+              value={draft.closeTime}
+              onBlur={() => handleBlur('closeTime')}
+              onChange={(event) => setField('closeTime', event.target.value)}
+            >
+              {HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
+            </BrandSelect>
+            <BrandButton startIcon={<Clock3 size={15} />} onClick={handleSave}>
+              Save availability
+            </BrandButton>
+          </div>
+        </FlowSection>
         <FlowSection eyebrow="Upcoming bookings" title="This week's active schedule" description="The booking grid keeps the operational snapshot visible while availability is being edited.">
           <div className="schedule-bookings-list">
             {bookings.map((booking) => (
@@ -402,7 +311,93 @@ export function SchedulingWorkspace() {
             ))}
           </div>
         </FlowSection>
-      </FlowLayout>
+        <FlowSection eyebrow="Date overrides" title="Special date windows" description="Add one-off operating rules for holidays, promos, and exceptions.">
+          <div className="schedule-overrides-shell">
+            <div className="schedule-overrides-shell__form">
+              <BrandInput label="Date" type="date" value={newOverrideDate} onChange={(event) => setNewOverrideDate(event.target.value)} />
+              <BrandSelect label="Status" value={newOverrideStatus} onChange={(event) => setNewOverrideStatus(event.target.value as OverrideStatus)}>
+                {OVERRIDE_STATUSES.map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </BrandSelect>
+              <BrandSelect
+                disabled={newOverrideStatus === 'closed'}
+                label="Open time"
+                value={newOverrideOpenTime}
+                onChange={(event) => setNewOverrideOpenTime(event.target.value)}
+              >
+                {HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
+              </BrandSelect>
+              <BrandSelect
+                disabled={newOverrideStatus === 'closed'}
+                label="Close time"
+                value={newOverrideCloseTime}
+                onChange={(event) => setNewOverrideCloseTime(event.target.value)}
+              >
+                {HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
+              </BrandSelect>
+            </div>
+            <BrandInput
+              helperText="Optional context for front desk handoff."
+              label="Note"
+              value={newOverrideNote}
+              onChange={(event) => setNewOverrideNote(event.target.value)}
+            />
+            <BrandButton size="nav" startIcon={<Plus size={14} />} variant="secondary" onClick={handleAddOverride}>
+              Add override
+            </BrandButton>
+            <div className="schedule-overrides-shell__list">
+              {dateOverrides.map((override) => (
+                <div key={override.id} className="schedule-overrides-shell__item">
+                  <div className="schedule-overrides-shell__item-top">
+                    <strong>{formatDateLabel(override.date)}</strong>
+                    <Tag text={override.status} />
+                  </div>
+                  <span>{override.status === 'closed' ? 'Closed all day' : `${override.openTime} - ${override.closeTime}`}</span>
+                  <span>{override.note}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </FlowSection>
+        <FlowSection eyebrow="Blackout dates" title="Block booking acceptance" description="Reserve dates where no public booking slots should appear.">
+          <div className="schedule-blackout-shell">
+            <div className="schedule-blackout-shell__form">
+              <BrandInput label="Blackout date" type="date" value={newBlackoutDate} onChange={(event) => setNewBlackoutDate(event.target.value)} />
+              <BrandButton size="nav" variant="secondary" onClick={handleAddBlackoutDate}>Add date</BrandButton>
+            </div>
+            <div className="schedule-blackout-shell__list">
+              {blackoutDates.map((date) => (
+                <span key={date} className="schedule-blackout-shell__tag">{formatDateLabel(date)}</span>
+              ))}
+            </div>
+          </div>
+        </FlowSection>
+        <FlowSection eyebrow="Timezone and conflicts" title="Calendar safeguards" description="Use this rail to catch timezone drift and date policy conflicts before publish.">
+          <div className="schedule-conflict-shell">
+            <BrandSelect label="Booking timezone" value={timezone} onChange={(event) => setTimezone(event.target.value)}>
+              {timezoneOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </BrandSelect>
+            <ReviewBlock items={daySummary} title="Weekly baseline" />
+            {conflictMessages.length > 0 ? (
+              <div className="schedule-conflict-shell__alerts" role="status">
+                {conflictMessages.map((message) => (
+                  <div key={message} className="schedule-conflict-shell__alert">
+                    <AlertTriangle size={16} />
+                    <span>{message}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="schedule-conflict-shell__healthy">
+                <Globe2 size={16} />
+                <span>No scheduling conflicts detected in this local preview.</span>
+              </div>
+            )}
+            <BrandButton startIcon={<Save size={14} />} onClick={handleSave}>Save all scheduling updates</BrandButton>
+          </div>
+        </FlowSection>
+      </div>
     </OwnerPageScaffold>
   );
 }
