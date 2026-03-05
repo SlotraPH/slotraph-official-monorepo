@@ -84,8 +84,8 @@ export function ConfirmationSummary({ confirmation }: ConfirmationSummaryProps) 
         <Link className="button-link" to="/book">
           Book another appointment
         </Link>
-        <Link className="button-link button-link--secondary" to="/">
-          Return home
+        <Link className="button-link button-link--secondary" to="/book">
+          Back to booking flow
         </Link>
       </div>
     </div>

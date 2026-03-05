@@ -20,7 +20,7 @@ describe('AppErrorBoundary', () => {
     );
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Open owner setup' })).toHaveAttribute('href', '/owner/onboarding');
     errorSpy.mockRestore();
   });
 });

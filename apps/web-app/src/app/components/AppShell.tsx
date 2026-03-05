@@ -18,7 +18,7 @@ interface AppShellProps {
 }
 
 const NAV_LINKS = [
-  { label: 'Home', to: '/' },
+  { label: 'Setup', to: '/owner/onboarding' },
   { label: 'Dashboard', to: '/owner/dashboard' },
   { label: 'Calendar', to: '/owner/calendar' },
   { label: 'Booking', to: '/book' },
@@ -110,7 +110,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
 
       <header className={`app-shell__navbar ${navbarSolid ? 'app-shell__navbar--solid' : ''}`}>
         <div className="app-shell__navbar-inner">
-          <Link aria-label="Slotra home" className="app-shell__brand" to="/">
+          <Link aria-label="Slotra owner setup" className="app-shell__brand" to="/owner/onboarding">
             <img alt="Slotra" className="app-shell__brand-image" src={wordmark} />
           </Link>
 
@@ -160,9 +160,9 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
             </p>
           </div>
           <div className="app-shell__footer-links">
-            <Link to="/">
+            <Link to="/owner/onboarding">
               <LayoutDashboard size={15} />
-              Home
+              Owner setup
             </Link>
             <Link to="/owner/dashboard">
               <Sparkles size={15} />
@@ -182,7 +182,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
             <a href="https://www.facebook.com/profile.php?id=61586607277534" rel="noreferrer" target="_blank">
               Facebook
             </a>
-            <span>© {footerYear} Slotra Technologies Inc.</span>
+            <span>Â© {footerYear} Slotra Technologies Inc.</span>
           </div>
         </div>
       </footer>
@@ -239,3 +239,4 @@ export function AppShellLead({
     </div>
   );
 }
+

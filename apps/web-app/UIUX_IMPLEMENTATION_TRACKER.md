@@ -1,4 +1,4 @@
-# UI/UX Implementation Tracker (Phase 1 Baseline)
+# UI/UX Implementation Tracker (Phase 2 Route IA Update)
 
 Last updated: March 5, 2026
 Scope: `apps/web-app` only
@@ -15,12 +15,13 @@ No edits to mobile and landing; web-app only.
 ## Constraints
 - Web-app only: do not touch `apps/mobile/**` or `apps/landing/**`.
 - UI-first phase: no backend logic changes.
-- Keep owner/public route behavior unchanged in this phase.
+- Keep public booking routes intact while updating owner entry IA.
 - Use Slotra brand tokens and patterns from `brand.md` as source of truth.
 
 ## Current Route IA (Observed)
-- `/` Home (marketing-style shell entry)
+- `/` redirects to `/owner/onboarding`
 - `/owner/*` owner workspace routes (guarded)
+  - `/owner` redirects to `/owner/onboarding`
 - `/book` public booking flow
 - `/book/confirmation` booking confirmation
 - `/sandbox` UI token/surface validation
@@ -39,7 +40,14 @@ No edits to mobile and landing; web-app only.
   - `/book/confirmation`
 - Utility surface:
   - `/sandbox`
-- Home (`/`) is not part of the target IA decision center for redesign sequencing.
+- Home (`/`) is decommissioned as a page and retained only as a redirect entrypoint.
+
+## Phase 2 Migration Notes
+- Removed Home page route/component usage from `src/router/index.tsx`.
+- Default authenticated workspace entry is setup-first: `/owner/onboarding`.
+- Global shell navigation removed the `Home` item and now uses `Setup`.
+- Owner shell brand/footer links no longer point to a Home route.
+- Fallback CTAs (`NotFound`, `AppErrorBoundary`, `Sandbox`) were retargeted away from Home.
 
 ## Component Inventory (Baseline)
 - Shell and layout:

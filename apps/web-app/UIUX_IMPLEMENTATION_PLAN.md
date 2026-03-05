@@ -14,7 +14,11 @@ No edits to mobile and landing; web-app only.
 - Incremental rollout with route-level verification to avoid broad regressions.
 
 ## Information Architecture Target (Without Home)
+- Root entry behavior
+  - `/` -> redirect to `/owner/onboarding`
 - Owner app shell (`/owner/*`)
+  - `/owner` -> redirect to `/owner/onboarding`
+  - `/owner/onboarding` (default owner landing)
   - `/owner/dashboard`
   - `/owner/calendar`
   - `/owner/services`
@@ -26,12 +30,23 @@ No edits to mobile and landing; web-app only.
   - `/owner/settings/team`
   - `/owner/settings/notifications`
   - `/owner/settings/booking`
-  - `/owner/onboarding`
 - Public booking surfaces
   - `/book`
   - `/book/confirmation`
 - Utility route
   - `/sandbox`
+
+## Final Navigation Map (Phase 2)
+- Global shell nav
+  - Setup (`/owner/onboarding`)
+  - Dashboard (`/owner/dashboard`)
+  - Calendar (`/owner/calendar`)
+  - Booking (`/book`)
+  - Settings (`/owner/settings`)
+- Owner sidebar nav
+  - Dashboard, Calendar, Services, Customers, Payments, Integrations, Settings
+- Explicitly removed
+  - `Home` nav item and Home page route/component as an IA destination
 
 ## Page-Level Layout Specs
 - Global shell
