@@ -17,12 +17,8 @@ import type { BookingConfirmationRecord, BookingCustomerDetails, BookingDraft } 
 import { formatCurrency, formatDuration } from '@/domain/service/formatters';
 import { trackWebEvent } from '@/features/analytics/trackWebEvent';
 import {
-  createInitialBookingDraft,
-  getBookingDateOptions,
-  getBookingSlots,
-  getPublicBookingResource,
-  savePublicBookingConfirmation,
-} from '@/features/public-booking/data';
+  mockPublicBookingRouteClient,
+} from '@/features/public-booking/routeClient';
 import { FlowActions, FlowLayout, FlowSection, FlowStepper, ReviewBlock } from '@/modules/shared/flow/FlowScaffolds';
 import { formatSelectedDate } from '@/pages/public/booking/availability';
 import {
@@ -100,9 +96,9 @@ function SelectionGrid({
 
 export function BookingFlowScreen() {
   const navigate = useNavigate();
-  const resource = getPublicBookingResource();
+  const resource = mockPublicBookingRouteClient.getBookingRouteQuery();
   const [draft, setDraft] = useState<BookingDraft>(() =>
-    resource.status === 'ready' ? createInitialBookingDraft(resource.data.business.id) : createInitialBookingDraft('')
+    resource.status === 'success' ? mockPublicBookingRouteClient.createDraft(resource.data.business.id) : mockPublicBookingRouteClient.createDraft('')
   );
   const [currentStep, setCurrentStep] = useState<BookingStepId>('service');
   const [customerErrors, setCustomerErrors] = useState<Record<string, string | undefined>>({});
@@ -114,7 +110,7 @@ export function BookingFlowScreen() {
   }
 
   if (resource.status === 'error') {
-    return <RouteStateCard title="Booking flow unavailable" description={resource.message} variant="error" />;
+    return <RouteStateCard title="Booking flow unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   const { bookingEnabled, business, services, servicesById, staff, staffById } = resource.data;
@@ -127,8 +123,8 @@ export function BookingFlowScreen() {
   const selectedStaff = draft.staffId ? staffById[draft.staffId] ?? null : null;
   const staffRequired = selectedService?.staffSelectionMode === 'required';
   const availableStaff = selectedService ? staff.filter((member) => selectedService.staffIds.includes(member.id)) : [];
-  const dateOptions = selectedService ? getBookingDateOptions(selectedService, staffRequired ? draft.staffId : null) : [];
-  const slots = selectedService && draft.date ? getBookingSlots(selectedService, draft.date, staffRequired ? draft.staffId : null) : [];
+  const dateOptions = selectedService ? mockPublicBookingRouteClient.getDateOptions(selectedService, staffRequired ? draft.staffId : null) : [];
+  const slots = selectedService && draft.date ? mockPublicBookingRouteClient.getSlots(selectedService, draft.date, staffRequired ? draft.staffId : null) : [];
   const selectedSlot = slots.find((slot) => slot.id === draft.slotId) ?? null;
   const steps = getBookingSteps(selectedService).map((step) => ({
     id: step,
@@ -224,7 +220,7 @@ export function BookingFlowScreen() {
       followUpNote: 'Staff still confirms the appointment manually after reviewing availability and payment instructions.',
     };
 
-    savePublicBookingConfirmation(confirmation);
+    mockPublicBookingRouteClient.saveConfirmation(confirmation);
     trackWebEvent('booking_confirmation_saved', {
       reference: confirmation.reference,
       serviceId: selectedService.id,

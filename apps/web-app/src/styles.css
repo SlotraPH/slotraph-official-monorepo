@@ -5976,6 +5976,62 @@ dialog[open],
   }
 }
 
+.route-state-card {
+  border: 1px solid rgba(46, 49, 146, 0.1);
+}
+
+.route-state-card__actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.route-state-card__skeleton {
+  width: 180px;
+  height: 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  background: linear-gradient(90deg, rgba(122, 135, 153, 0.15), rgba(122, 135, 153, 0.32), rgba(122, 135, 153, 0.15));
+  background-size: 200% 100%;
+  animation: phase5-pulse 1.2s ease infinite;
+}
+
+.save-state-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+}
+
+.save-state-indicator--idle {
+  background: rgba(122, 135, 153, 0.12);
+  border-color: rgba(122, 135, 153, 0.24);
+  color: var(--color-text-secondary);
+}
+
+.save-state-indicator--saving {
+  background: rgba(46, 49, 146, 0.1);
+  border-color: rgba(46, 49, 146, 0.25);
+  color: var(--color-brand);
+}
+
+.save-state-indicator--saved {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #0f766e;
+}
+
+.save-state-indicator--failed {
+  background: rgba(229, 62, 62, 0.1);
+  border-color: rgba(229, 62, 62, 0.28);
+  color: var(--color-error);
+}
+
 @keyframes phase5-pulse {
   0% {
     background-position: 100% 50%;

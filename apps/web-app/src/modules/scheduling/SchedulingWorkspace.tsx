@@ -2,9 +2,21 @@ import { useState } from 'react';
 import { AlertTriangle, CalendarDays, ChevronLeft, ChevronRight, Clock3, Globe2, Plus, Save } from 'lucide-react';
 import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
-import { getOwnerBusinessSettingsResource, getOwnerDashboardResource } from '@/features/owner/data';
+import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { FlowSection, ReviewBlock } from '@/modules/shared/flow/FlowScaffolds';
-import { BrandButton, BrandInput, BrandSelect, Card, colors, radii, spacing, typography, useBrandToast } from '@/ui';
+import {
+  BrandButton,
+  BrandInput,
+  BrandSelect,
+  Card,
+  SaveStateIndicator,
+  colors,
+  radii,
+  spacing,
+  typography,
+  useBrandToast,
+  type SaveStateStatus,
+} from '@/ui';
 import { type AvailabilityDraft, validateAvailabilityField, validateAvailabilityForm } from './validation';
 
 const HOURS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
@@ -22,14 +34,14 @@ interface DateOverride {
 }
 
 export function SchedulingWorkspace() {
-  const dashboardResource = getOwnerDashboardResource();
-  const businessResource = getOwnerBusinessSettingsResource();
+  const dashboardResource = mockOwnerRouteClient.getDashboardQuery();
+  const businessResource = mockOwnerRouteClient.getBusinessSettingsQuery();
   const toast = useBrandToast();
   const [selectedDayId, setSelectedDayId] = useState<string | null>(
-    () => (businessResource.status === 'ready' ? businessResource.data.businessHours[0]?.id ?? null : null),
+    () => (businessResource.status === 'success' ? businessResource.data.businessHours[0]?.id ?? null : null),
   );
   const [draft, setDraft] = useState<AvailabilityDraft>(() => {
-    if (businessResource.status !== 'ready') {
+    if (businessResource.status !== 'success') {
       return {
         day: '',
         isOpen: true,
@@ -46,8 +58,8 @@ export function SchedulingWorkspace() {
       closeTime: initialDay?.closeTime ?? '18:00',
     };
   });
-  const [weeklyHours, setWeeklyHours] = useState(() => businessResource.status === 'ready' ? businessResource.data.businessHours : []);
-  const [timezone, setTimezone] = useState(() => businessResource.status === 'ready' ? businessResource.data.business.timezone : 'Asia/Manila');
+  const [weeklyHours, setWeeklyHours] = useState(() => businessResource.status === 'success' ? businessResource.data.businessHours : []);
+  const [timezone, setTimezone] = useState(() => businessResource.status === 'success' ? businessResource.data.business.timezone : 'Asia/Manila');
   const [dateOverrides, setDateOverrides] = useState<DateOverride[]>([
     {
       id: 'ovr-holiday',
@@ -73,12 +85,29 @@ export function SchedulingWorkspace() {
   const [newOverrideNote, setNewOverrideNote] = useState('');
   const [blackoutDates, setBlackoutDates] = useState(['2026-04-18']);
   const [newBlackoutDate, setNewBlackoutDate] = useState('');
-  const [saveState, setSaveState] = useState<'saved' | 'dirty'>('saved');
+  const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
   const [lastSavedLabel, setLastSavedLabel] = useState('Auto-saved 2m ago');
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
 
-  if (dashboardResource.status !== 'ready' || businessResource.status !== 'ready') {
+  if (dashboardResource.status === 'loading' || businessResource.status === 'loading') {
     return <RouteStateCard title="Loading calendar" description="Preparing the weekly calendar and availability defaults." variant="loading" />;
+  }
+
+  if (dashboardResource.status === 'error' || businessResource.status === 'error') {
+    const errorMessage = dashboardResource.status === 'error'
+      ? dashboardResource.message
+      : businessResource.status === 'error'
+        ? businessResource.message
+        : 'Unable to load calendar data.';
+
+    return (
+      <RouteStateCard
+        title="Calendar unavailable"
+        description={errorMessage}
+        variant="error"
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   const { bookings } = dashboardResource.data;
@@ -107,7 +136,7 @@ export function SchedulingWorkspace() {
   function setField<K extends keyof AvailabilityDraft>(field: K, value: AvailabilityDraft[K]) {
     const nextDraft = { ...draft, [field]: value };
     setDraft(nextDraft);
-    setSaveState('dirty');
+    setSaveState('idle');
     setErrors((currentErrors) => ({
       ...currentErrors,
       [field]: validateAvailabilityField(nextDraft, field),
@@ -131,6 +160,7 @@ export function SchedulingWorkspace() {
     if (selectedDayId) {
       setWeeklyHours((currentHours) => currentHours.map((item) => (item.id === selectedDayId ? { ...item, ...draft } : item)));
     }
+    setSaveState('saving');
     setSaveState('saved');
     setLastSavedLabel(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
     toast.success({
@@ -162,7 +192,7 @@ export function SchedulingWorkspace() {
     setDateOverrides((currentOverrides) => [...currentOverrides, nextOverride]);
     setNewOverrideDate('');
     setNewOverrideNote('');
-    setSaveState('dirty');
+    setSaveState('idle');
     toast.info({
       title: 'Override draft added',
       description: `${formatDateLabel(nextOverride.date)} is now queued in this local editor.`,
@@ -175,7 +205,7 @@ export function SchedulingWorkspace() {
     }
     setBlackoutDates((currentDates) => [...currentDates, newBlackoutDate]);
     setNewBlackoutDate('');
-    setSaveState('dirty');
+    setSaveState('idle');
   }
 
   const conflictMessages = (() => {
@@ -197,8 +227,6 @@ export function SchedulingWorkspace() {
     return messages;
   })();
 
-  const saveStateLabel = saveState === 'saved' ? lastSavedLabel : 'Unsaved changes';
-
   return (
     <OwnerPageScaffold>
       <PageIntro
@@ -217,7 +245,7 @@ export function SchedulingWorkspace() {
           <>
             <AppPill tone="accent">Week of March 4, 2026</AppPill>
             <AppPill>{teamMembers.length} staff scheduled</AppPill>
-            <AppPill tone={saveState === 'saved' ? 'success' : 'warning'}>{saveStateLabel}</AppPill>
+            <SaveStateIndicator status={saveState} savedLabel={lastSavedLabel} onRetry={handleSave} />
           </>
         )}
       />

@@ -1,19 +1,19 @@
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { OwnerContentGrid, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
-import { getOwnerIntegrationsResource } from '@/features/owner/data';
+import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { IntegrationOverview } from './integrations/IntegrationOverview';
 import { IntegrationRoadmap } from './integrations/IntegrationRoadmap';
 import { IntegrationWorkflowList } from './integrations/IntegrationWorkflowList';
 
 export function IntegrationsPage() {
-  const resource = getOwnerIntegrationsResource();
+  const resource = mockOwnerRouteClient.getIntegrationsQuery();
 
   if (resource.status === 'loading') {
     return <RouteStateCard title="Loading integrations" description="Preparing MVP integration workflow fixtures." variant="loading" />;
   }
 
   if (resource.status === 'error') {
-    return <RouteStateCard title="Integrations unavailable" description={resource.message} variant="error" />;
+    return <RouteStateCard title="Integrations unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   const { roadmap, workflows } = resource.data;

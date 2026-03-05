@@ -15,13 +15,16 @@ import { DASHBOARD_ACTIVITY, DASHBOARD_QUICK_ACTIONS, DASHBOARD_SUMMARY } from '
 import { INTEGRATION_ROADMAP, INTEGRATION_WORKFLOWS } from '@/mocks/owner/integrations';
 import { mockCustomerRepository } from '@/features/owner/customers/mockCustomerRepository';
 import { mockOnboardingRepository } from '@/features/owner/onboarding/mockOnboardingRepository';
+import type { OwnerOnboardingSeed } from '@/features/owner/onboarding/contracts';
 import { mockSettingsRepository } from '@/features/owner/settings/mockSettingsRepository';
 import { mockServiceRepository } from '@/features/owner/services/mockServiceRepository';
 import { createReadyResource } from '@/features/resource';
 import type { ActivityItem, DashboardSummary, QuickAction } from '@/mocks/owner/dashboard';
 import type { IntegrationWorkflow } from '@/mocks/owner/integrations';
 
-interface OwnerDashboardData {
+export type { OwnerOnboardingSeed };
+
+export interface OwnerDashboardData {
   business: OwnerBusinessProfile;
   summary: DashboardSummary[];
   bookings: UpcomingBooking[];
@@ -29,33 +32,33 @@ interface OwnerDashboardData {
   activity: ActivityItem[];
 }
 
-interface OwnerServicesData {
+export interface OwnerServicesData {
   services: ServiceRecord[];
 }
 
-interface OwnerCustomersData {
+export interface OwnerCustomersData {
   customers: CustomerRecord[];
 }
 
-interface OwnerTeamData {
+export interface OwnerTeamData {
   teamMembers: TeamMemberRecord[];
 }
 
-interface OwnerBusinessSettingsData {
+export interface OwnerBusinessSettingsData {
   business: OwnerBusinessProfile;
   teamMembers: TeamMemberRecord[];
   businessHours: BusinessHourDraft[];
   timezoneOptions: string[];
 }
 
-interface OwnerPaymentsData {
+export interface OwnerPaymentsData {
   paymentSettings: PaymentSettings;
   bookingPreferences: BookingPreferencesSettings;
   checklist: PaymentChecklistItem[];
   acceptedPaymentMethodOptions: string[];
 }
 
-interface OwnerIntegrationsData {
+export interface OwnerIntegrationsData {
   workflows: IntegrationWorkflow[];
   roadmap: string[];
 }

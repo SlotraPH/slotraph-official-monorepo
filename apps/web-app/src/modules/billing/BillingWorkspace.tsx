@@ -2,19 +2,31 @@ import { useState } from 'react';
 import { BadgeCent, ClipboardCheck, Landmark, ReceiptText } from 'lucide-react';
 import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
-import { getOwnerPaymentsResource } from '@/features/owner/data';
+import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { FlowLayout, FlowSection, ReviewBlock, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
-import { BrandButton, BrandSelect, BrandTextarea, Card, colors, radii, spacing, typography, useBrandToast } from '@/ui';
+import {
+  BrandButton,
+  BrandSelect,
+  BrandTextarea,
+  Card,
+  SaveStateIndicator,
+  colors,
+  radii,
+  spacing,
+  typography,
+  useBrandToast,
+  type SaveStateStatus,
+} from '@/ui';
 import { type BillingDraft, validateBillingField, validateBillingForm } from './validation';
 
 type BillingView = 'collection' | 'checklist';
 
 export function BillingWorkspace() {
-  const resource = getOwnerPaymentsResource();
+  const resource = mockOwnerRouteClient.getPaymentsQuery();
   const toast = useBrandToast();
   const [view, setView] = useState<BillingView>('collection');
   const [draft, setDraft] = useState<BillingDraft>(() => {
-    if (resource.status !== 'ready') {
+    if (resource.status !== 'success') {
       return {
         collectionMethod: 'hybrid',
         depositType: 'none',
@@ -33,13 +45,15 @@ export function BillingWorkspace() {
     };
   });
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [saveState, setSaveState] = useState<SaveStateStatus>('idle');
+  const [lastSavedLabel, setLastSavedLabel] = useState('Saved');
 
   if (resource.status === 'loading') {
     return <RouteStateCard title="Loading payment settings" description="Preparing deposit and collection defaults." variant="loading" />;
   }
 
   if (resource.status === 'error') {
-    return <RouteStateCard title="Payments unavailable" description={resource.message} variant="error" />;
+    return <RouteStateCard title="Payments unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   const { checklist, paymentSettings } = resource.data;
@@ -47,6 +61,7 @@ export function BillingWorkspace() {
   function setField<K extends keyof BillingDraft>(field: K, value: BillingDraft[K]) {
     const nextDraft = { ...draft, [field]: value };
     setDraft(nextDraft);
+    setSaveState('idle');
     setErrors((currentErrors) => ({
       ...currentErrors,
       [field]: validateBillingField(nextDraft, field),
@@ -64,9 +79,13 @@ export function BillingWorkspace() {
     const nextErrors = validateBillingForm(draft);
     setErrors(nextErrors);
     if (Object.values(nextErrors).some(Boolean)) {
+      setSaveState('failed');
       return;
     }
 
+    setSaveState('saving');
+    setLastSavedLabel(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+    setSaveState('saved');
     toast.success({
       title: 'Billing policy updated',
       description: 'Collection instructions and deposit defaults were saved to the local billing preview.',
@@ -83,6 +102,7 @@ export function BillingWorkspace() {
           <>
             <AppPill tone="warning">Manual collection</AppPill>
             <AppPill>{checklist.filter((item) => item.status === 'Ready now').length} ready now</AppPill>
+            <SaveStateIndicator status={saveState} savedLabel={lastSavedLabel} onRetry={handleSave} />
           </>
         )}
       />
