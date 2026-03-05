@@ -228,3 +228,45 @@ No edits to mobile and landing; web-app only.
 ### Phase 6 Open Issues
 - Availability overrides and blackout entries are local UI drafts only; no persistence wiring yet.
 - Scheduling conflict checks are UX heuristics and do not yet evaluate real appointment overlap against backend calendars.
+
+## Phase 7 Domain + Notifications + Settings + Publish (March 5, 2026)
+- Added dedicated settings routes/pages for domain and publish workflows:
+  - `/owner/settings/domain`
+  - `/owner/settings/publish`
+  - files:
+    - `src/pages/owner/settings/DomainSettingsPage.tsx`
+    - `src/pages/owner/settings/PublishSettingsPage.tsx`
+    - `src/router/index.tsx`
+    - `src/pages/owner/SettingsPage.tsx`
+- Domain settings now include:
+  - subdomain editor (`businessname.slotraph.com` style preview)
+  - CNAME instruction card
+  - verification status timeline shell
+  - troubleshooting accordion shell
+- Notifications settings rebuilt with branded primitives and expanded UX:
+  - trigger toggles
+  - template editor shell
+  - multi-channel preview cards
+  - consistent helper/error validation affordances
+  - file: `src/pages/owner/settings/NotificationsSettingsPage.tsx`
+- Settings polish pass delivered for business/team/security/billing visual consistency:
+  - business profile migrated to unified card/form rhythm
+  - team route expanded to roster + invite + security + billing sections
+  - files:
+    - `src/pages/owner/settings/BusinessProfilePage.tsx`
+    - `src/pages/owner/settings/TeamSettingsPage.tsx`
+- Shared style system extended for release-quality settings surfaces:
+  - new settings workspace card/header/grid/button/status patterns
+  - domain, notifications, team, publish shell styles and responsive collapse guards
+  - file: `src/styles.css`
+
+### Phase 7 Feature Coverage Status
+- [x] Domain page UX shell (editor + DNS + verification + troubleshooting)
+- [x] Notifications page UX shell (triggers + template editor + previews + validation cues)
+- [x] Settings section visual unification (business/team/security/billing)
+- [x] Publish page UX shell (readiness checklist + blocker chips + go-live + share link + success state)
+
+### Remaining Visual Debt (Post-Phase 7)
+- Legacy stylesheet still contains duplicate and partially overlapping settings-era rules in `src/styles.css`; ownership split is improved but not fully modularized.
+- Several owner/onboarding and integration/payment sub-components still rely on `@slotra/ui` primitives, creating mixed visual contracts alongside `Brand*` components.
+- Accessibility hardening remains for custom shell controls (toggle/accordion keyboard focus polish and richer ARIA status announcements).

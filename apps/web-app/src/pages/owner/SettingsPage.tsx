@@ -6,7 +6,9 @@ const SETTINGS_TABS = [
   { label: 'Business Profile', to: '/owner/settings/business', enabled: true },
   { label: 'Team', to: '/owner/settings/team', enabled: true },
   { label: 'Notifications', to: '/owner/settings/notifications', enabled: true },
+  { label: 'Domain', to: '/owner/settings/domain', enabled: true },
   { label: 'Booking', to: '/owner/settings/booking', enabled: true },
+  { label: 'Publish', to: '/owner/settings/publish', enabled: true },
 ];
 
 export function SettingsPage() {
@@ -14,8 +16,8 @@ export function SettingsPage() {
     <OwnerPageScaffold>
       <PageIntro
         eyebrow="Settings"
-        title="Brand and operational preferences"
-        description="Manage business identity, booking behavior, notifications, and team defaults from one settings surface."
+        title="Configuration and launch controls"
+        description="Manage brand setup, operations defaults, communication templates, domain connection, and publish readiness from one settings workspace."
       />
       <nav className="settings-tabs" aria-label="Settings sections">
         {SETTINGS_TABS.map((tab) =>

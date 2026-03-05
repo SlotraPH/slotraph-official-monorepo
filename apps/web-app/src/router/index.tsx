@@ -16,7 +16,9 @@ const SettingsPage = lazy(() => import('@/pages/owner/SettingsPage').then((modul
 const BookingPreferencesPage = lazy(() => import('@/pages/owner/settings/BookingPreferencesPage').then((module) => ({ default: module.BookingPreferencesPage })));
 const BrandDetailsPage = lazy(() => import('@/pages/owner/settings/BrandDetailsPage').then((module) => ({ default: module.BrandDetailsPage })));
 const BusinessProfilePage = lazy(() => import('@/pages/owner/settings/BusinessProfilePage').then((module) => ({ default: module.BusinessProfilePage })));
+const DomainSettingsPage = lazy(() => import('@/pages/owner/settings/DomainSettingsPage').then((module) => ({ default: module.DomainSettingsPage })));
 const NotificationsSettingsPage = lazy(() => import('@/pages/owner/settings/NotificationsSettingsPage').then((module) => ({ default: module.NotificationsSettingsPage })));
+const PublishSettingsPage = lazy(() => import('@/pages/owner/settings/PublishSettingsPage').then((module) => ({ default: module.PublishSettingsPage })));
 const TeamSettingsPage = lazy(() => import('@/pages/owner/settings/TeamSettingsPage').then((module) => ({ default: module.TeamSettingsPage })));
 const BookingConfirmationPage = lazy(() => import('@/pages/public/BookingConfirmationPage').then((module) => ({ default: module.BookingConfirmationPage })));
 const BookingPage = lazy(() => import('@/pages/public/BookingPage').then((module) => ({ default: module.BookingPage })));
@@ -47,7 +49,9 @@ export function AppRouter() {
               <Route path="business" element={<BusinessProfilePage />} />
               <Route path="team" element={<TeamSettingsPage />} />
               <Route path="notifications" element={<NotificationsSettingsPage />} />
+              <Route path="domain" element={<DomainSettingsPage />} />
               <Route path="booking" element={<BookingPreferencesPage />} />
+              <Route path="publish" element={<PublishSettingsPage />} />
               <Route path="*" element={<NotFoundPage context="owner" />} />
             </Route>
             <Route path="onboarding" element={<OnboardingPage />} />
