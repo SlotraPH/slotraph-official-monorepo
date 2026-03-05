@@ -1,6 +1,9 @@
 import { ArrowDown, ArrowUp, Monitor, Save, Smartphone } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { getOwnerBusinessSettingsResource, getOwnerPaymentsResource } from '@/features/owner/data';
+import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
+import { ownerSettingsPersistenceClient } from '@/features/owner/settings/persistenceClient';
 import { BrandButton, BrandInput, BrandSelect, BrandTextarea, Card, SaveStateIndicator, useBrandToast, type SaveStateStatus } from '@/ui';
 
 interface BuilderSection {
@@ -31,6 +34,11 @@ export function BookingPreferencesPage() {
   const [heroSubcopy, setHeroSubcopy] = useState('Fast confirmations, clear policies, and a branded checkout experience.');
   const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
   const [lastSaved, setLastSaved] = useState('Auto-saved 3m ago');
+  const [loading, setLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState('');
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [heroHeadlineTouched, setHeroHeadlineTouched] = useState(false);
+  const [heroSubcopyTouched, setHeroSubcopyTouched] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [sections, setSections] = useState<BuilderSection[]>([
     { id: 'hero', label: 'Hero', description: 'Headline, trust badges, and CTA.', enabled: true },
@@ -47,10 +55,51 @@ export function BookingPreferencesPage() {
   ]);
 
   const enabledSections = useMemo(() => sections.filter((section) => section.enabled), [sections]);
+  const heroHeadlineError = useMemo(() => (!heroHeadline.trim() ? 'Hero headline is required.' : ''), [heroHeadline]);
+  const heroSubcopyError = useMemo(() => {
+    if (!heroSubcopy.trim()) {
+      return 'Hero subcopy is required.';
+    }
+    if (heroSubcopy.trim().length < 24) {
+      return 'Hero subcopy should be at least 24 characters.';
+    }
+    return '';
+  }, [heroSubcopy]);
 
   function markDirty() {
     setSaveState('idle');
   }
+
+  useUnsavedChangesGuard(saveState === 'idle' || saveState === 'failed');
+
+  async function loadBookingDraft() {
+    setLoading(true);
+    setLoadingError('');
+
+    try {
+      const snapshot = await ownerSettingsPersistenceClient.loadSnapshot();
+      setLeadTime(snapshot.booking.leadTime);
+      setCancellationWindow(snapshot.booking.cancellationWindow);
+      setBookingApproval(snapshot.booking.bookingApproval);
+      setHeroHeadline(snapshot.booking.heroHeadline);
+      setHeroSubcopy(snapshot.booking.heroSubcopy);
+      setSections(snapshot.booking.sections);
+      setIntakeFields(snapshot.booking.intakeFields);
+      setSaveState('saved');
+      setLastSaved('Draft restored');
+      setSubmitAttempted(false);
+      setHeroHeadlineTouched(false);
+      setHeroSubcopyTouched(false);
+    } catch {
+      setLoadingError('Could not load booking settings draft. Retry to continue.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadBookingDraft();
+  }, []);
 
   function moveSection(index: number, direction: -1 | 1) {
     const nextIndex = index + direction;
@@ -81,6 +130,45 @@ export function BookingPreferencesPage() {
     markDirty();
   }
 
+  async function handleSave() {
+    setSubmitAttempted(true);
+    if (heroHeadlineError || heroSubcopyError) {
+      setSaveState('failed');
+      return;
+    }
+
+    setSaveState('saving');
+    try {
+      await ownerSettingsPersistenceClient.saveBooking({
+        leadTime,
+        cancellationWindow,
+        bookingApproval,
+        heroHeadline: heroHeadline.trim(),
+        heroSubcopy: heroSubcopy.trim(),
+        sections,
+        intakeFields,
+      });
+      setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      setSaveState('saved');
+      toast.success({
+        title: 'Booking page draft saved',
+        description: 'Section order, intake fields, and preview copy were saved in this local workspace.',
+      });
+    } catch {
+      setSaveState('failed');
+      toast.error({
+        title: 'Save failed',
+        description: 'Booking settings were not saved. Retry to keep your latest changes.',
+      });
+    }
+  }
+
+  if (loading) {
+    return <RouteStateCard title="Loading booking settings" description="Preparing booking page builder drafts." variant="loading" />;
+  }
+
+  if (loadingError) {
+    return <RouteStateCard title="Booking settings unavailable" description={loadingError} variant="error" onRetry={() => void loadBookingDraft()} />;
   function handleSave() {
     setSaveState('saving');
     setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
@@ -103,6 +191,7 @@ export function BookingPreferencesPage() {
                 Manage the customer-facing structure for hero, services, policies, FAQ, and optional staff sections.
               </p>
             </div>
+            <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={() => void handleSave()} />
             <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={handleSave} />
           </div>
           <div className="booking-builder-section-list">
@@ -156,11 +245,11 @@ export function BookingPreferencesPage() {
           <div className="booking-builder-intake-list">
             {intakeFields.map((field) => (
               <div key={field.id} className="booking-builder-intake-row">
-                <BrandInput
-                  label="Label"
-                  value={field.label}
-                  onChange={(event) => updateIntakeField(field.id, { label: event.target.value })}
-                />
+              <BrandInput
+                label="Label"
+                value={field.label}
+                onChange={(event) => updateIntakeField(field.id, { label: event.target.value })}
+              />
                 <BrandInput
                   label="Placeholder"
                   value={field.placeholder}
@@ -200,6 +289,8 @@ export function BookingPreferencesPage() {
             <BrandInput
               label="Hero headline"
               value={heroHeadline}
+              onBlur={() => setHeroHeadlineTouched(true)}
+              error={(heroHeadlineTouched || submitAttempted) ? heroHeadlineError || undefined : undefined}
               onChange={(event) => {
                 setHeroHeadline(event.target.value);
                 markDirty();
@@ -208,6 +299,8 @@ export function BookingPreferencesPage() {
             <BrandTextarea
               label="Hero subcopy"
               value={heroSubcopy}
+              onBlur={() => setHeroSubcopyTouched(true)}
+              error={(heroSubcopyTouched || submitAttempted) ? heroSubcopyError || undefined : undefined}
               onChange={(event) => {
                 setHeroSubcopy(event.target.value);
                 markDirty();
@@ -250,7 +343,7 @@ export function BookingPreferencesPage() {
             </BrandSelect>
           </div>
           <div className="booking-builder-actions">
-            <BrandButton startIcon={<Save size={14} />} onClick={handleSave}>Save booking page draft</BrandButton>
+            <BrandButton startIcon={<Save size={14} />} onClick={() => void handleSave()} disabled={saveState === 'saving'}>Save booking page draft</BrandButton>
           </div>
         </Card>
       </div>

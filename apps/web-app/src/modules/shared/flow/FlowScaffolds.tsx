@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { Check, ChevronRight } from 'lucide-react';
-import { useId, type CSSProperties, type ReactNode } from 'react';
+import { useId, type CSSProperties, type ReactNode, type Ref } from 'react';
 import { BrandButton, Card, colors, radii, shadows, spacing, typography } from '@/ui';
 
 export interface FlowStep {
@@ -127,12 +127,16 @@ export function FlowSection({
   action,
   children,
   description,
+  headingRef,
+  headingTabIndex,
   eyebrow,
   title,
 }: {
   action?: ReactNode;
   children: ReactNode;
   description: ReactNode;
+  headingRef?: Ref<HTMLHeadingElement>;
+  headingTabIndex?: number;
   eyebrow?: string;
   title: ReactNode;
 }) {
@@ -156,7 +160,12 @@ export function FlowSection({
                 {eyebrow}
               </span>
             ) : null}
-            <h2 id={headingId} style={{ color: colors.navy, fontFamily: typography.fontFamily, margin: 0, ...typography.subHeading }}>
+            <h2
+              id={headingId}
+              ref={headingRef}
+              tabIndex={headingTabIndex}
+              style={{ color: colors.navy, fontFamily: typography.fontFamily, margin: 0, ...typography.subHeading }}
+            >
               {title}
             </h2>
             <p style={{ color: colors.secondary, fontFamily: typography.fontFamily, margin: 0, ...typography.body }}>

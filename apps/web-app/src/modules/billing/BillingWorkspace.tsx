@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { BadgeCent, ClipboardCheck, Landmark, ReceiptText } from 'lucide-react';
+﻿import { AlertTriangle, BadgeCent, ClipboardCheck, Landmark, ReceiptText, RotateCcw } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { ownerPaymentsPersistenceClient, type PaymentOperationItem, type PaymentProcessingStatus } from '@/features/owner/payments/persistenceClient';
 import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { FlowLayout, FlowSection, ReviewBlock, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
 import {
@@ -10,6 +11,7 @@ import {
   BrandTextarea,
   Card,
   SaveStateIndicator,
+  StatusTag,
   colors,
   radii,
   spacing,
@@ -19,9 +21,66 @@ import {
 } from '@/ui';
 import { type BillingDraft, validateBillingField, validateBillingForm } from './validation';
 
-type BillingView = 'collection' | 'checklist';
+type BillingView = 'activity' | 'collection' | 'checklist';
+
+function createDefaultDraft(): BillingDraft {
+  return {
+    collectionMethod: 'hybrid',
+    depositType: 'none',
+    depositValue: '0',
+    requireDepositFor: 'manual-review',
+    instructions: '',
+  };
+}
 
 export function BillingWorkspace() {
+  const toast = useBrandToast();
+  const [sessionStatus, setSessionStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [sessionMessage, setSessionMessage] = useState('Loading payment operations...');
+  const [view, setView] = useState<BillingView>('activity');
+  const [draft, setDraft] = useState<BillingDraft>(createDefaultDraft);
+  const [checklist, setChecklist] = useState<Array<{ id: string; title: string; description: string; status: 'Ready now' | 'Later phase' }>>([]);
+  const [operations, setOperations] = useState<PaymentOperationItem[]>([]);
+  const [acceptedMethods, setAcceptedMethods] = useState<string[]>([]);
+  const [bookingPolicyLabel, setBookingPolicyLabel] = useState('Manual review');
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
+  const [lastSavedLabel, setLastSavedLabel] = useState('Waiting for first save');
+  const [pendingPolicyDraft, setPendingPolicyDraft] = useState<BillingDraft | null>(null);
+  const [actionInFlightOperationId, setActionInFlightOperationId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [lastOperationTransition, setLastOperationTransition] = useState<{
+    operationId: string;
+    customerName: string;
+    previousStatus: PaymentProcessingStatus;
+    nextStatus: PaymentProcessingStatus;
+  } | null>(null);
+
+  async function hydratePayments() {
+    setSessionStatus('loading');
+    setSessionMessage('Loading payment operations...');
+    setActionError(null);
+
+    try {
+      const snapshot = await ownerPaymentsPersistenceClient.load();
+      setDraft({
+        collectionMethod: snapshot.policy.collectionMethod,
+        depositType: snapshot.policy.depositType,
+        depositValue: snapshot.policy.depositValue,
+        requireDepositFor: snapshot.policy.requireDepositFor,
+        instructions: snapshot.policy.instructions,
+      });
+      setChecklist(snapshot.checklist);
+      setOperations(snapshot.operations);
+      setAcceptedMethods(snapshot.acceptedPaymentMethodOptions);
+      setBookingPolicyLabel(snapshot.bookingPreferences.bookingApproval);
+      setSaveState('saved');
+      setLastSavedLabel('Policy restored');
+      setSessionStatus('ready');
+      setSessionMessage('');
+    } catch {
+      setSessionStatus('error');
+      setSessionMessage('Could not load payment operations. Retry to restore billing policy and payment activity.');
   const resource = mockOwnerRouteClient.getPaymentsQuery();
   const toast = useBrandToast();
   const [view, setView] = useState<BillingView>('collection');
@@ -35,7 +94,11 @@ export function BillingWorkspace() {
         instructions: '',
       };
     }
+  }
 
+  useEffect(() => {
+    void hydratePayments();
+  }, []);
     return {
       collectionMethod: resource.data.paymentSettings.collectionMethod,
       depositType: resource.data.paymentSettings.depositType,
@@ -48,15 +111,31 @@ export function BillingWorkspace() {
   const [saveState, setSaveState] = useState<SaveStateStatus>('idle');
   const [lastSavedLabel, setLastSavedLabel] = useState('Saved');
 
-  if (resource.status === 'loading') {
-    return <RouteStateCard title="Loading payment settings" description="Preparing deposit and collection defaults." variant="loading" />;
+  if (sessionStatus === 'loading') {
+    return <RouteStateCard title="Loading payment settings" description="Preparing policy, checklist, and transaction states." variant="loading" />;
   }
 
+  if (sessionStatus === 'error') {
+    return <RouteStateCard title="Payments unavailable" description={sessionMessage} variant="error" onRetry={() => void hydratePayments()} />;
   if (resource.status === 'error') {
     return <RouteStateCard title="Payments unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
-  const { checklist, paymentSettings } = resource.data;
+  const operationsByStatus = (() => {
+    const base = {
+      pending: 0,
+      paid: 0,
+      failed: 0,
+      refunded: 0,
+      blocked: 0,
+    };
+
+    for (const operation of operations) {
+      base[operation.status] += 1;
+    }
+
+    return base;
+  })();
 
   function setField<K extends keyof BillingDraft>(field: K, value: BillingDraft[K]) {
     const nextDraft = { ...draft, [field]: value };
@@ -75,6 +154,35 @@ export function BillingWorkspace() {
     }));
   }
 
+  async function persistPolicy(draftToSave: BillingDraft) {
+    setSaveState('saving');
+    setPendingPolicyDraft(draftToSave);
+
+    try {
+      const result = await ownerPaymentsPersistenceClient.savePolicy(draftToSave);
+      setDraft({
+        collectionMethod: result.policy.collectionMethod,
+        depositType: result.policy.depositType,
+        depositValue: result.policy.depositValue,
+        requireDepositFor: result.policy.requireDepositFor,
+        instructions: result.policy.instructions,
+      });
+      setPendingPolicyDraft(null);
+      setSaveState('saved');
+      setLastSavedLabel(`Saved at ${new Date(result.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      toast.success({
+        title: 'Payment policy saved',
+        description: 'Collection defaults are now aligned for owner and staff workflows.',
+      });
+    } catch {
+      setSaveState('failed');
+      toast.error({
+        title: 'Policy save failed',
+        description: 'Retry to keep payment collection policy changes.',
+      });
+    }
+  }
+
   function handleSave() {
     const nextErrors = validateBillingForm(draft);
     setErrors(nextErrors);
@@ -83,6 +191,68 @@ export function BillingWorkspace() {
       return;
     }
 
+    void persistPolicy(draft);
+  }
+
+  function retrySave() {
+    if (!pendingPolicyDraft) {
+      return;
+    }
+
+    void persistPolicy(pendingPolicyDraft);
+  }
+
+  async function transitionOperation(
+    operation: PaymentOperationItem,
+    nextStatus: PaymentProcessingStatus,
+    options: { trackUndo: boolean; successTitle?: string } = { trackUndo: true },
+  ) {
+    setActionInFlightOperationId(operation.id);
+    setActionError(null);
+
+    try {
+      const result = await ownerPaymentsPersistenceClient.transitionOperation(operation.id, nextStatus);
+      setOperations((current) => current.map((item) => (item.id === operation.id ? result.operation : item)));
+
+      if (options.trackUndo) {
+        setLastOperationTransition({
+          operationId: operation.id,
+          customerName: operation.customerName,
+          previousStatus: result.previousStatus,
+          nextStatus: result.operation.status,
+        });
+      }
+
+      toast.success({
+        title: options.successTitle ?? 'Payment status updated',
+        description: `${operation.customerName} payment moved to ${result.operation.status}.`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not update payment status. Retry this action.';
+      setActionError(message);
+      toast.error({
+        title: 'Payment action failed',
+        description: message,
+      });
+    } finally {
+      setActionInFlightOperationId(null);
+    }
+  }
+
+  async function handleUndoOperation() {
+    if (!lastOperationTransition) {
+      return;
+    }
+
+    const operation = operations.find((item) => item.id === lastOperationTransition.operationId);
+    if (!operation) {
+      setLastOperationTransition(null);
+      return;
+    }
+
+    await transitionOperation(operation, lastOperationTransition.previousStatus, {
+      trackUndo: false,
+      successTitle: 'Payment status restored',
     setSaveState('saving');
     setLastSavedLabel(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
     setSaveState('saved');
@@ -90,16 +260,23 @@ export function BillingWorkspace() {
       title: 'Billing policy updated',
       description: 'Collection instructions and deposit defaults were saved to the local billing preview.',
     });
+    setLastOperationTransition(null);
   }
 
   return (
     <OwnerPageScaffold>
       <PageIntro
         eyebrow="Billing"
-        title="Payments and billing views"
-        description="Keep billing honest for the current MVP: branded policy controls, checklist visibility, and a clear statement of what still runs manually."
+        title="Payments and billing operations"
+        description="Operate collection policy, payment states, and rollout checklist from one integration-facing workspace."
         pills={(
           <>
+            <AppPill tone="warning">{operationsByStatus.pending} pending</AppPill>
+            <AppPill tone="success">{operationsByStatus.paid} paid</AppPill>
+            <AppPill>{operationsByStatus.failed} failed</AppPill>
+            <AppPill>{operationsByStatus.refunded} refunded</AppPill>
+            <AppPill>{operationsByStatus.blocked} blocked</AppPill>
+            <SaveStateIndicator status={saveState} savedLabel={lastSavedLabel} onRetry={retrySave} />
             <AppPill tone="warning">Manual collection</AppPill>
             <AppPill>{checklist.filter((item) => item.status === 'Ready now').length} ready now</AppPill>
             <SaveStateIndicator status={saveState} savedLabel={lastSavedLabel} onRetry={handleSave} />
@@ -107,8 +284,9 @@ export function BillingWorkspace() {
         )}
       />
 
-      <FlowSection eyebrow="Billing views" title="Collection and rollout status" description="Switch between policy editing and the implementation checklist without leaving the billing workspace.">
+      <FlowSection eyebrow="Billing views" title="Collection, activity, and checklist" description="Switch between policy editing, payment activity, and readiness checklist without leaving this route.">
         <StatusTabs current={view} onChange={setView} options={[
+          { label: 'Activity', value: 'activity' },
           { label: 'Collection', value: 'collection' },
           { label: 'Checklist', value: 'checklist' },
         ]} />
@@ -116,12 +294,13 @@ export function BillingWorkspace() {
 
       <FlowLayout
         sidebar={(
-          <FlowSection eyebrow="Billing summary" title="Current defaults" description="These settings drive the current owner-facing payment messaging and customer follow-up copy.">
+          <FlowSection eyebrow="Billing summary" title="Current defaults" description="Snapshot of policy and handoff context used by booking and owner workflows.">
             <ReviewBlock
               items={[
-                { label: 'Collection method', value: paymentSettings.collectionMethod },
-                { label: 'Deposit type', value: paymentSettings.depositType },
-                { label: 'Default policy', value: paymentSettings.defaultPolicyLabel },
+                { label: 'Collection method', value: draft.collectionMethod },
+                { label: 'Deposit type', value: draft.depositType },
+                { label: 'Booking approval', value: bookingPolicyLabel },
+                { label: 'Accepted methods', value: acceptedMethods.join(', ') },
               ]}
               title="Policy snapshot"
             />
@@ -129,7 +308,7 @@ export function BillingWorkspace() {
         )}
       >
         {view === 'collection' ? (
-          <FlowSection eyebrow="Collection policy" title="Deposit and payment instructions" description="Each field validates on blur. The instruction block is required so staff always has a usable handoff message.">
+          <FlowSection eyebrow="Collection policy" title="Deposit and payment instructions" description="Validation stays deterministic and save failures always include retry affordances.">
             <div style={{ display: 'grid', gap: spacing[4], gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
               <BrandSelect label="Collection method" value={draft.collectionMethod} onChange={(event) => setField('collectionMethod', event.target.value as BillingDraft['collectionMethod'])}>
                 <option value="manual-transfer">Manual transfer</option>
@@ -186,59 +365,172 @@ export function BillingWorkspace() {
               </BrandButton>
             </div>
           </FlowSection>
-        ) : (
-          <FlowSection eyebrow="Implementation checklist" title="What is live versus deferred" description="The checklist keeps scope explicit so billing UI does not imply unavailable payment automation.">
-            <div style={{ display: 'grid', gap: spacing[3] }}>
-              {checklist.map((item) => (
-                <Card key={item.id} padding={4}>
-                  <div style={{ alignItems: 'start', display: 'grid', gap: spacing[3], gridTemplateColumns: 'auto minmax(0, 1fr) auto' }}>
-                    <div
-                      aria-hidden="true"
-                      style={{
-                        alignItems: 'center',
-                        background: item.status === 'Ready now' ? 'rgba(46,49,146,0.08)' : 'rgba(122,135,153,0.12)',
-                        borderRadius: radii.lg,
-                        color: item.status === 'Ready now' ? colors.brand : colors.secondary,
-                        display: 'inline-flex',
-                        height: 40,
-                        justifyContent: 'center',
-                        width: 40,
-                      }}
-                    >
-                      {item.status === 'Ready now' ? <ClipboardCheck size={20} /> : <Landmark size={20} />}
-                    </div>
-                    <div style={{ display: 'grid', gap: 2 }}>
-                      <strong style={{ color: colors.navy, fontFamily: typography.fontFamily }}>{item.title}</strong>
-                      <span style={{ color: colors.secondary, fontFamily: typography.fontFamily, ...typography.bodySmall }}>{item.description}</span>
-                    </div>
-                    <Tag text={item.status} />
-                  </div>
-                </Card>
-              ))}
-            </div>
+        ) : null}
+
+        {view === 'activity' ? (
+          <FlowSection eyebrow="Payment activity" title="Status transitions" description="Each payment row supports only valid transitions so pending, paid, failed, refunded, and blocked states remain explicit.">
+            {actionError ? (
+              <div className="payments-inline-alert payments-inline-alert--error" role="status" aria-live="polite">
+                <AlertTriangle size={15} />
+                <span>{actionError}</span>
+              </div>
+            ) : null}
+            {lastOperationTransition ? (
+              <div className="payments-inline-alert payments-inline-alert--success" role="status" aria-live="polite">
+                <span>
+                  {lastOperationTransition.customerName} moved to {lastOperationTransition.nextStatus}.
+                </span>
+                <BrandButton size="nav" variant="secondary" startIcon={<RotateCcw size={13} />} onClick={() => void handleUndoOperation()}>
+                  Undo status
+                </BrandButton>
+              </div>
+            ) : null}
+
+            {operations.length === 0 ? (
+              <RouteStateCard
+                title="No payment activity yet"
+                description="Payment operations will appear here once bookings start collecting payment actions."
+                variant="empty"
+              />
+            ) : (
+              <div className="payments-activity-table-wrap">
+                <table className="payments-activity-table">
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Service</th>
+                      <th>Amount</th>
+                      <th>Method</th>
+                      <th>Status</th>
+                      <th>Reference</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {operations.map((operation) => (
+                      <tr key={operation.id}>
+                        <td>
+                          <div className="payments-activity-table__cell-main">
+                            <strong>{operation.customerName}</strong>
+                            <span>{operation.dueLabel}</span>
+                          </div>
+                        </td>
+                        <td>{operation.serviceName}</td>
+                        <td>PHP {operation.amount.toLocaleString()}</td>
+                        <td>{operation.method}</td>
+                        <td>
+                          <StatusTag text={operation.status} tone={toPaymentStatusTone(operation.status)} />
+                        </td>
+                        <td>{operation.reference}</td>
+                        <td>
+                          <div className="payments-activity-table__actions">
+                            {getOperationActions(operation).map((action) => (
+                              <BrandButton
+                                key={action.status}
+                                size="nav"
+                                variant="secondary"
+                                disabled={actionInFlightOperationId === operation.id}
+                                onClick={() => void transitionOperation(operation, action.status)}
+                              >
+                                {action.label}
+                              </BrandButton>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </FlowSection>
-        )}
+        ) : null}
+
+        {view === 'checklist' ? (
+          <FlowSection eyebrow="Implementation checklist" title="What is live versus deferred" description="Checklist remains tied to integration-facing payment state and does not imply unavailable automation.">
+            {checklist.length === 0 ? (
+              <RouteStateCard title="Checklist unavailable" description="No payment checklist items are loaded for this workspace." variant="empty" />
+            ) : (
+              <div style={{ display: 'grid', gap: spacing[3] }}>
+                {checklist.map((item) => (
+                  <Card key={item.id} padding={4}>
+                    <div style={{ alignItems: 'start', display: 'grid', gap: spacing[3], gridTemplateColumns: 'auto minmax(0, 1fr) auto' }}>
+                      <div
+                        aria-hidden="true"
+                        style={{
+                          alignItems: 'center',
+                          background: item.status === 'Ready now' ? 'rgba(46,49,146,0.08)' : 'rgba(122,135,153,0.12)',
+                          borderRadius: radii.lg,
+                          color: item.status === 'Ready now' ? colors.brand : colors.secondary,
+                          display: 'inline-flex',
+                          height: 40,
+                          justifyContent: 'center',
+                          width: 40,
+                        }}
+                      >
+                        {item.status === 'Ready now' ? <ClipboardCheck size={20} /> : <Landmark size={20} />}
+                      </div>
+                      <div style={{ display: 'grid', gap: 2 }}>
+                        <strong style={{ color: colors.navy, fontFamily: typography.fontFamily }}>{item.title}</strong>
+                        <span style={{ color: colors.secondary, fontFamily: typography.fontFamily, ...typography.bodySmall }}>{item.description}</span>
+                      </div>
+                      <StatusTag text={item.status} tone={item.status === 'Ready now' ? 'positive' : 'neutral'} />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </FlowSection>
+        ) : null}
       </FlowLayout>
     </OwnerPageScaffold>
   );
 }
 
-function Tag({ text }: { text: string }) {
-  return (
-    <span
-      style={{
-        background: 'rgba(46,49,146,0.08)',
-        borderRadius: radii.full,
-        color: colors.brand,
-        display: 'inline-flex',
-        fontFamily: typography.fontFamily,
-        fontSize: typography.label.fontSize,
-        fontWeight: 600,
-        justifyContent: 'center',
-        padding: '6px 10px',
-      }}
-    >
-      {text}
-    </span>
-  );
+function getOperationActions(operation: PaymentOperationItem): Array<{ label: string; status: PaymentProcessingStatus }> {
+  if (operation.status === 'pending') {
+    return [
+      { label: 'Mark paid', status: 'paid' },
+      { label: 'Mark failed', status: 'failed' },
+      { label: 'Block', status: 'blocked' },
+    ];
+  }
+
+  if (operation.status === 'failed') {
+    return [
+      { label: 'Retry pending', status: 'pending' },
+      { label: 'Mark paid', status: 'paid' },
+      { label: 'Block', status: 'blocked' },
+    ];
+  }
+
+  if (operation.status === 'blocked') {
+    return [
+      { label: 'Retry review', status: 'pending' },
+      { label: 'Mark failed', status: 'failed' },
+    ];
+  }
+
+  if (operation.status === 'paid') {
+    return [{ label: 'Refund', status: 'refunded' }];
+  }
+
+  return [];
 }
+
+function toPaymentStatusTone(status: PaymentProcessingStatus) {
+  if (status === 'paid') {
+    return 'positive' as const;
+  }
+
+  if (status === 'pending') {
+    return 'accent' as const;
+  }
+
+  if (status === 'failed' || status === 'blocked') {
+    return 'critical' as const;
+  }
+
+  return 'neutral' as const;
+}
+

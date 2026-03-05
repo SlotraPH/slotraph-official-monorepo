@@ -1,6 +1,9 @@
 import { Bell, Mail, MessageSquare, Save } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { BrandButton, BrandInput, BrandSelect, BrandTextarea, Card, useBrandToast } from '@/ui';
+import { useEffect, useMemo, useState } from 'react';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
+import { ownerSettingsPersistenceClient } from '@/features/owner/settings/persistenceClient';
+import { BrandButton, BrandInput, BrandSelect, BrandTextarea, Card, SaveStateIndicator, useBrandToast, type SaveStateStatus } from '@/ui';
 
 interface NotificationTrigger {
   id: string;
@@ -42,6 +45,15 @@ export function NotificationsSettingsPage() {
   const [channel, setChannel] = useState('Email + SMS');
   const [subject, setSubject] = useState('Your booking with Slotra is confirmed');
   const [message, setMessage] = useState('Hi {{customer_name}}, your appointment for {{service_name}} is confirmed on {{appointment_time}}. Reply if you need to reschedule.');
+  const [loading, setLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState('');
+  const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
+  const [lastSaved, setLastSaved] = useState('Waiting for first save');
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [subjectTouched, setSubjectTouched] = useState(false);
+  const [messageTouched, setMessageTouched] = useState(false);
+
+  useUnsavedChangesGuard(saveState === 'idle' || saveState === 'failed');
 
   const subjectError = useMemo(() => {
     if (!subject.trim()) {
@@ -63,14 +75,47 @@ export function NotificationsSettingsPage() {
     return '';
   }, [message]);
 
+  function markDirty() {
+    setSaveState('idle');
+  }
+
+  async function loadNotificationsDraft() {
+    setLoading(true);
+    setLoadingError('');
+
+    try {
+      const snapshot = await ownerSettingsPersistenceClient.loadSnapshot();
+      setTriggers(snapshot.notifications.triggers);
+      setChannel(snapshot.notifications.channel);
+      setSubject(snapshot.notifications.subject);
+      setMessage(snapshot.notifications.message);
+      setSaveState('saved');
+      setLastSaved('Draft restored');
+      setSubmitAttempted(false);
+      setSubjectTouched(false);
+      setMessageTouched(false);
+    } catch {
+      setLoadingError('Could not load notifications draft. Retry to continue.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadNotificationsDraft();
+  }, []);
+
   function toggleTrigger(triggerId: string) {
     setTriggers((current) => current.map((trigger) => (
       trigger.id === triggerId ? { ...trigger, enabled: !trigger.enabled } : trigger
     )));
+    markDirty();
   }
 
-  function handleSaveTemplates() {
+  async function handleSaveTemplates() {
+    setSubmitAttempted(true);
     if (subjectError || messageError) {
+      setSaveState('failed');
       toast.error({
         title: 'Template not saved',
         description: subjectError || messageError,
@@ -78,10 +123,35 @@ export function NotificationsSettingsPage() {
       return;
     }
 
-    toast.success({
-      title: 'Notification settings saved',
-      description: 'Trigger defaults and template draft were updated in this workspace preview.',
-    });
+    setSaveState('saving');
+    try {
+      await ownerSettingsPersistenceClient.saveNotifications({
+        triggers,
+        channel,
+        subject: subject.trim(),
+        message: message.trim(),
+      });
+      setSaveState('saved');
+      setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      toast.success({
+        title: 'Notification settings saved',
+        description: 'Trigger defaults and template draft were updated in this workspace preview.',
+      });
+    } catch {
+      setSaveState('failed');
+      toast.error({
+        title: 'Save failed',
+        description: 'Notification settings were not saved. Retry to keep your latest changes.',
+      });
+    }
+  }
+
+  if (loading) {
+    return <RouteStateCard title="Loading notification settings" description="Preparing trigger and template drafts." variant="loading" />;
+  }
+
+  if (loadingError) {
+    return <RouteStateCard title="Notification settings unavailable" description={loadingError} variant="error" onRetry={() => void loadNotificationsDraft()} />;
   }
 
   return (
@@ -129,7 +199,10 @@ export function NotificationsSettingsPage() {
             label="Channel"
             helperText="Select where this template is used by default."
             value={channel}
-            onChange={(event) => setChannel(event.target.value)}
+            onChange={(event) => {
+              setChannel(event.target.value);
+              markDirty();
+            }}
           >
             <option value="Email + SMS">Email + SMS</option>
             <option value="Email only">Email only</option>
@@ -138,8 +211,12 @@ export function NotificationsSettingsPage() {
           <BrandInput
             label="Message subject"
             value={subject}
-            onChange={(event) => setSubject(event.target.value)}
-            error={subjectError || undefined}
+            onBlur={() => setSubjectTouched(true)}
+            onChange={(event) => {
+              setSubject(event.target.value);
+              markDirty();
+            }}
+            error={(subjectTouched || submitAttempted) ? subjectError || undefined : undefined}
             helperText="Use placeholders like {{customer_name}} and {{service_name}}."
           />
         </div>
@@ -147,13 +224,18 @@ export function NotificationsSettingsPage() {
         <BrandTextarea
           label="Template body"
           value={message}
-          onChange={(event) => setMessage(event.target.value)}
-          error={messageError || undefined}
+          onBlur={() => setMessageTouched(true)}
+          onChange={(event) => {
+            setMessage(event.target.value);
+            markDirty();
+          }}
+          error={(messageTouched || submitAttempted) ? messageError || undefined : undefined}
           helperText="Keep the first sentence clear for preview snippets and SMS truncation."
         />
 
         <div className="settings-button-row settings-button-row--end">
-          <BrandButton startIcon={<Save size={14} />} onClick={handleSaveTemplates}>Save notification defaults</BrandButton>
+          <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={() => void handleSaveTemplates()} />
+          <BrandButton startIcon={<Save size={14} />} onClick={() => void handleSaveTemplates()} disabled={saveState === 'saving'}>Save notification defaults</BrandButton>
         </div>
       </Card>
 

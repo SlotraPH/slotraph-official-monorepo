@@ -79,4 +79,20 @@ describe('BookingFlow', () => {
 
     expect(screen.queryByText('Enter the customer name.')).not.toBeInTheDocument();
   });
+
+  it('blocks date-step continuation while availability is still loading', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <BookingFlow />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: /Scalp Reset Treatment/i }));
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(screen.getByText('Availability is still syncing. Wait for dates to finish loading.')).toBeInTheDocument();
+  });
 });

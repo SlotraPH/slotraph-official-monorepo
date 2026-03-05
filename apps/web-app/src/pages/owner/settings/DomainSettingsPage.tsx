@@ -1,6 +1,9 @@
 import { CheckCircle2, CircleDashed, Clock3, Globe, TriangleAlert } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { BrandButton, BrandInput, Card, useBrandToast } from '@/ui';
+import { useEffect, useMemo, useState } from 'react';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
+import { ownerSettingsPersistenceClient } from '@/features/owner/settings/persistenceClient';
+import { BrandButton, BrandInput, Card, SaveStateIndicator, useBrandToast, type SaveStateStatus } from '@/ui';
 
 interface DomainMilestone {
   id: string;
@@ -74,6 +77,14 @@ export function DomainSettingsPage() {
   const toast = useBrandToast();
   const [subdomain, setSubdomain] = useState('businessname');
   const [activeIssue, setActiveIssue] = useState<string | null>(TROUBLESHOOTING_ITEMS[0]?.id ?? null);
+  const [loading, setLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState('');
+  const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
+  const [lastSaved, setLastSaved] = useState('Waiting for first save');
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [subdomainTouched, setSubdomainTouched] = useState(false);
+
+  useUnsavedChangesGuard(saveState === 'idle' || saveState === 'failed');
 
   const subdomainError = useMemo(() => {
     if (!subdomain) {
@@ -90,8 +101,37 @@ export function DomainSettingsPage() {
 
   const domainPreview = `${subdomain || 'businessname'}${DOMAIN_SUFFIX}`;
 
-  function handleSaveDomain() {
+  function markDirty() {
+    setSaveState('idle');
+  }
+
+  async function loadDomainDraft() {
+    setLoading(true);
+    setLoadingError('');
+
+    try {
+      const snapshot = await ownerSettingsPersistenceClient.loadSnapshot();
+      setSubdomain(snapshot.domain.subdomain);
+      setActiveIssue(snapshot.domain.activeIssueId);
+      setSaveState('saved');
+      setLastSaved('Draft restored');
+      setSubmitAttempted(false);
+      setSubdomainTouched(false);
+    } catch {
+      setLoadingError('Could not load domain settings draft. Retry to continue.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadDomainDraft();
+  }, []);
+
+  async function handleSaveDomain() {
+    setSubmitAttempted(true);
     if (subdomainError) {
+      setSaveState('failed');
       toast.error({
         title: 'Domain not saved',
         description: subdomainError,
@@ -99,10 +139,25 @@ export function DomainSettingsPage() {
       return;
     }
 
-    toast.success({
-      title: 'Domain draft saved',
-      description: `${domainPreview} is ready for verification once DNS records are published.`,
-    });
+    setSaveState('saving');
+    try {
+      await ownerSettingsPersistenceClient.saveDomain({
+        subdomain,
+        activeIssueId: activeIssue,
+      });
+      setSaveState('saved');
+      setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      toast.success({
+        title: 'Domain draft saved',
+        description: `${domainPreview} is ready for verification once DNS records are published.`,
+      });
+    } catch {
+      setSaveState('failed');
+      toast.error({
+        title: 'Save failed',
+        description: 'Domain settings were not saved. Retry to keep your latest changes.',
+      });
+    }
   }
 
   function handleVerifyNow() {
@@ -118,6 +173,14 @@ export function DomainSettingsPage() {
       title: 'CNAME copied',
       description: 'Paste the target into your DNS provider CNAME value field.',
     });
+  }
+
+  if (loading) {
+    return <RouteStateCard title="Loading domain settings" description="Preparing your domain and verification draft." variant="loading" />;
+  }
+
+  if (loadingError) {
+    return <RouteStateCard title="Domain settings unavailable" description={loadingError} variant="error" onRetry={() => void loadDomainDraft()} />;
   }
 
   return (
@@ -138,9 +201,13 @@ export function DomainSettingsPage() {
           <BrandInput
             label="Booking subdomain"
             value={subdomain}
-            onChange={(event) => setSubdomain(sanitizeSubdomain(event.target.value))}
+            onBlur={() => setSubdomainTouched(true)}
+            onChange={(event) => {
+              setSubdomain(sanitizeSubdomain(event.target.value));
+              markDirty();
+            }}
             helperText="Lowercase letters, numbers, and hyphens only."
-            error={subdomainError || undefined}
+            error={(subdomainTouched || submitAttempted) ? subdomainError || undefined : undefined}
           />
           <div className="settings-inline-preview" aria-live="polite">
             <p className="settings-inline-preview__label">Live preview</p>
@@ -150,7 +217,8 @@ export function DomainSettingsPage() {
         </div>
 
         <div className="settings-button-row">
-          <BrandButton onClick={handleSaveDomain}>Save domain draft</BrandButton>
+          <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={() => void handleSaveDomain()} />
+          <BrandButton onClick={() => void handleSaveDomain()} disabled={saveState === 'saving'}>Save domain draft</BrandButton>
           <BrandButton variant="secondary" onClick={handleVerifyNow}>Retry verification</BrandButton>
         </div>
       </Card>
@@ -225,7 +293,10 @@ export function DomainSettingsPage() {
                   type="button"
                   className="settings-accordion-shell__trigger"
                   aria-expanded={expanded}
-                  onClick={() => setActiveIssue((current) => current === issue.id ? null : issue.id)}
+                  onClick={() => {
+                    setActiveIssue((current) => current === issue.id ? null : issue.id);
+                    markDirty();
+                  }}
                 >
                   <span>{issue.question}</span>
                   <TriangleAlert size={14} aria-hidden="true" />

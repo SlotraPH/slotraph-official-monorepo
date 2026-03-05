@@ -1,4 +1,4 @@
-# UI/UX Implementation Tracker (Phase 2 Route IA Update)
+﻿# UI/UX Implementation Tracker (Phase 2 Route IA Update)
 
 Last updated: March 6, 2026
 Scope: `apps/web-app` only
@@ -427,3 +427,266 @@ No edits to mobile and landing; web-app only.
 - `pnpm --filter @slotra/web-app lint`: Pass
 - `pnpm --filter @slotra/web-app test`: Failed (unchanged environment dependency issue: `undici` missing `./lib/dispatcher/retry-agent` during Vitest worker startup)
 - `pnpm --filter @slotra/web-app build`: Pass
+
+## Phase 2 Onboarding + Settings Persistence UX Wiring (March 6, 2026)
+- Added typed frontend persistence clients for onboarding and owner settings sections:
+  - `src/features/owner/onboarding/persistenceClient.ts`
+  - `src/features/owner/settings/persistenceClient.ts`
+- Added unsaved-changes browser leave guard shared by onboarding/settings form surfaces:
+  - `src/features/forms/useUnsavedChangesGuard.ts`
+- Onboarding (`/owner/onboarding`) persistence UX upgrades:
+  - async draft load + route-safe loading/error copy
+  - explicit save lifecycle (`saving`, `saved`, `failed`, retry) with inline state indicator
+  - partial-save messaging for autosave versus manual full save
+  - retry affordance for both save failure and draft-load failure
+  - file:
+    - `src/pages/owner/onboarding/OnboardingFlow.tsx`
+- Settings route persistence wiring upgrades:
+  - `/owner/settings/brand`:
+    - persisted draft load/save, dirty-state indicator, submit-timed inline validation
+    - file: `src/pages/owner/settings/BrandDetailsPage.tsx`
+  - `/owner/settings/business`:
+    - persisted draft load/save, save retry, submit-timed validation
+    - file: `src/pages/owner/settings/BusinessProfilePage.tsx`
+  - `/owner/settings/team`:
+    - persisted invite/security draft load/save, dirty-state and retry model
+    - file: `src/pages/owner/settings/TeamSettingsPage.tsx`
+  - `/owner/settings/notifications`:
+    - persisted trigger/template draft load/save, touched/submit validation timing, retry
+    - file: `src/pages/owner/settings/NotificationsSettingsPage.tsx`
+  - `/owner/settings/domain`:
+    - persisted subdomain/troubleshooting draft load/save, touched/submit validation timing, retry
+    - file: `src/pages/owner/settings/DomainSettingsPage.tsx`
+  - `/owner/settings/booking`:
+    - persisted booking-builder draft load/save, touched/submit validation timing, retry
+    - file: `src/pages/owner/settings/BookingPreferencesPage.tsx`
+  - `/owner/settings/publish`:
+    - persisted publish-state draft load/save, save retry indicator for go-live persistence
+    - file: `src/pages/owner/settings/PublishSettingsPage.tsx`
+
+### Phase 2 Acceptance Matrix (Onboarding + Settings Routes)
+| Surface | Status | Notes |
+| --- | --- | --- |
+| `/owner/onboarding` | Done | Typed persistence client wired with async load/save/retry and partial-save UX states. |
+| `/owner/settings/brand` | Done | Persisted brand draft + dirty/unsaved and validation timing standardization. |
+| `/owner/settings/business` | Done | Persisted business draft + save lifecycle and inline submit-timed validation. |
+| `/owner/settings/team` | Done | Persisted invite/security drafts + dirty/save/retry interaction model. |
+| `/owner/settings/notifications` | Done | Persisted trigger/template drafts + touched/submit validation timing. |
+| `/owner/settings/domain` | Done | Persisted domain draft + validation timing + retry/save feedback. |
+| `/owner/settings/booking` | Done | Persisted booking builder draft + dirty/save/retry and validation alignment. |
+| `/owner/settings/publish` | Done | Persisted publish state + save confirmation and failure recovery path. |
+
+### Phase 2 Known Gaps (Non-Blocking for Frontend Contract Scope)
+- Persistence remains browser-session scoped (`sessionStorage`) and intentionally does not call backend APIs.
+- Cross-route dirty aggregation (for global settings-tab unsaved badges) is not yet centralized; indicators are route-local.
+- In-app route-navigation blocking for unsaved changes is not implemented yet; current guard covers browser leave/refresh.
+
+## Phase 3 Scheduling + Booking Engine Integration UX (March 6, 2026)
+- Scheduling workspace (`/owner/calendar`) moved from local placeholder-only state to typed integration-facing persistence contracts:
+  - async load/save boundary with retry handling
+  - persisted weekly hours, timezone, date overrides, blackout dates
+  - deterministic `loading | empty | error | retry` route-state handling for scheduling data hydration
+  - files:
+    - `src/features/owner/scheduling/persistenceClient.ts`
+    - `src/modules/scheduling/SchedulingWorkspace.tsx`
+    - `src/styles.css`
+- Scheduling conflict/timezone hardening delivered:
+  - persistent timezone context chip in scheduling header
+  - actionable conflict guidance (timezone drift, duplicate overrides, blackout overlap)
+  - explicit save lifecycle (`saving/saved/failed + retry`) to remove ambiguous save outcomes
+- Booking flow (`/book`) integration UX upgraded:
+  - async integration-facing availability contracts for date and slot loading
+  - deterministic date/slot `idle | loading | success | error` handling with retry actions
+  - step progression now blocks ambiguous continues while availability contracts are still loading/errored
+  - confirmation submit now supports transient failure recovery via retry
+  - files:
+    - `src/features/public-booking/integrationClient.ts`
+    - `src/modules/booking/BookingFlowScreen.tsx`
+- Booking confirmation (`/book/confirmation`) now loads confirmation via async integration boundary with loading/error/retry UX.
+  - file:
+    - `src/pages/public/booking/BookingConfirmation.tsx`
+
+### Phase 3 Acceptance Checklist
+| Surface | Status | Notes |
+| --- | --- | --- |
+| `/owner/calendar` scheduling contracts | Done | Weekly hours/overrides/blackouts/timezone now persist via typed frontend integration client. |
+| `/owner/calendar` conflict + timezone UX | Done | Conflict states now include explicit action guidance and persistent timezone context. |
+| `/book` availability integration UX | Done | Date/slot states use async integration loading/error/retry flow boundaries. |
+| `/book` step progression + recovery | Done | Continue behavior now guards loading/error availability states before progression. |
+| `/book/confirmation` transient handling | Done | Confirmation load has deterministic loading/error/retry behavior. |
+
+### Phase 3 Known Limitations
+- Scheduling and booking persistence are still browser-session scoped and do not call backend APIs yet.
+- Availability and slot results still come from mock repositories through integration clients (contract shape is production-facing; transport is not).
+- Retry behavior is immediate and does not yet include exponential backoff or network-classified messaging.
+
+### Phase 3 Validation (March 6, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (environment dependency issue persists: `Cannot find module './lib/dispatcher/retry-agent'` from `undici` during Vitest worker startup)
+- `pnpm --filter @slotra/web-app build`: Pass
+
+## Phase 4 Customer + Payments Operational Wiring (March 6, 2026)
+- Customer workspace (`/owner/customers`) moved from route-shell-only rendering to integration-facing frontend persistence:
+  - async customer hydration contract with deterministic `loading | error | empty | success` rendering and retry
+  - persisted intake draft writes with save lifecycle (`saving | saved | failed`) and retry affordance
+  - customer status actions wired to typed transitions with explicit failure handling + undo recovery cue
+  - files:
+    - `src/features/owner/customers/persistenceClient.ts`
+    - `src/modules/clients/CustomerWorkspace.tsx`
+    - `src/modules/clients/CustomerWorkspace.test.tsx`
+- Payments workspace (`/owner/payments`) upgraded to operational payment-state wiring:
+  - async payment policy + checklist + activity snapshot hydration with retry/error contracts
+  - payment activity state model now explicit (`pending | paid | failed | refunded | blocked`)
+  - status transition actions enforce allowed-state transitions and provide actionable error messages
+  - undo affordance added for latest status transition recovery
+  - files:
+    - `src/features/owner/payments/persistenceClient.ts`
+    - `src/modules/billing/BillingWorkspace.tsx`
+- Cross-surface consistency pass (customers + payments):
+  - standardized inline success/error recovery banners and row-action button density
+  - standardized operational activity table spacing and action cluster behavior for narrow widths
+  - file:
+    - `src/styles.css`
+- Added persistence client unit coverage:
+  - `src/features/owner/customers/persistenceClient.test.ts`
+  - `src/features/owner/payments/persistenceClient.test.ts`
+
+### Phase 4 Acceptance Checklist (Customers + Payments)
+| Surface | Status | Notes |
+| --- | --- | --- |
+| `/owner/customers` list/search/filter wiring | Done | Query and status segmentation now run against async-hydrated customer snapshot with deterministic empty/retry flows. |
+| `/owner/customers` intake save lifecycle | Done | Intake save now uses async persistence contract with inline save-state indicator and retry path. |
+| `/owner/customers` action feedback + recovery | Done | Status transitions now emit explicit success/failure signals and include undo recovery cue. |
+| `/owner/payments` policy/checklist wiring | Done | Policy + checklist now hydrate from async payment persistence snapshot and persist policy edits with retry. |
+| `/owner/payments` payment-state clarity | Done | Payment activity now exposes explicit pending/paid/failed/refunded/blocked states with allowed transitions only. |
+| `/owner/payments` actionable error/recovery | Done | Invalid transitions return actionable copy and the latest successful transition is undoable. |
+| Cross-surface interaction consistency | Done | Customer and payment action banners/row actions now follow shared spacing and responsive behavior. |
+
+### Phase 4 Known Limitations
+- Customer and payment persistence remain session-scoped (`sessionStorage`) and do not call backend APIs yet.
+- Undo is intentionally scoped to the latest successful status transition per workspace session.
+- Payment activity records are mocked operational seeds; transition contracts are production-facing but transport is not.
+
+### Phase 4 Validation (March 6, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (environment dependency issue persists: `Cannot find module './lib/dispatcher/retry-agent'` from `undici` during Vitest worker startup)
+- `pnpm --filter @slotra/web-app build`: Pass
+
+## Phase 5 Integrations Provider Auth/Sync/Status Flows (March 6, 2026)
+- Integrations workspace (`/owner/integrations`) upgraded from static roadmap shell to lifecycle-ready operational UX:
+  - provider lifecycle states surfaced per integration:
+    - `disconnected`
+    - `connecting`
+    - `connected`
+    - `degraded`
+    - `error`
+    - `reauth-required`
+  - explicit next actions for every state (`connect`, `disconnect`, `reauthenticate`, `sync`, `retry sync`)
+  - files:
+    - `src/pages/owner/IntegrationsPage.tsx`
+    - `src/styles.css`
+- Added typed frontend integration persistence contracts for auth/sync/status workflows:
+  - async typed methods:
+    - `load()`
+    - `connect(providerId)`
+    - `disconnect(providerId)`
+    - `reauthenticate(providerId)`
+    - `runSync(providerId)`
+  - session-scoped snapshot model includes:
+    - provider status + sync health
+    - last sync timestamp
+    - error taxonomy metadata
+    - retry backoff window metadata
+    - incident/event log stream
+  - file:
+    - `src/features/owner/integrations/persistenceClient.ts`
+- Troubleshooting and observability UX added:
+  - incident log panel with newest-first provider events
+  - severity signaling (`info | warning | critical`)
+  - explicit error taxonomy copy:
+    - auth failure
+    - rate limit
+    - config issue
+    - network issue
+  - critical-error banner designed to remain visible but non-blocking to navigation/workspace continuity.
+- Responsive + accessibility pass for integrations controls:
+  - provider card action groups wrap safely at narrow widths
+  - stats grid collapses to single-column at compact breakpoints
+  - focus-visible styling added for provider action controls
+  - incident log uses semantic `role="log"` + polite live region.
+
+### Phase 5 Integrations Acceptance Matrix
+| Surface | Status | Notes |
+| --- | --- | --- |
+| `/owner/integrations` provider lifecycle states | Done | All six target states are represented in typed provider contracts and rendered in UI with explicit labels/tags. |
+| Auth action wiring | Done | Connect/disconnect/reauth flows are wired to typed async integration persistence methods. |
+| Sync action wiring | Done | Sync action updates last-sync and sync-health signals with deterministic success/failure pathways. |
+| Retry/backoff cues | Done | Backoff countdown labels and disabled retry actions are shown without blocking route usage. |
+| Troubleshooting observability | Done | Incident log panel + severity taxonomy + latest-event context are now surfaced in-route. |
+| Error taxonomy UX copy | Done | Auth/rate-limit/config/network error classes are explicit in both provider cards and taxonomy panel. |
+| Responsive/a11y sweep | Done | Narrow-width layout guards and focus-visible keyboard affordances were added for integration controls. |
+
+### Unresolved Provider Gaps (Frontend Scope Aware)
+- Provider operations are still session-scoped frontend mocks; no real backend provider transport/auth token exchange.
+- No provider webhooks or real-time push updates; incident log updates are action-driven only.
+- Backoff windows are frontend heuristics and not coordinated with server-side retry schedulers.
+- No cross-route/global incident center yet; observability is currently integrations-route scoped.
+
+### Phase 5 Validation (March 6, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (environment/module issue persists: `undici` missing `./lib/dispatcher/retry-agent` during Vitest worker startup; run reported 12 worker-start errors)
+- `pnpm --filter @slotra/web-app build`: Pass
+
+## Phase 6 Post-Integration Hardening (March 6, 2026)
+- E2E/regression hardening pass (Vitest flow coverage expansion):
+  - booking flow:
+    - added regression for date-step continue gating while availability is still loading
+    - file: `src/pages/public/booking/BookingFlow.test.tsx`
+  - customers flow:
+    - added status transition + undo affordance coverage
+    - file: `src/modules/clients/CustomerWorkspace.test.tsx`
+  - owner cross-surface operational flow suite:
+    - onboarding launchpad -> step-editor entry
+    - scheduling timezone drift conflict guidance
+    - payments status transition -> undo affordance
+    - integrations disconnected -> connect -> sync action-state progression
+    - file: `src/pages/owner/Phase6Hardening.test.tsx`
+- Accessibility hardening:
+  - booking flow now announces step/availability/submit status through polite live region and moves keyboard focus to active step heading on step changes.
+    - files:
+      - `src/modules/shared/flow/FlowScaffolds.tsx`
+      - `src/modules/booking/BookingFlowScreen.tsx`
+  - brand settings upload zones now support keyboard activation (`Enter` / `Space`) and provide explicit async feedback via toasts instead of silent no-op controls.
+    - file: `src/pages/owner/settings/BrandDetailsPage.tsx`
+  - upload-zone focus styles hardened to include `:focus-visible`.
+    - file: `src/styles.css`
+- CSS ownership split (maintainability):
+  - moved integrations feature styles out of global `src/styles.css` into route-owned stylesheet:
+    - new: `src/pages/owner/integrations.css`
+    - imported by: `src/pages/owner/IntegrationsPage.tsx`
+  - removed corresponding integrations selectors from `src/styles.css`, including mobile breakpoint rules now owned by integrations stylesheet.
+
+### Phase 6 Hardening Acceptance Checklist
+| Checklist item | Status | Notes |
+| --- | --- | --- |
+| Owner onboarding flow hardening | Done | Launchpad -> step editor interaction covered in new test suite. |
+| Scheduling flow hardening | Done | Timezone drift conflict guidance covered in new test suite. |
+| Public booking flow hardening | Done | Availability-loading continue-gate regression added. |
+| Customers flow hardening | Done | Status transition + undo regression added. |
+| Payments flow hardening | Done | Payment status transition + undo regression added. |
+| Integrations flow hardening | Done | Disconnected-to-connected action-state regression added. |
+| Accessibility (keyboard + focus + live announcements) | Done (targeted) | Booking focus/live-region and brand upload keyboard affordances shipped. |
+| CSS ownership split | Done (integrations slice) | Integrations feature styles extracted from global stylesheet. |
+| Cross-route acceptance sweep | Done (code/test pass) | No route IA or setup-first entry behavior changed. |
+| Validation commands | Partial | Lint/build pass; test blocked by existing `undici` environment issue. |
+
+### Residual Technical Debt (Post-Phase 6)
+- Vitest environment remains blocked by `undici` module resolution (`./lib/dispatcher/retry-agent`) during worker startup, preventing runtime execution of both legacy and new suites.
+- `src/styles.css` remains a large transition host; integrations split is complete, but additional route-level style extraction is still pending for scheduling, onboarding, and settings surfaces.
+- Custom interactive shells still include mixed legacy and brand-primitive patterns; broader accessibility semantics pass (expanded keyboard shortcuts and richer per-surface status narration) remains a follow-up.
+
+### Phase 6 Validation (March 6, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (unchanged environment issue: `undici` cannot resolve `./lib/dispatcher/retry-agent`; 13 Vitest worker startup errors reported)
+- `pnpm --filter @slotra/web-app build`: Pass
+
