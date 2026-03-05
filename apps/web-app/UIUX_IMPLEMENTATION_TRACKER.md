@@ -270,3 +270,29 @@ No edits to mobile and landing; web-app only.
 - Legacy stylesheet still contains duplicate and partially overlapping settings-era rules in `src/styles.css`; ownership split is improved but not fully modularized.
 - Several owner/onboarding and integration/payment sub-components still rely on `@slotra/ui` primitives, creating mixed visual contracts alongside `Brand*` components.
 - Accessibility hardening remains for custom shell controls (toggle/accordion keyboard focus polish and richer ARIA status announcements).
+
+## Phase 8 Responsive Hardening + Overlap Eradication (March 5, 2026)
+- Strengthened owner/public shell behavior across medium-to-small widths with new hardening rules for:
+  - navbar crowding at tablet widths (`<=1280`, `<=1024`)
+  - settings tab overflow handling (horizontal scroll instead of compressed wrapping)
+  - timeline/checklist row compression at tablet (`<=768`)
+  - long-copy wrapping in status/timeline cards
+  - keyboard focus visibility for custom controls (tabs, accordion trigger, view toggle, service row buttons, customer rows)
+- Footer copy symbol standardized in shell footer (`&copy;`) to avoid encoding drift in render surfaces.
+- files:
+  - `src/styles.css`
+  - `src/app/components/AppShell.tsx`
+
+### Phase 8 Responsive QA Matrix
+| Page / Surface | 1440 | 1280 | 1024 | 768 | 640 | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| Global shell (banner + navbar + footer) | Pass | Pass | Pass | Pass | Pass | Navbar now de-densifies earlier; demo CTA hidden before compression overlap. |
+| Owner workspace frame (sidebar + content) | Pass | Pass | Pass | Pass | Pass | Sidebar/content stacking remains deterministic; sticky rail disabled on compact layouts. |
+| Services (`/owner/services`) | Pass | Pass | Pass | Pass | Pass | Toolbar/actions now preserve wrap without clipping; table fallback remains horizontal-scroll safe. |
+| Customers (`/owner/customers`) | Pass | Pass | Pass | Pass | Pass | List/detail and intake blocks keep stack order and avoid row collision at smaller widths. |
+| Settings tabs + subpages (`/owner/settings/*`) | Pass | Pass | Pass | Pass | Pass | Tabs use horizontal scroll at constrained widths; domain/publish rows no longer compress badge/timestamp into overlap. |
+| Public booking (`/book`, `/book/confirmation`) | Pass | Pass | Pass | Pass | Pass | Existing booking collapse strategy remains stable; no new overlap introduced by Phase 8 rules. |
+
+### Remaining Responsive Defects (Post-Phase 8)
+- No blocking overlap defects found in this pass.
+- Residual debt remains from legacy duplicate CSS ownership in `src/styles.css`; this is maintainability risk, not an active breakpoint blocker.

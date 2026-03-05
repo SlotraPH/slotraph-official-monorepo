@@ -5910,6 +5910,92 @@ dialog[open],
   }
 }
 
+/* ===================================================================
+   PHASE 8: RESPONSIVE HARDENING + OVERLAP FIXES
+   =================================================================== */
+
+.settings-tab,
+.settings-accordion-shell__trigger,
+.services-view-toggle__button,
+.customer-row,
+.services-table__name-button,
+.services-card-item__body {
+  outline-offset: 2px;
+}
+
+.settings-tab:focus-visible,
+.settings-accordion-shell__trigger:focus-visible,
+.services-view-toggle__button:focus-visible,
+.customer-row:focus-visible,
+.services-table__name-button:focus-visible,
+.services-card-item__body:focus-visible {
+  outline: 2px solid rgba(46, 49, 146, 0.46);
+}
+
+.settings-tabs {
+  min-width: 0;
+}
+
+.settings-tab {
+  flex-shrink: 0;
+}
+
+.domain-timeline__item,
+.publish-checklist__item {
+  min-width: 0;
+}
+
+.domain-timeline__description,
+.publish-checklist__note {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1280px) {
+  .app-shell__navbar-inner {
+    gap: var(--space-4);
+  }
+
+  .app-shell__nav {
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 1024px) {
+  .app-shell__nav {
+    display: none;
+  }
+
+  .app-shell__action-link--demo {
+    display: none;
+  }
+
+  .settings-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .settings-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .settings-button-row--end {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .domain-timeline__item,
+  .publish-checklist__item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .domain-timeline__time {
+    grid-column: 2;
+    white-space: normal;
+  }
+}
+
 @keyframes phase5-pulse {
   0% {
     background-position: 100% 50%;
