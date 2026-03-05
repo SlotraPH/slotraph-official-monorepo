@@ -200,3 +200,31 @@ No edits to mobile and landing; web-app only.
 - Convert repeated status chip/tag patterns (`services-status-chip`, `customer-status-tag`) into a shared `StatusTag` UI primitive.
 - Extract KPI card pattern used by Services and Customers into a shared owner KPI row component.
 - Promote current services toolbar layout pattern as a reusable owner filter/action header component for Payments and Integrations tables.
+
+## Phase 6 Availability + Booking Builder Upgrade (March 5, 2026)
+- Availability workspace (`/owner/calendar`) upgraded with:
+  - weekly schedule operations grid with explicit day status/time columns
+  - date override editor shell (closed/custom/extended) with local draft listing
+  - blackout-date shell for hard booking blocks
+  - timezone selector + conflict warning panel for override/blackout overlap and timezone drift
+  - consistent save-state indicators (saved/unsaved) and toasts for scheduling actions
+  - files:
+    - `src/modules/scheduling/SchedulingWorkspace.tsx`
+    - `src/styles.css`
+- Booking settings route (`/owner/settings/booking`) rebuilt into booking page builder workspace with:
+  - section toggles and ordering controls (hero/services/policies/FAQ/staff)
+  - customer intake form field configuration (label, placeholder, visible/required)
+  - booking copy + policy controls with unified save-state and toast behavior
+  - preview shell with desktop/mobile mode toggle
+  - files:
+    - `src/pages/owner/settings/BookingPreferencesPage.tsx`
+    - `src/styles.css`
+
+### Phase 6 Resolved UI Risks
+- Reduced side-panel clipping risk by introducing bounded list containers and explicit overflow handling in override/preview areas.
+- Reduced sticky panel overlap risk in builder view by collapsing preview column at `<=1100px`.
+- Improved small-width survivability for schedule grid and booking editor rows by switching complex multi-column rows to stacked layouts at `<=720px`.
+
+### Phase 6 Open Issues
+- Availability overrides and blackout entries are local UI drafts only; no persistence wiring yet.
+- Scheduling conflict checks are UX heuristics and do not yet evaluate real appointment overlap against backend calendars.
