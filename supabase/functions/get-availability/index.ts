@@ -22,9 +22,10 @@ Deno.serve(async (req: Request) => {
   }
 
   const calApiKey = Deno.env.get("CAL_API_KEY");
-  const calEventTypeId = Deno.env.get("CAL_EVENT_TYPE_ID");
+  const calUsername = Deno.env.get("CAL_USERNAME");
+  const calEventSlug = Deno.env.get("CAL_EVENT_SLUG");
 
-  if (!calApiKey || !calEventTypeId) {
+  if (!calApiKey || !calUsername || !calEventSlug) {
     return new Response(JSON.stringify({ error: "not_configured" }), {
       status: 503,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
@@ -43,12 +44,12 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Fetch two months ahead (current + next) for better UX
   const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59); // last day of month
+  const endDate = new Date(year, month, 0, 23, 59, 59);
 
   const calUrl = new URL(`${CAL_API_BASE}/slots/available`);
-  calUrl.searchParams.set("eventTypeId", calEventTypeId);
+  calUrl.searchParams.set("username", calUsername);
+  calUrl.searchParams.set("eventTypeSlug", calEventSlug);
   calUrl.searchParams.set("startTime", startDate.toISOString());
   calUrl.searchParams.set("endTime", endDate.toISOString());
   calUrl.searchParams.set("timeZone", timezone);
@@ -78,7 +79,6 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Flatten to { date: slotISOString[] }
   const slots: Record<string, string[]> = {};
   for (const [date, slotArr] of Object.entries(calData.data.slots)) {
     slots[date] = slotArr.map((s) => s.time);
