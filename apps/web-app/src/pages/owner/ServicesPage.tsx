@@ -3,7 +3,7 @@ import { AppPill, OwnerContentGrid, OwnerPageScaffold, PageIntro } from '@/app/c
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { ServiceRecord } from '@/domain/service/types';
 import { getOwnerServicesResource } from '@/features/owner/data';
-import { Card } from '@/ui';
+import { Card, MetricCard } from '@/ui';
 import { ServiceEditor, type ServiceDraft } from './services/ServiceEditor';
 import { ServiceList } from './services/ServiceList';
 import { ServiceToolbar } from './services/ServiceToolbar';
@@ -186,9 +186,21 @@ export function ServicesPage() {
       />
 
       <div className="services-summary-grid">
-        <ServiceSummaryCard label="Visible catalog" value={`${services.filter((service) => service.visibility === 'Public').length}`} />
-        <ServiceSummaryCard label="Avg. ticket" value={`PHP ${Math.round(services.reduce((sum, service) => sum + service.price, 0) / Math.max(1, services.length)).toLocaleString()}`} />
-        <ServiceSummaryCard label="Total bookings" value={`${services.reduce((sum, service) => sum + service.bookings, 0)}`} />
+        <MetricCard
+          className="services-summary-card"
+          label="Visible catalog"
+          value={`${services.filter((service) => service.visibility === 'Public').length}`}
+        />
+        <MetricCard
+          className="services-summary-card"
+          label="Avg. ticket"
+          value={`PHP ${Math.round(services.reduce((sum, service) => sum + service.price, 0) / Math.max(1, services.length)).toLocaleString()}`}
+        />
+        <MetricCard
+          className="services-summary-card"
+          label="Total bookings"
+          value={`${services.reduce((sum, service) => sum + service.bookings, 0)}`}
+        />
       </div>
 
       <ServiceToolbar
@@ -228,14 +240,5 @@ export function ServicesPage() {
         />
       </OwnerContentGrid>
     </OwnerPageScaffold>
-  );
-}
-
-function ServiceSummaryCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card className="services-summary-card" padding={4}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </Card>
   );
 }

@@ -296,3 +296,28 @@ No edits to mobile and landing; web-app only.
 ### Remaining Responsive Defects (Post-Phase 8)
 - No blocking overlap defects found in this pass.
 - Residual debt remains from legacy duplicate CSS ownership in `src/styles.css`; this is maintainability risk, not an active breakpoint blocker.
+
+## Phase 9 Code Cleanup + Design-System Consolidation (March 5, 2026)
+- Consolidated duplicated status chip/tag patterns into a shared web-app UI primitive:
+  - added `src/ui/StatusTag.tsx`
+  - migrated usage from:
+    - `src/pages/owner/services/ServiceList.tsx`
+    - `src/modules/clients/CustomerWorkspace.tsx`
+  - removed legacy split CSS selectors (`services-status-chip*`, `customer-status-tag*`) in favor of shared `status-tag*` styles.
+- Consolidated repeated KPI summary card markup into a shared UI primitive:
+  - added `src/ui/MetricCard.tsx`
+  - migrated usage from:
+    - `src/pages/owner/ServicesPage.tsx`
+    - `src/modules/clients/CustomerWorkspace.tsx`
+  - unified metric typography styles under `metric-card` selectors in `src/styles.css`.
+- Token/style consistency cleanup:
+  - normalized service list count badge colors to token refs:
+    - `--color-accent-subtle`
+    - `--color-accent`
+  - removed duplicate late-file `svc-count-badge` override that reintroduced one-off values.
+- File hygiene cleanup:
+  - removed unreferenced legacy customer UI files:
+    - `src/pages/owner/customers/CustomerDetailPanel.tsx`
+    - `src/pages/owner/customers/CustomerImportCallout.tsx`
+    - `src/pages/owner/customers/CustomerList.tsx`
+    - `src/pages/owner/customers/CustomerToolbar.tsx`

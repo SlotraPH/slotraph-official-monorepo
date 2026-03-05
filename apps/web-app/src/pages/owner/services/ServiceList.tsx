@@ -1,7 +1,7 @@
 import { ArchiveRestore, PencilLine, Plus } from 'lucide-react';
 import { formatCurrency, formatDuration } from '@/domain/service/formatters';
 import type { ServiceRecord } from '@/domain/service/types';
-import { BrandButton, Card } from '@/ui';
+import { BrandButton, Card, StatusTag } from '@/ui';
 
 interface ServiceListProps {
   items: ServiceRecord[];
@@ -77,7 +77,7 @@ export function ServiceList({
                     <td>{formatCurrency(service.price)}</td>
                     <td>{service.visibility}</td>
                     <td>
-                      <StatusChip status={service.status} />
+                      <StatusTag text={service.status} tone={toStatusTone(service.status)} />
                     </td>
                     <td>
                       <div className="services-table__actions">
@@ -112,7 +112,7 @@ export function ServiceList({
                       <h3>{service.name}</h3>
                       <p>{service.category} • {formatDuration(service.durationMinutes)}</p>
                     </div>
-                    <StatusChip status={service.status} />
+                    <StatusTag text={service.status} tone={toStatusTone(service.status)} />
                   </div>
                   <p className="services-card-item__description">{service.description}</p>
                   <div className="services-card-item__meta">
@@ -143,6 +143,14 @@ export function ServiceList({
   );
 }
 
-function StatusChip({ status }: { status: ServiceRecord['status'] }) {
-  return <span className={`services-status-chip services-status-chip--${status.toLowerCase()}`}>{status}</span>;
+function toStatusTone(status: ServiceRecord['status']) {
+  if (status === 'Active') {
+    return 'positive' as const;
+  }
+
+  if (status === 'Hidden') {
+    return 'neutral' as const;
+  }
+
+  return 'critical' as const;
 }

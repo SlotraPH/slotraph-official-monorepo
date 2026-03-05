@@ -5136,19 +5136,6 @@ dialog[open],
   padding: var(--space-6);
 }
 
-.svc-count-badge {
-  background: #ecedf9;
-  border-radius: 9999px;
-  color: #2e3192;
-  display: inline-flex;
-  font-size: 12px;
-  font-weight: 700;
-  margin-left: 10px;
-  min-height: 28px;
-  padding: 0 10px;
-  vertical-align: middle;
-}
-
 .button-link {
   align-items: center;
   background: linear-gradient(180deg, #3336a4 0%, #2a2d8c 100%);
@@ -5347,21 +5334,18 @@ dialog[open],
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.services-summary-card,
-.customers-kpi-card {
+.metric-card {
   display: grid;
   gap: 4px;
 }
 
-.services-summary-card span,
-.customers-kpi-card span {
+.metric-card__label {
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
-.services-summary-card strong,
-.customers-kpi-card strong {
+.metric-card__value {
   color: var(--color-text-primary);
   font-size: 1.15rem;
   line-height: 1.25;
@@ -5457,9 +5441,9 @@ dialog[open],
 
 .services-list-card__count {
   align-items: center;
-  background: #ecedf9;
+  background: var(--color-accent-subtle);
   border-radius: var(--radius-full);
-  color: #2e3192;
+  color: var(--color-accent);
   display: inline-flex;
   font-size: var(--font-size-xs);
   font-weight: 700;
@@ -5592,8 +5576,7 @@ dialog[open],
   padding: 0 var(--space-4) var(--space-4);
 }
 
-.services-status-chip,
-.customer-status-tag {
+.status-tag {
   align-items: center;
   border-radius: var(--radius-full);
   display: inline-flex;
@@ -5603,27 +5586,24 @@ dialog[open],
   padding: 0 10px;
 }
 
-.services-status-chip--active,
-.customer-status-tag--positive {
+.status-tag--positive {
   background: rgba(14, 116, 65, 0.12);
   color: #166534;
 }
 
-.services-status-chip--hidden,
-.customer-status-tag--neutral {
+.status-tag--neutral {
   background: rgba(100, 116, 139, 0.14);
   color: #334155;
 }
 
-.services-status-chip--archived,
-.customer-status-tag--critical {
+.status-tag--critical {
   background: rgba(185, 28, 28, 0.12);
   color: #991b1b;
 }
 
-.customer-status-tag--accent {
+.status-tag--accent {
   background: rgba(46, 49, 146, 0.1);
-  color: #2e3192;
+  color: var(--color-accent);
 }
 
 .services-empty-state {

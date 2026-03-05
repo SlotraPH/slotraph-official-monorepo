@@ -6,7 +6,7 @@ import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { CustomerRecord } from '@/domain/customer/types';
 import { getOwnerCustomersResource } from '@/features/owner/data';
 import { EmptyFlowState, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
-import { BrandButton, BrandInput, BrandTextarea, Card, useBrandToast } from '@/ui';
+import { BrandButton, BrandInput, BrandTextarea, Card, MetricCard, StatusTag, useBrandToast } from '@/ui';
 import { type ClientIntakeDraft, validateClientIntakeField, validateClientIntakeForm } from './validation';
 
 const STATUS_OPTIONS = [
@@ -110,9 +110,17 @@ export function CustomerWorkspace() {
       />
 
       <div className="customers-kpi-grid">
-        <KpiCard label="Active pipeline" value={`${customers.length} clients`} />
-        <KpiCard label="Avg. spend per client" value={`PHP ${Math.round(totalSpend / Math.max(1, customers.length)).toLocaleString()}`} />
-        <KpiCard label="Booked in next cycle" value={`${customers.filter((customer) => customer.upcomingBooking !== '—').length}`} />
+        <MetricCard className="customers-kpi-card" label="Active pipeline" value={`${customers.length} clients`} />
+        <MetricCard
+          className="customers-kpi-card"
+          label="Avg. spend per client"
+          value={`PHP ${Math.round(totalSpend / Math.max(1, customers.length)).toLocaleString()}`}
+        />
+        <MetricCard
+          className="customers-kpi-card"
+          label="Booked in next cycle"
+          value={`${customers.filter((customer) => customer.upcomingBooking !== '—').length}`}
+        />
       </div>
 
       <Card className="customers-filter-card" padding={5}>
@@ -237,15 +245,6 @@ export function CustomerWorkspace() {
   );
 }
 
-function KpiCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card className="customers-kpi-card" padding={4}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </Card>
-  );
-}
-
 function CustomerProfile({ customer }: { customer: CustomerRecord }) {
   return (
     <Card className="customer-profile-panel" padding={5}>
@@ -279,10 +278,6 @@ function CustomerProfile({ customer }: { customer: CustomerRecord }) {
       </div>
     </Card>
   );
-}
-
-function StatusTag({ text, tone }: { text: string; tone: 'critical' | 'positive' | 'accent' | 'neutral' }) {
-  return <span className={`customer-status-tag customer-status-tag--${tone}`}>{text}</span>;
 }
 
 function MetaLine({ icon: Icon, text }: { icon: typeof Mail; text: string }) {
