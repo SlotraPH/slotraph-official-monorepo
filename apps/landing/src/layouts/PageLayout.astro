@@ -1,0 +1,41 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { Navbar } from '@slotra/ui';
+import { Footer } from '../components/Footer';
+import { ScrollToTop } from '../components/ScrollToTop';
+import { DevBanner } from '../components/DevBanner';
+import { Toaster } from 'sileo';
+import { IN_DEVELOPMENT } from '../config';
+import { APP_NAME } from '@slotra/utils';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = `${APP_NAME} — Free Scheduling Software for Philippine Businesses`,
+  description = 'Slotra is a free scheduling platform for Philippine businesses. Automate bookings, reminders, and payments 24/7.',
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  {IN_DEVELOPMENT && <DevBanner client:load />}
+  <Navbar loginHref="/demo" inDevelopment={IN_DEVELOPMENT} client:load />
+  <slot />
+  <Footer client:load />
+  <ScrollToTop client:load />
+  <Toaster
+    position="bottom-left"
+    options={{
+      fill: "#0f1f2e",
+      roundness: 14,
+      styles: {
+        title: "!text-white",
+        description: "!text-white/60",
+        badge: "!bg-white/10",
+      },
+    }}
+    client:load
+  />
+</BaseLayout>

@@ -1,11 +1,11 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import PageLayout from '../layouts/PageLayout.astro';
 import { NotFoundSection } from '../components/NotFoundSection';
 ---
 
-<BaseLayout
+<PageLayout
   title="404 — Page Not Found | Slotra"
   description="The page you're looking for doesn't exist or has been moved."
 >
   <NotFoundSection client:load />
-</BaseLayout>
+</PageLayout>

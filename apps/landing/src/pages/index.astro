@@ -1,6 +1,5 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { Navbar } from '@slotra/ui';
+import PageLayout from '../layouts/PageLayout.astro';
 import { HeroSection } from '../components/HeroSection';
 import { SpotlightSection } from '../components/SpotlightSection';
 import { FeatureRow } from '../components/FeatureRow';
@@ -9,21 +8,11 @@ import { SocialProofSection } from '../components/SocialProofSection';
 import { PricingSection } from '../components/PricingSection';
 import { FaqSection } from '../components/FaqSection';
 import { FinalCtaBanner } from '../components/FinalCtaBanner';
-import { Footer } from '../components/Footer';
-import { ScrollToTop } from '../components/ScrollToTop';
-import { DevBanner } from '../components/DevBanner';
 import { WaitlistSection } from '../components/WaitlistSection';
 import { IN_DEVELOPMENT } from '../config';
-import { Toaster } from 'sileo';
-import { APP_NAME } from '@slotra/utils';
 ---
 
-<BaseLayout
-  title={`${APP_NAME} — Free Scheduling Software for Philippine Businesses`}
-  description="Slotra is a free scheduling platform for Philippine businesses. Automate bookings, reminders, and payments 24/7."
->
-  {IN_DEVELOPMENT && <DevBanner client:load />}
-  <Navbar loginHref="/demo" inDevelopment={IN_DEVELOPMENT} client:load />
+<PageLayout>
   {IN_DEVELOPMENT ? (
     <WaitlistSection turnstileSiteKey={__TURNSTILE_SITE_KEY__} client:load />
   ) : (
@@ -38,21 +27,4 @@ import { APP_NAME } from '@slotra/utils';
       <FinalCtaBanner client:load />
     </>
   )}
-  <Footer client:load />
-  <ScrollToTop client:load />
-  <Toaster
-    position="bottom-left"
-    options={{
-      fill: "#0f1f2e",
-      roundness: 14,
-      styles: {
-        title: "!text-white",
-        description: "!text-white/60",
-        badge: "!bg-white/10",
-      },
-    }}
-    client:load
-  />
-</BaseLayout>
-
-
+</PageLayout>
