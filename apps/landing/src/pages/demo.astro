@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Navbar } from '@slotra/ui';
+import { BookDemoSection } from '../components/BookDemoSection';
+import { Footer } from '../components/Footer';
+import { ScrollToTop } from '../components/ScrollToTop';
+import { Toaster } from 'sileo';
+import { APP_NAME } from '@slotra/utils';
+---
+
+<BaseLayout
+  title={`Book a Demo — ${APP_NAME}`}
+  description="Book a free 30-minute Google Meet with the Slotra team. Get a personalized walkthrough of the platform."
+>
+  <Navbar loginHref="/demo" client:load />
+  <BookDemoSection turnstileSiteKey={__TURNSTILE_SITE_KEY__} client:load />
+  <Footer client:load />
+  <ScrollToTop client:load />
+  <Toaster
+    position="bottom-left"
+    options={{
+      fill: "#0f1f2e",
+      roundness: 14,
+      styles: {
+        title: "!text-white",
+        description: "!text-white/60",
+        badge: "!bg-white/10",
+      },
+    }}
+    client:load
+  />
+</BaseLayout>
