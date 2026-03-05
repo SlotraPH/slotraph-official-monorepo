@@ -102,11 +102,12 @@ export function BookDemoSection() {
                             </div>
                         ))}
                     </div>
+
                 </div>
 
                 {/* ── Two-column: checklist + Cal embed ── */}
                 <div className="grid grid-cols-[1fr_2fr] gap-10 items-start max-[900px]:grid-cols-1">
-                    {/* What's covered */}
+                    {/* What's covered + Team */}
                     <div className="flex flex-col gap-3 pt-2">
                         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: '#7a8799' }}>
                             What we'll cover
@@ -129,6 +130,30 @@ export function BookDemoSection() {
                                 <span className="text-[14px]" style={{ color: '#4a5668' }}>{item}</span>
                             </div>
                         ))}
+
+                        {/* Team */}
+                        <div className="flex flex-col gap-2 mt-5">
+                            <p className="text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: '#b0bac6' }}>
+                                You'll meet
+                            </p>
+                            {[
+                                { src: '/team/dheyn.jpg', name: 'Dheyn Orlanda', role: 'Chief Executive Officer' },
+                                { src: '/team/francis.png', name: 'Francis Mistica', role: 'Chief Technology Officer' },
+                            ].map(({ src, name, role }) => (
+                                <div key={name} className="flex items-center gap-3 py-2">
+                                    <img
+                                        src={src}
+                                        alt={name}
+                                        className="w-9 h-9 rounded-full object-cover object-top flex-shrink-0"
+                                        style={{ border: '1px solid rgba(0,0,0,0.08)' }}
+                                    />
+                                    <div>
+                                        <p className="text-[13px] font-semibold tracking-[-0.01em]" style={{ color: '#0f1f2e' }}>{name}</p>
+                                        <p className="text-[11px]" style={{ color: '#7a8799' }}>{role}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Cal embed */}
