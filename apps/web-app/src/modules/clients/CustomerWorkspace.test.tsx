@@ -17,7 +17,7 @@ describe('CustomerWorkspace', () => {
       </MemoryRouter>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Save intake draft' }));
+    await user.click(await screen.findByRole('button', { name: 'Save intake draft' }));
 
     expect(screen.getByText('Enter the client name.')).toBeInTheDocument();
     expect(screen.getByText('Enter an email address.')).toBeInTheDocument();

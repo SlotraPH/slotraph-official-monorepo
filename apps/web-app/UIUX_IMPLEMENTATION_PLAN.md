@@ -225,3 +225,36 @@ No edits to mobile and landing; web-app only.
 1. Integration clients currently wrap mocked repositories for safe UX wiring; network transport adapters remain Phase 4 work.
 2. Persistence remains browser-session scoped (`sessionStorage`) for deterministic frontend behavior while backend write contracts are pending.
 3. Retry semantics are immediate and user-driven; network-aware retry policies/backoff are deferred until real API error classes are available.
+
+## Phase 4 Architecture Notes (Customer + Payments Operational Wiring) (March 6, 2026)
+- Added dedicated owner persistence clients for customer and payment operation domains:
+  - customers:
+    - `src/features/owner/customers/persistenceClient.ts`
+    - contract: `load()`, `saveIntakeDraft()`, `updateCustomerStatus()`, `restoreDefaults()`
+    - snapshot intent: isolate customer list/intake/status transition UX from route shell contracts
+  - payments:
+    - `src/features/owner/payments/persistenceClient.ts`
+    - contract: `load()`, `savePolicy()`, `transitionOperation()`
+    - snapshot intent: unify payment policy/checklist/activity states behind one typed async boundary
+- Customer interaction architecture updates:
+  - deterministic route-safe state rendering for hydration (`loading | error | empty | ready`)
+  - status transitions now follow explicit operation contract with previous-status metadata for undo UX
+  - intake save lifecycle now aligns to shared save-state language (`saving | saved | failed + retry`)
+- Payments interaction architecture updates:
+  - payment activity model introduces explicit state machine for operational clarity:
+    - `pending -> paid | failed | blocked`
+    - `failed -> pending | paid | blocked`
+    - `blocked -> pending | failed`
+    - `paid -> refunded`
+  - invalid transitions return actionable messages to avoid ambiguous failure states
+  - policy save and activity transitions remain decoupled, reducing coupling risk between settings and operations lists
+- Cross-surface UX consistency decisions:
+  - inline success/error alert pattern standardized for action outcomes
+  - row action clusters use matching density/wrap semantics on customers and payments surfaces
+  - activity/list tables preserve deterministic spacing and horizontal overflow fallback at narrow widths
+
+### Phase 4 Next Dependencies
+1. Replace session persistence clients with real API adapters while preserving contract shapes.
+2. Introduce network-aware retry classes and error taxonomy (validation vs auth vs transport).
+3. Add audit-event timelines for customer and payment status transitions.
+4. Add E2E coverage for customer status undo and payment transition gating rules.

@@ -1,12 +1,22 @@
-﻿import { Compass, Mail, Phone, Search, UserPlus, Users } from 'lucide-react';
-import { useState } from 'react';
+﻿import { AlertTriangle, Compass, Mail, Phone, Search, UserPlus, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
-import type { CustomerRecord } from '@/domain/customer/types';
-import { mockOwnerRouteClient } from '@/features/owner/routeClient';
+import type { CustomerRecord, CustomerStatus } from '@/domain/customer/types';
+import { ownerCustomerPersistenceClient } from '@/features/owner/customers/persistenceClient';
 import { EmptyFlowState, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
-import { BrandButton, BrandInput, BrandTextarea, Card, MetricCard, StatusTag, useBrandToast } from '@/ui';
+import {
+  BrandButton,
+  BrandInput,
+  BrandTextarea,
+  Card,
+  MetricCard,
+  SaveStateIndicator,
+  StatusTag,
+  useBrandToast,
+  type SaveStateStatus,
+} from '@/ui';
 import { type ClientIntakeDraft, validateClientIntakeField, validateClientIntakeForm } from './validation';
 
 const STATUS_OPTIONS = [
@@ -25,25 +35,82 @@ const EMPTY_DRAFT: ClientIntakeDraft = {
 };
 
 export function CustomerWorkspace() {
-  const resource = mockOwnerRouteClient.getCustomersQuery();
   const toast = useBrandToast();
+  const [sessionStatus, setSessionStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [sessionMessage, setSessionMessage] = useState('Loading customer records...');
+  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
+  const [intakeDraftCount, setIntakeDraftCount] = useState(0);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<(typeof STATUS_OPTIONS)[number]['value']>('All');
-  const [selectedId, setSelectedId] = useState<string | null>(
-    () => (resource.status === 'success' ? resource.data.customers[0]?.id ?? null : null),
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<ClientIntakeDraft>(EMPTY_DRAFT);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [intakeSaveState, setIntakeSaveState] = useState<SaveStateStatus>('saved');
+  const [lastSavedLabel, setLastSavedLabel] = useState('Waiting for first intake save');
+  const [pendingIntakeDraft, setPendingIntakeDraft] = useState<ClientIntakeDraft | null>(null);
+  const [statusActionInFlightId, setStatusActionInFlightId] = useState<string | null>(null);
+  const [lastStatusUpdate, setLastStatusUpdate] = useState<{
+    customerId: string;
+    customerName: string;
+    previousStatus: CustomerStatus;
+    nextStatus: CustomerStatus;
+  } | null>(null);
+  const [statusActionError, setStatusActionError] = useState<string | null>(null);
 
-  if (resource.status === 'loading') {
-    return <RouteStateCard title="Loading customers" description="Preparing owner customer records." variant="loading" />;
+  async function hydrateCustomers() {
+    setSessionStatus('loading');
+    setSessionMessage('Loading customer records...');
+    setStatusActionError(null);
+
+    try {
+      const snapshot = await ownerCustomerPersistenceClient.load();
+      setCustomers(snapshot.customers);
+      setIntakeDraftCount(snapshot.intakeDraftCount);
+      setSelectedId((current) => (current && snapshot.customers.some((item) => item.id === current)
+        ? current
+        : snapshot.customers[0]?.id ?? null));
+      setSessionStatus('ready');
+      setSessionMessage('');
+    } catch {
+      setSessionStatus('error');
+      setSessionMessage('Could not load customer operations data. Retry to restore customers and drafts.');
+    }
   }
 
-  if (resource.status === 'error') {
-    return <RouteStateCard title="Customers unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
+  useEffect(() => {
+    void hydrateCustomers();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedId && customers[0]) {
+      setSelectedId(customers[0].id);
+      return;
+    }
+
+    if (selectedId && !customers.some((customer) => customer.id === selectedId)) {
+      setSelectedId(customers[0]?.id ?? null);
+    }
+  }, [customers, selectedId]);
+
+  if (sessionStatus === 'loading') {
+    return <RouteStateCard title="Loading customers" description="Preparing owner customer records and segment history." variant="loading" />;
   }
 
-  const { customers } = resource.data;
+  if (sessionStatus === 'error') {
+    return <RouteStateCard title="Customers unavailable" description={sessionMessage} variant="error" onRetry={() => void hydrateCustomers()} />;
+  }
+
+  if (customers.length === 0) {
+    return (
+      <RouteStateCard
+        title="No customers found"
+        description="Customer records are empty in this workspace session."
+        variant="empty"
+        actions={<BrandButton variant="secondary" onClick={() => void restoreDefaults()}>Reload sample customers</BrandButton>}
+      />
+    );
+  }
+
   const filtered = customers.filter((customer) => {
     const haystack = `${customer.name} ${customer.email} ${customer.tags.join(' ')}`.toLowerCase();
     return (status === 'All' || customer.status === status) && haystack.includes(query.toLowerCase());
@@ -55,6 +122,7 @@ export function CustomerWorkspace() {
   function setField<K extends keyof ClientIntakeDraft>(field: K, value: ClientIntakeDraft[K]) {
     const nextDraft = { ...draft, [field]: value };
     setDraft(nextDraft);
+    setIntakeSaveState('idle');
     setErrors((currentErrors) => ({
       ...currentErrors,
       [field]: validateClientIntakeField(nextDraft, field),
@@ -68,6 +136,34 @@ export function CustomerWorkspace() {
     }));
   }
 
+  async function persistIntake(draftToPersist: ClientIntakeDraft) {
+    setIntakeSaveState('saving');
+    setPendingIntakeDraft(draftToPersist);
+
+    try {
+      const result = await ownerCustomerPersistenceClient.saveIntakeDraft(draftToPersist);
+      setCustomers((current) => [result.customer, ...current]);
+      setIntakeDraftCount((count) => count + 1);
+      setSelectedId(result.customer.id);
+      setDraft(EMPTY_DRAFT);
+      setErrors({});
+      setPendingIntakeDraft(null);
+      setIntakeSaveState('saved');
+      setLastSavedLabel(`Saved at ${new Date(result.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+
+      toast.success({
+        title: 'Customer intake saved',
+        description: `${result.customer.name} was added to customer operations as a new draft.`,
+      });
+    } catch {
+      setIntakeSaveState('failed');
+      toast.error({
+        title: 'Intake save failed',
+        description: 'Retry to keep this intake draft in customer operations.',
+      });
+    }
+  }
+
   function handleSubmit() {
     const nextErrors = validateClientIntakeForm(draft);
     setErrors(nextErrors);
@@ -75,17 +171,89 @@ export function CustomerWorkspace() {
       return;
     }
 
-    toast.success({
-      title: 'Client intake captured',
-      description: `Created a local intake draft for ${draft.fullName}. Persistence stays in Phase 5.`,
-    });
-    setDraft(EMPTY_DRAFT);
-    setErrors({});
+    void persistIntake(draft);
   }
 
   const vipCount = customers.filter((customer) => customer.status === 'VIP').length;
   const followUpCount = customers.filter((customer) => customer.status === 'Needs follow-up').length;
+  const activeCount = customers.filter((customer) => customer.status === 'Active').length;
   const totalSpend = customers.reduce((sum, customer) => sum + customer.totalSpend, 0);
+
+  async function handleStatusUpdate(customer: CustomerRecord, nextStatus: CustomerStatus) {
+    setStatusActionInFlightId(customer.id);
+    setStatusActionError(null);
+
+    try {
+      const result = await ownerCustomerPersistenceClient.updateCustomerStatus(customer.id, nextStatus);
+      setCustomers((current) => current.map((item) => (item.id === customer.id ? result.customer : item)));
+      setLastStatusUpdate({
+        customerId: customer.id,
+        customerName: customer.name,
+        previousStatus: result.previousStatus,
+        nextStatus: result.customer.status,
+      });
+      toast.success({
+        title: 'Customer status updated',
+        description: `${customer.name} moved to ${result.customer.status}.`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not update customer status. Retry this action.';
+      setStatusActionError(message);
+      toast.error({
+        title: 'Status update failed',
+        description: message,
+      });
+    } finally {
+      setStatusActionInFlightId(null);
+    }
+  }
+
+  async function handleUndoStatusUpdate() {
+    if (!lastStatusUpdate) {
+      return;
+    }
+
+    const customer = customers.find((item) => item.id === lastStatusUpdate.customerId);
+    if (!customer) {
+      setLastStatusUpdate(null);
+      return;
+    }
+
+    await handleStatusUpdate(customer, lastStatusUpdate.previousStatus);
+    setLastStatusUpdate(null);
+    toast.info({
+      title: 'Status change undone',
+      description: `${customer.name} was restored to ${lastStatusUpdate.previousStatus}.`,
+    });
+  }
+
+  async function restoreDefaults() {
+    setSessionStatus('loading');
+    try {
+      const snapshot = await ownerCustomerPersistenceClient.restoreDefaults();
+      setCustomers(snapshot.customers);
+      setIntakeDraftCount(snapshot.intakeDraftCount);
+      setSelectedId(snapshot.customers[0]?.id ?? null);
+      setSessionStatus('ready');
+      toast.info({
+        title: 'Customer defaults restored',
+        description: 'Sample customer records and counts are back to baseline.',
+      });
+    } catch {
+      setSessionStatus('error');
+      setSessionMessage('Could not restore default customer records. Retry to recover this workspace.');
+    }
+  }
+
+  function retryIntakeSave() {
+    if (!pendingIntakeDraft) {
+      return;
+    }
+
+    void persistIntake(pendingIntakeDraft);
+  }
+
+  const statusSummaryText = `${vipCount} VIP / ${activeCount} active / ${followUpCount} follow-up`;
 
   return (
     <OwnerPageScaffold>
@@ -103,8 +271,10 @@ export function CustomerWorkspace() {
         pills={(
           <>
             <AppPill tone="success">{vipCount} VIP</AppPill>
-            <AppPill>{followUpCount} follow-up</AppPill>
+            <AppPill>{statusSummaryText}</AppPill>
             <AppPill>PHP {totalSpend.toLocaleString()} lifetime spend</AppPill>
+            <AppPill>{intakeDraftCount} intake drafts saved</AppPill>
+            <SaveStateIndicator status={intakeSaveState} savedLabel={lastSavedLabel} idleLabel="Unsaved intake changes" onRetry={retryIntakeSave} />
           </>
         )}
       />
@@ -140,6 +310,22 @@ export function CustomerWorkspace() {
           />
           <StatusTabs current={status} options={[...STATUS_OPTIONS]} onChange={(value) => setStatus(value)} />
         </div>
+        {statusActionError ? (
+          <div className="customers-inline-alert customers-inline-alert--error" role="status" aria-live="polite">
+            <AlertTriangle size={15} />
+            <span>{statusActionError}</span>
+          </div>
+        ) : null}
+        {lastStatusUpdate ? (
+          <div className="customers-inline-alert customers-inline-alert--success" role="status" aria-live="polite">
+            <span>
+              {lastStatusUpdate.customerName} moved to {lastStatusUpdate.nextStatus}.
+            </span>
+            <BrandButton size="nav" variant="secondary" onClick={() => void handleUndoStatusUpdate()}>
+              Undo change
+            </BrandButton>
+          </div>
+        ) : null}
       </Card>
 
       <div className="customers-main-grid">
@@ -182,6 +368,22 @@ export function CustomerWorkspace() {
                     <div className="customer-row__tags">
                       {customer.tags.map((tag) => (
                         <StatusTag key={tag} text={tag} tone="neutral" />
+                      ))}
+                    </div>
+                    <div className="customer-row__actions">
+                      {getStatusActions(customer).map((action) => (
+                        <BrandButton
+                          key={action.status}
+                          size="nav"
+                          variant="secondary"
+                          disabled={statusActionInFlightId === customer.id}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleStatusUpdate(customer, action.status);
+                          }}
+                        >
+                          {action.label}
+                        </BrandButton>
                       ))}
                     </div>
                   </button>
@@ -314,5 +516,22 @@ function toStatusTone(status: CustomerRecord['status']) {
   return 'neutral' as const;
 }
 
+function getStatusActions(customer: CustomerRecord): Array<{ label: string; status: CustomerStatus }> {
+  const options: Array<{ label: string; status: CustomerStatus }> = [];
+
+  if (customer.status !== 'Active') {
+    options.push({ label: 'Mark active', status: 'Active' });
+  }
+
+  if (customer.status !== 'Needs follow-up') {
+    options.push({ label: 'Needs follow-up', status: 'Needs follow-up' });
+  }
+
+  if (customer.status !== 'VIP') {
+    options.push({ label: 'Upgrade VIP', status: 'VIP' });
+  }
+
+  return options.slice(0, 2);
+}
 
 

@@ -1,4 +1,4 @@
-# UI/UX Implementation Tracker (Phase 2 Route IA Update)
+﻿# UI/UX Implementation Tracker (Phase 2 Route IA Update)
 
 Last updated: March 6, 2026
 Scope: `apps/web-app` only
@@ -524,3 +524,51 @@ No edits to mobile and landing; web-app only.
 - `pnpm --filter @slotra/web-app lint`: Pass
 - `pnpm --filter @slotra/web-app test`: Failed (environment dependency issue persists: `Cannot find module './lib/dispatcher/retry-agent'` from `undici` during Vitest worker startup)
 - `pnpm --filter @slotra/web-app build`: Pass
+
+## Phase 4 Customer + Payments Operational Wiring (March 6, 2026)
+- Customer workspace (`/owner/customers`) moved from route-shell-only rendering to integration-facing frontend persistence:
+  - async customer hydration contract with deterministic `loading | error | empty | success` rendering and retry
+  - persisted intake draft writes with save lifecycle (`saving | saved | failed`) and retry affordance
+  - customer status actions wired to typed transitions with explicit failure handling + undo recovery cue
+  - files:
+    - `src/features/owner/customers/persistenceClient.ts`
+    - `src/modules/clients/CustomerWorkspace.tsx`
+    - `src/modules/clients/CustomerWorkspace.test.tsx`
+- Payments workspace (`/owner/payments`) upgraded to operational payment-state wiring:
+  - async payment policy + checklist + activity snapshot hydration with retry/error contracts
+  - payment activity state model now explicit (`pending | paid | failed | refunded | blocked`)
+  - status transition actions enforce allowed-state transitions and provide actionable error messages
+  - undo affordance added for latest status transition recovery
+  - files:
+    - `src/features/owner/payments/persistenceClient.ts`
+    - `src/modules/billing/BillingWorkspace.tsx`
+- Cross-surface consistency pass (customers + payments):
+  - standardized inline success/error recovery banners and row-action button density
+  - standardized operational activity table spacing and action cluster behavior for narrow widths
+  - file:
+    - `src/styles.css`
+- Added persistence client unit coverage:
+  - `src/features/owner/customers/persistenceClient.test.ts`
+  - `src/features/owner/payments/persistenceClient.test.ts`
+
+### Phase 4 Acceptance Checklist (Customers + Payments)
+| Surface | Status | Notes |
+| --- | --- | --- |
+| `/owner/customers` list/search/filter wiring | Done | Query and status segmentation now run against async-hydrated customer snapshot with deterministic empty/retry flows. |
+| `/owner/customers` intake save lifecycle | Done | Intake save now uses async persistence contract with inline save-state indicator and retry path. |
+| `/owner/customers` action feedback + recovery | Done | Status transitions now emit explicit success/failure signals and include undo recovery cue. |
+| `/owner/payments` policy/checklist wiring | Done | Policy + checklist now hydrate from async payment persistence snapshot and persist policy edits with retry. |
+| `/owner/payments` payment-state clarity | Done | Payment activity now exposes explicit pending/paid/failed/refunded/blocked states with allowed transitions only. |
+| `/owner/payments` actionable error/recovery | Done | Invalid transitions return actionable copy and the latest successful transition is undoable. |
+| Cross-surface interaction consistency | Done | Customer and payment action banners/row actions now follow shared spacing and responsive behavior. |
+
+### Phase 4 Known Limitations
+- Customer and payment persistence remain session-scoped (`sessionStorage`) and do not call backend APIs yet.
+- Undo is intentionally scoped to the latest successful status transition per workspace session.
+- Payment activity records are mocked operational seeds; transition contracts are production-facing but transport is not.
+
+### Phase 4 Validation (March 6, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (environment dependency issue persists: `Cannot find module './lib/dispatcher/retry-agent'` from `undici` during Vitest worker startup)
+- `pnpm --filter @slotra/web-app build`: Pass
+
