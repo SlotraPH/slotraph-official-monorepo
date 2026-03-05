@@ -60,7 +60,7 @@ export function BookDemoSection() {
     return (
         <section
             className="relative overflow-hidden"
-            style={{ paddingTop: 'calc(var(--banner-h, 0px) + 80px)', paddingBottom: '80px', backgroundColor: '#f7f8fa' }}
+            style={{ paddingTop: 'calc(var(--banner-h, 0px) + 120px)', paddingBottom: '80px', backgroundColor: '#f7f8fa' }}
         >
             <InteractiveGridPattern />
             <div

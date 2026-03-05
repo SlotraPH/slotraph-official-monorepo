@@ -234,7 +234,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
             ref={sectionRef}
             id="waitlist"
             className="relative min-h-screen flex items-center overflow-hidden"
-            style={{ paddingTop: 'calc(var(--banner-h, 0px) + 80px)', paddingBottom: '80px' }}
+            style={{ paddingTop: 'calc(var(--banner-h, 0px) + 120px)', paddingBottom: '80px' }}
         >
             {/* Interactive grid background */}
             <InteractiveGridPattern />
