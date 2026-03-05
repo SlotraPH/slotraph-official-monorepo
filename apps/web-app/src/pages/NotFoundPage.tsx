@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Compass, Home, LayoutDashboard } from 'lucide-react';
+import { Compass, LayoutDashboard } from 'lucide-react';
 import { AppShell } from '@/app/components/AppShell';
 import { HeroSection } from '@/app/components/PageTemplates';
 import { BrandButton } from '@/ui';
@@ -23,9 +23,9 @@ export function NotFoundPage({ context = 'public' }: NotFoundPageProps) {
         }
         actions={(
           <>
-            <Link style={{ textDecoration: 'none' }} to={isOwner ? '/owner/dashboard' : '/'}>
-              <BrandButton startIcon={isOwner ? <LayoutDashboard size={15} /> : <Home size={15} />}>
-                {isOwner ? 'Go to owner dashboard' : 'Go to home'}
+            <Link style={{ textDecoration: 'none' }} to={isOwner ? '/owner/onboarding' : '/book'}>
+              <BrandButton startIcon={isOwner ? <LayoutDashboard size={15} /> : <Compass size={15} />}>
+                {isOwner ? 'Go to owner setup' : 'Go to booking flow'}
               </BrandButton>
             </Link>
             <Link style={{ textDecoration: 'none' }} to="/book">

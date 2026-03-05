@@ -4,7 +4,6 @@ import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { OwnerRouteGuard } from '@/app/routes/OwnerRouteGuard';
 import { OwnerLayout } from '@/app/layouts/OwnerLayout';
 
-const HomePage = lazy(() => import('@/pages/HomePage').then((module) => ({ default: module.HomePage })));
 const SandboxPage = lazy(() => import('@/pages/SandboxPage').then((module) => ({ default: module.SandboxPage })));
 const CalendarPage = lazy(() => import('@/pages/owner/CalendarPage').then((module) => ({ default: module.CalendarPage })));
 const CustomersPage = lazy(() => import('@/pages/owner/CustomersPage').then((module) => ({ default: module.CustomersPage })));
@@ -17,7 +16,9 @@ const SettingsPage = lazy(() => import('@/pages/owner/SettingsPage').then((modul
 const BookingPreferencesPage = lazy(() => import('@/pages/owner/settings/BookingPreferencesPage').then((module) => ({ default: module.BookingPreferencesPage })));
 const BrandDetailsPage = lazy(() => import('@/pages/owner/settings/BrandDetailsPage').then((module) => ({ default: module.BrandDetailsPage })));
 const BusinessProfilePage = lazy(() => import('@/pages/owner/settings/BusinessProfilePage').then((module) => ({ default: module.BusinessProfilePage })));
+const DomainSettingsPage = lazy(() => import('@/pages/owner/settings/DomainSettingsPage').then((module) => ({ default: module.DomainSettingsPage })));
 const NotificationsSettingsPage = lazy(() => import('@/pages/owner/settings/NotificationsSettingsPage').then((module) => ({ default: module.NotificationsSettingsPage })));
+const PublishSettingsPage = lazy(() => import('@/pages/owner/settings/PublishSettingsPage').then((module) => ({ default: module.PublishSettingsPage })));
 const TeamSettingsPage = lazy(() => import('@/pages/owner/settings/TeamSettingsPage').then((module) => ({ default: module.TeamSettingsPage })));
 const BookingConfirmationPage = lazy(() => import('@/pages/public/BookingConfirmationPage').then((module) => ({ default: module.BookingConfirmationPage })));
 const BookingPage = lazy(() => import('@/pages/public/BookingPage').then((module) => ({ default: module.BookingPage })));
@@ -32,10 +33,10 @@ export function AppRouter() {
     <BrowserRouter>
       <Suspense fallback={<RouterFallback />}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Navigate replace to="/owner/onboarding" />} />
 
           <Route path="/owner" element={<OwnerRouteGuard><OwnerLayout /></OwnerRouteGuard>}>
-            <Route index element={<Navigate replace to="/owner/calendar" />} />
+            <Route index element={<Navigate replace to="/owner/onboarding" />} />
             <Route path="calendar" element={<CalendarPage />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="services" element={<ServicesPage />} />
@@ -48,7 +49,9 @@ export function AppRouter() {
               <Route path="business" element={<BusinessProfilePage />} />
               <Route path="team" element={<TeamSettingsPage />} />
               <Route path="notifications" element={<NotificationsSettingsPage />} />
+              <Route path="domain" element={<DomainSettingsPage />} />
               <Route path="booking" element={<BookingPreferencesPage />} />
+              <Route path="publish" element={<PublishSettingsPage />} />
               <Route path="*" element={<NotFoundPage context="owner" />} />
             </Route>
             <Route path="onboarding" element={<OnboardingPage />} />

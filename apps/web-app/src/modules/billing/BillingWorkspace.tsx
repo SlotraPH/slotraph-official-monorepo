@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BadgeCent, ClipboardCheck, Landmark, ReceiptText } from 'lucide-react';
-import { AppPill, PageIntro } from '@/app/components/PageTemplates';
+import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { getOwnerPaymentsResource } from '@/features/owner/data';
 import { FlowLayout, FlowSection, ReviewBlock, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
@@ -74,7 +74,7 @@ export function BillingWorkspace() {
   }
 
   return (
-    <div className="owner-page-stack">
+    <OwnerPageScaffold>
       <PageIntro
         eyebrow="Billing"
         title="Payments and billing views"
@@ -199,7 +199,7 @@ export function BillingWorkspace() {
           </FlowSection>
         )}
       </FlowLayout>
-    </div>
+    </OwnerPageScaffold>
   );
 }
 

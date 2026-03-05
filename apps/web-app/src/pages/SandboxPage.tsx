@@ -66,8 +66,8 @@ export function SandboxPage() {
             title="Slotra design tokens and primitives"
             description="This isolated route exists to verify the new web-app token layer, gradients, focus rings, typography scale, and toast styling without touching production navigation."
           />
-          <Link to="/" style={{ textDecoration: 'none' }}>
-            <BrandButton size="nav" variant="secondary">Back home</BrandButton>
+          <Link to="/owner/onboarding" style={{ textDecoration: 'none' }}>
+            <BrandButton size="nav" variant="secondary">Back to setup</BrandButton>
           </Link>
         </div>
 

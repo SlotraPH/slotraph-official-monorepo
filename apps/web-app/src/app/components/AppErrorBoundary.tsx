@@ -48,8 +48,8 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps, App
                 <Button type="button" onClick={this.handleRetry}>
                   Retry screen
                 </Button>
-                <a className="button-link button-link--secondary" href="/">
-                  Back to home
+                <a className="button-link button-link--secondary" href="/owner/onboarding">
+                  Open owner setup
                 </a>
               </>
             )}

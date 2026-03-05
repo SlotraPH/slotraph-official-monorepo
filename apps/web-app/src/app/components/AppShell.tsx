@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import wordmark from '@slotra/branding/assets/slotra_symbol_wordmark.png';
 import { appConfig } from '@/config/env';
-import { BrandButton, colors, layout, spacing, typography } from '@/ui';
+import { BrandButton, colors, spacing, typography } from '@/ui';
 
 interface AppShellProps {
   children: ReactNode;
@@ -18,7 +18,7 @@ interface AppShellProps {
 }
 
 const NAV_LINKS = [
-  { label: 'Home', to: '/' },
+  { label: 'Setup', to: '/owner/onboarding' },
   { label: 'Dashboard', to: '/owner/dashboard' },
   { label: 'Calendar', to: '/owner/calendar' },
   { label: 'Booking', to: '/book' },
@@ -110,7 +110,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
 
       <header className={`app-shell__navbar ${navbarSolid ? 'app-shell__navbar--solid' : ''}`}>
         <div className="app-shell__navbar-inner">
-          <Link aria-label="Slotra home" className="app-shell__brand" to="/">
+          <Link aria-label="Slotra owner setup" className="app-shell__brand" to="/owner/onboarding">
             <img alt="Slotra" className="app-shell__brand-image" src={wordmark} />
           </Link>
 
@@ -127,7 +127,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
           </nav>
 
           <div className="app-shell__actions">
-            <a className="app-shell__action-link" href="mailto:hello@slotra.ph?subject=Book%20a%20Demo">
+            <a className="app-shell__action-link app-shell__action-link--demo" href="mailto:hello@slotra.ph?subject=Book%20a%20Demo">
               <BrandButton
                 size="nav"
                 startIcon={<CalendarDays size={15} />}
@@ -137,7 +137,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
               </BrandButton>
             </a>
             {!appConfig.inDevelopment ? (
-              <Link className="app-shell__action-link" to="/owner/onboarding">
+              <Link className="app-shell__action-link app-shell__action-link--start" to="/owner/onboarding">
                 <BrandButton size="nav" endIcon={<ArrowRight size={15} />}>
                   Get Started
                 </BrandButton>
@@ -160,9 +160,9 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
             </p>
           </div>
           <div className="app-shell__footer-links">
-            <Link to="/">
+            <Link to="/owner/onboarding">
               <LayoutDashboard size={15} />
-              Home
+              Owner setup
             </Link>
             <Link to="/owner/dashboard">
               <Sparkles size={15} />
@@ -182,7 +182,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
             <a href="https://www.facebook.com/profile.php?id=61586607277534" rel="noreferrer" target="_blank">
               Facebook
             </a>
-            <span>© {footerYear} Slotra Technologies Inc.</span>
+            <span>&copy; {footerYear} Slotra Technologies Inc.</span>
           </div>
         </div>
       </footer>
@@ -192,15 +192,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
 
 export function AppShellContainer({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div
-      className={className}
-      style={{
-        margin: '0 auto',
-        maxWidth: layout.maxWidth,
-        paddingInline: spacing[8],
-        width: '100%',
-      }}
-    >
+    <div className={['app-shell__container', className].filter(Boolean).join(' ')}>
       {children}
     </div>
   );
@@ -239,3 +231,4 @@ export function AppShellLead({
     </div>
   );
 }
+

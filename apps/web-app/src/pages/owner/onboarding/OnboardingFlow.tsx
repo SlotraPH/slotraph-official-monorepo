@@ -1,19 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Card, PageHeader } from '@slotra/ui';
+import { Badge, Button, PageHeader } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
+import { OwnerPageScaffold } from '@/app/components/PageTemplates';
 import type { ServiceRecord } from '@/domain/service/types';
 import type { TeamMemberRecord } from '@/domain/staff/types';
 import { trackWebEvent } from '@/features/analytics/trackWebEvent';
 import { getDefaultOwnerOnboardingSeed } from '@/features/owner/data';
 import { mockOnboardingRepository } from '@/features/owner/onboarding/mockOnboardingRepository';
+import { BrandButton, Card, colors, typography } from '@/ui';
 import { sanitizeBookingSlug } from '../settings/brandDetailsShared';
 import { createDefaultOnboardingDraft } from './mockData';
 import {
   canAccessOnboardingStep,
   getFurthestOnboardingStepIndex,
-  getOnboardingProgressPercent,
   ONBOARDING_STEPS,
 } from './progression';
+import { SetupChecklistCard } from './components/SetupChecklistCard';
+import { SetupProgressMeta, SetupProgressRing } from './components/SetupProgressRing';
+import { SetupReadinessPanel } from './components/SetupReadinessPanel';
+import type { SetupChecklistItem, SetupChecklistStatus } from './components/setupTypes';
 import { BusinessHoursStep } from './steps/BusinessHoursStep';
 import { BusinessInfoStep } from './steps/BusinessInfoStep';
 import { BookingSlugStep } from './steps/BookingSlugStep';
@@ -24,11 +29,28 @@ import { TeamSetupStep } from './steps/TeamSetupStep';
 import type { OnboardingDraft, OnboardingStepId } from './types';
 import { validateOnboardingStep } from './validation';
 
+function resolveSetupStatus(completedCount: number, totalCount: number): SetupChecklistStatus {
+  if (completedCount <= 0) {
+    return 'not-started';
+  }
+
+  if (completedCount >= totalCount) {
+    return 'done';
+  }
+
+  return 'in-progress';
+}
+
+function isFilled(value: string) {
+  return value.trim().length > 0;
+}
+
 export function OnboardingFlow() {
   const resource = getDefaultOwnerOnboardingSeed();
   const [draft, setDraft] = useState<OnboardingDraft>(createDefaultOnboardingDraft);
   const [currentStepId, setCurrentStepId] = useState<OnboardingStepId>('business-info');
   const [completedStepIds, setCompletedStepIds] = useState<OnboardingStepId[]>([]);
+  const [showStepEditor, setShowStepEditor] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveMessage, setSaveMessage] = useState('Autosaved in this browser session');
   const [hydrated, setHydrated] = useState(false);
@@ -69,8 +91,102 @@ export function OnboardingFlow() {
   const currentStepIndex = ONBOARDING_STEPS.findIndex((step) => step.id === currentStepId);
   const safeCurrentStepIndex = currentStepIndex >= 0 ? currentStepIndex : 0;
   const currentStep = ONBOARDING_STEPS[safeCurrentStepIndex]!;
-  const progressPercent = getOnboardingProgressPercent(currentStepId);
   const furthestStepIndex = getFurthestOnboardingStepIndex(currentStepId, completedStepIds);
+  const businessFields = [
+    draft.businessInfo.name,
+    draft.businessInfo.industry,
+    draft.businessInfo.phone,
+    draft.businessInfo.email,
+    draft.businessInfo.address,
+    draft.businessInfo.about,
+  ];
+  const brandingCompletedFields = businessFields.filter((value) => isFilled(value)).length;
+  const brandingStatus = resolveSetupStatus(brandingCompletedFields, businessFields.length);
+  const configuredServices = draft.services.filter((service) => isFilled(service.name) && service.durationMinutes > 0).length;
+  const servicesStatus = draft.services.length === 0
+    ? 'not-started'
+    : resolveSetupStatus(configuredServices, draft.services.length);
+  const enabledHours = draft.businessHours.filter((slot) => slot.isOpen);
+  const enabledHoursConfigured = enabledHours.filter((slot) => isFilled(slot.openTime) && isFilled(slot.closeTime)).length;
+  const availabilityStatus = enabledHours.length === 0
+    ? 'not-started'
+    : resolveSetupStatus(enabledHoursConfigured, enabledHours.length);
+  const sanitizedSlug = sanitizeBookingSlug(draft.bookingSlug);
+  const domainStatus: SetupChecklistStatus = !isFilled(draft.bookingSlug)
+    ? 'not-started'
+    : sanitizedSlug === draft.bookingSlug && draft.bookingSlug.length >= 3
+      ? 'done'
+      : 'in-progress';
+  const checklistWithoutPublish: SetupChecklistItem[] = [
+    {
+      id: 'branding',
+      title: 'Branding',
+      description: 'Business profile, contact details, and industry details.',
+      status: brandingStatus,
+      blocker: brandingStatus === 'done' ? 'Ready for customers.' : 'Business details still missing.',
+      progressLabel: `${brandingCompletedFields}/${businessFields.length} profile fields complete`,
+      targetStepId: 'business-info',
+    },
+    {
+      id: 'services',
+      title: 'Services',
+      description: 'Add services, duration, and visibility before publishing.',
+      status: servicesStatus,
+      blocker: servicesStatus === 'done' ? 'At least one offer is ready.' : 'Add and configure service offerings.',
+      progressLabel: draft.services.length === 0
+        ? 'No services configured yet'
+        : `${configuredServices}/${draft.services.length} services configured`,
+      targetStepId: 'services',
+    },
+    {
+      id: 'availability',
+      title: 'Availability',
+      description: 'Set opening days and staff-ready booking windows.',
+      status: availabilityStatus,
+      blocker: availabilityStatus === 'done' ? 'Open hours are configured.' : 'Operating hours need setup.',
+      progressLabel: enabledHours.length === 0
+        ? 'No open schedule set'
+        : `${enabledHoursConfigured}/${enabledHours.length} open days configured`,
+      targetStepId: 'hours',
+    },
+    {
+      id: 'domain',
+      title: 'Domain',
+      description: 'Reserve your public booking slug and verify URL identity.',
+      status: domainStatus,
+      blocker: domainStatus === 'done' ? 'Booking URL is publish-ready.' : 'Finalize booking slug format.',
+      progressLabel: domainStatus === 'done' ? `slotra.ph/book/${draft.bookingSlug}` : 'Booking slug not finalized',
+      targetStepId: 'booking-slug',
+    },
+  ];
+  const publishPrerequisitesDone = checklistWithoutPublish.every((item) => item.status === 'done');
+  const publishDone = completedStepIds.includes('completion') || currentStepId === 'completion';
+  const publishStatus: SetupChecklistStatus = publishPrerequisitesDone
+    ? (publishDone ? 'done' : 'in-progress')
+    : 'not-started';
+  const checklistItems: SetupChecklistItem[] = [
+    ...checklistWithoutPublish,
+    {
+      id: 'publish',
+      title: 'Publish',
+      description: 'Review all setup sections, then publish your booking workspace.',
+      status: publishStatus,
+      blocker: publishStatus === 'done' ? 'Workspace is publish-ready.' : 'Complete setup review and publish.',
+      progressLabel: publishDone ? 'Completion review finished' : 'Awaiting final review',
+      targetStepId: 'completion',
+    },
+  ];
+  const completedChecklistCount = checklistItems.filter((item) => item.status === 'done').length;
+  const progressPercent = Math.round((completedChecklistCount / checklistItems.length) * 100);
+  const setupState = !hydrated
+    ? 'loading'
+    : completedChecklistCount === 0
+      ? 'empty'
+      : completedChecklistCount === checklistItems.length
+        ? 'success'
+        : 'ready';
+  const unresolvedItems = checklistItems.filter((item) => item.status !== 'done');
+  const blockerMessages = unresolvedItems.map((item) => item.blocker);
 
   function persistManually() {
     mockOnboardingRepository.saveSession({
@@ -89,6 +205,13 @@ export function OnboardingFlow() {
     if (canAccessOnboardingStep(stepId, currentStepId, completedStepIds)) {
       setCurrentStepId(stepId);
     }
+  }
+
+  function openStepEditor(stepId: OnboardingStepId) {
+    const firstAvailable = ONBOARDING_STEPS.slice(0, furthestStepIndex + 2).at(-1)?.id ?? 'business-info';
+    const targetStepId = canAccessOnboardingStep(stepId, currentStepId, completedStepIds) ? stepId : firstAvailable;
+    setCurrentStepId(targetStepId);
+    setShowStepEditor(true);
   }
 
   function handleNext() {
@@ -121,6 +244,11 @@ export function OnboardingFlow() {
       setCurrentStepId(previousStep.id);
       setErrors({});
     }
+  }
+
+  function handleLaunchpadContinue() {
+    const nextChecklist = checklistItems.find((item) => item.status !== 'done');
+    openStepEditor(nextChecklist?.targetStepId ?? 'completion');
   }
 
   function updateBusinessInfo<K extends keyof OnboardingDraft['businessInfo']>(
@@ -335,10 +463,10 @@ export function OnboardingFlow() {
   }
 
   return (
-    <div className="owner-page-stack">
+    <OwnerPageScaffold>
       <PageHeader
-        title="Owner onboarding"
-        subtitle="Complete the initial business setup before accepting bookings."
+        title="Setup launchpad"
+        subtitle="Complete branding, services, availability, and domain configuration before accepting bookings."
         actions={(
           <>
             <Badge variant="info">{progressPercent}% complete</Badge>
@@ -349,48 +477,68 @@ export function OnboardingFlow() {
         )}
       />
 
-      <div className="onboarding-layout">
-        <aside className="onboarding-sidebar">
-          <Card className="onboarding-progress-card">
-            <div className="onboarding-progress-card__top">
-              <p className="onboarding-progress-card__eyebrow">Setup progress</p>
-              <p className="onboarding-progress-card__value">{safeCurrentStepIndex + 1} / {ONBOARDING_STEPS.length}</p>
+      <div className="setup-launchpad-layout">
+        <section className="setup-launchpad-main">
+          <Card className="setup-launchpad-hero">
+            <div className="setup-launchpad-hero__copy">
+              <p className="setup-launchpad-hero__eyebrow">Workspace setup</p>
+              <h2 className="setup-launchpad-hero__title">Launchpad readiness overview</h2>
+              <SetupProgressMeta completed={completedChecklistCount} total={checklistItems.length} />
+              <p style={{ color: colors.muted, fontFamily: typography.fontFamily, margin: 0 }}>
+                {saveMessage}
+              </p>
+              <div className="setup-launchpad-hero__actions">
+                <BrandButton onClick={handleLaunchpadContinue}>Continue setup</BrandButton>
+                <BrandButton variant="secondary" onClick={() => setShowStepEditor((current) => !current)}>
+                  {showStepEditor ? 'Hide step editor' : 'Open step editor'}
+                </BrandButton>
+              </div>
             </div>
-            <div className="onboarding-progress-bar" aria-hidden="true">
-              <span style={{ width: `${progressPercent}%` }} />
-            </div>
-            <p className="onboarding-progress-card__hint">{saveMessage}</p>
-
-            <div className="onboarding-step-list">
-              {ONBOARDING_STEPS.map((step, index) => {
-                const isCurrent = step.id === currentStepId;
-                const isComplete = completedStepIds.includes(step.id);
-                const isClickable = index <= furthestStepIndex + 1;
-
-                return (
-                  <button
-                    key={step.id}
-                    type="button"
-                    className={[
-                      'onboarding-step-link',
-                      isCurrent ? 'onboarding-step-link--current' : '',
-                      isComplete ? 'onboarding-step-link--complete' : '',
-                    ].filter(Boolean).join(' ')}
-                    onClick={() => goToStep(step.id)}
-                    disabled={!isClickable}
-                  >
-                    <span className="onboarding-step-link__index">{index + 1}</span>
-                    <span className="onboarding-step-link__body">
-                      <span className="onboarding-step-link__title">{step.title}</span>
-                      <span className="onboarding-step-link__description">{step.description}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <SetupProgressRing percentage={progressPercent} />
           </Card>
-        </aside>
 
+          {setupState === 'loading' ? (
+            <Card className="setup-state-card setup-state-card--loading">
+              <p className="setup-state-card__title">Loading setup progress...</p>
+              <p className="setup-state-card__description">Preparing your mocked setup snapshot for this session.</p>
+            </Card>
+          ) : null}
+
+          {setupState === 'empty' ? (
+            <Card className="setup-state-card setup-state-card--empty">
+              <p className="setup-state-card__title">No setup progress yet</p>
+              <p className="setup-state-card__description">Start with branding and services to unlock your booking workspace.</p>
+            </Card>
+          ) : null}
+
+          {setupState === 'success' ? (
+            <Card className="setup-state-card setup-state-card--success">
+              <p className="setup-state-card__title">Setup complete</p>
+              <p className="setup-state-card__description">All launch checks are done. Review completion and publish when ready.</p>
+            </Card>
+          ) : null}
+
+          <div className="setup-checklist-grid">
+            {checklistItems.map((item) => (
+              <SetupChecklistCard
+                key={item.id}
+                item={item}
+                onOpen={(selected) => openStepEditor(selected.targetStepId)}
+              />
+            ))}
+          </div>
+        </section>
+
+        <aside className="setup-launchpad-rail">
+          <SetupReadinessPanel
+            blockers={blockerMessages}
+            completed={completedChecklistCount}
+            onNextAction={handleLaunchpadContinue}
+          />
+        </aside>
+      </div>
+
+      {showStepEditor ? (
         <div className="onboarding-main">
           <Card className="onboarding-stage-card">
             <div className="onboarding-stage-card__header">
@@ -404,22 +552,32 @@ export function OnboardingFlow() {
             {renderCurrentStep()}
 
             <div className="onboarding-stage-card__footer">
-              <Button type="button" variant="ghost" onClick={handleBack} disabled={safeCurrentStepIndex === 0}>
-                Back
-              </Button>
-              {currentStepId !== 'completion' ? (
-                <Button type="button" onClick={handleNext}>
-                  {safeCurrentStepIndex === ONBOARDING_STEPS.length - 2 ? 'Finish onboarding' : 'Next step'}
+              <div className="onboarding-stage-card__footer-actions">
+                <Button type="button" variant="ghost" onClick={handleBack} disabled={safeCurrentStepIndex === 0}>
+                  Back
                 </Button>
-              ) : (
-                <Button type="button" variant="outline" onClick={() => goToStep('business-info')}>
-                  Revisit setup
+                <Button type="button" variant="outline" onClick={() => setShowStepEditor(false)}>
+                  Back to launchpad
                 </Button>
-              )}
+              </div>
+              <div className="onboarding-stage-card__footer-actions">
+                {currentStepId !== 'completion' ? (
+                  <Button type="button" onClick={handleNext}>
+                    {safeCurrentStepIndex === ONBOARDING_STEPS.length - 2 ? 'Finish onboarding' : 'Next step'}
+                  </Button>
+                ) : (
+                  <Button type="button" variant="outline" onClick={() => goToStep('business-info')}>
+                    Revisit setup
+                  </Button>
+                )}
+                <Button type="button" variant="outline" onClick={persistManually}>
+                  Save now
+                </Button>
+              </div>
             </div>
           </Card>
         </div>
-      </div>
-    </div>
+      ) : null}
+    </OwnerPageScaffold>
   );
 }
