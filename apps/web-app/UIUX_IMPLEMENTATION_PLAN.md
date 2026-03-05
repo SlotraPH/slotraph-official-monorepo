@@ -258,3 +258,41 @@ No edits to mobile and landing; web-app only.
 2. Introduce network-aware retry classes and error taxonomy (validation vs auth vs transport).
 3. Add audit-event timelines for customer and payment status transitions.
 4. Add E2E coverage for customer status undo and payment transition gating rules.
+
+## Phase 5 Architecture Notes (Integrations Provider Lifecycle UX) (March 6, 2026)
+- Added dedicated owner integrations persistence boundary for provider lifecycle operations:
+  - `src/features/owner/integrations/persistenceClient.ts`
+  - typed provider state contract:
+    - `disconnected | connecting | connected | degraded | error | reauth-required`
+  - typed operational methods:
+    - `load()`
+    - `connect(providerId)`
+    - `disconnect(providerId)`
+    - `reauthenticate(providerId)`
+    - `runSync(providerId)`
+- Integrations route architecture updated from static roadmap rendering to operational lifecycle workspace:
+  - file:
+    - `src/pages/owner/IntegrationsPage.tsx`
+  - interaction model:
+    - explicit next-action mapping per provider lifecycle state
+    - sync-health + last-sync metadata rendered as first-class status surfaces
+    - backoff-aware retry cues (countdown + disabled retry controls) without route lock
+    - action feedback surfaced via inline status surfaces + non-blocking toasts
+- Observability and troubleshooting architecture added to integrations route:
+  - incident/event log stream persisted in integration snapshot and rendered newest-first
+  - incident model includes severity and error class taxonomy:
+    - auth failure
+    - rate limit
+    - config issue
+    - network issue
+  - critical provider failures surfaced via route banner while preserving unrelated workflow continuity
+- Styling and responsive architecture:
+  - new integrations workspace classes added in `src/styles.css`
+  - provider card and incident log layouts collapse predictably at compact breakpoints
+  - focus-visible affordances added for keyboard interaction parity.
+
+### Phase 5 Sequencing Into Hardening
+1. Replace session-scoped integrations persistence with real API adapters while preserving lifecycle contract shape.
+2. Move retry/backoff authority to backend scheduler metadata and expose provider-specific retry reasons.
+3. Add provider incident drill-down route(s) with filtering by provider, severity, and error class.
+4. Add integration-focused unit + E2E coverage for lifecycle transitions, backoff gating, and log rendering order.

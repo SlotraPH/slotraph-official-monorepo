@@ -572,3 +572,68 @@ No edits to mobile and landing; web-app only.
 - `pnpm --filter @slotra/web-app test`: Failed (environment dependency issue persists: `Cannot find module './lib/dispatcher/retry-agent'` from `undici` during Vitest worker startup)
 - `pnpm --filter @slotra/web-app build`: Pass
 
+## Phase 5 Integrations Provider Auth/Sync/Status Flows (March 6, 2026)
+- Integrations workspace (`/owner/integrations`) upgraded from static roadmap shell to lifecycle-ready operational UX:
+  - provider lifecycle states surfaced per integration:
+    - `disconnected`
+    - `connecting`
+    - `connected`
+    - `degraded`
+    - `error`
+    - `reauth-required`
+  - explicit next actions for every state (`connect`, `disconnect`, `reauthenticate`, `sync`, `retry sync`)
+  - files:
+    - `src/pages/owner/IntegrationsPage.tsx`
+    - `src/styles.css`
+- Added typed frontend integration persistence contracts for auth/sync/status workflows:
+  - async typed methods:
+    - `load()`
+    - `connect(providerId)`
+    - `disconnect(providerId)`
+    - `reauthenticate(providerId)`
+    - `runSync(providerId)`
+  - session-scoped snapshot model includes:
+    - provider status + sync health
+    - last sync timestamp
+    - error taxonomy metadata
+    - retry backoff window metadata
+    - incident/event log stream
+  - file:
+    - `src/features/owner/integrations/persistenceClient.ts`
+- Troubleshooting and observability UX added:
+  - incident log panel with newest-first provider events
+  - severity signaling (`info | warning | critical`)
+  - explicit error taxonomy copy:
+    - auth failure
+    - rate limit
+    - config issue
+    - network issue
+  - critical-error banner designed to remain visible but non-blocking to navigation/workspace continuity.
+- Responsive + accessibility pass for integrations controls:
+  - provider card action groups wrap safely at narrow widths
+  - stats grid collapses to single-column at compact breakpoints
+  - focus-visible styling added for provider action controls
+  - incident log uses semantic `role="log"` + polite live region.
+
+### Phase 5 Integrations Acceptance Matrix
+| Surface | Status | Notes |
+| --- | --- | --- |
+| `/owner/integrations` provider lifecycle states | Done | All six target states are represented in typed provider contracts and rendered in UI with explicit labels/tags. |
+| Auth action wiring | Done | Connect/disconnect/reauth flows are wired to typed async integration persistence methods. |
+| Sync action wiring | Done | Sync action updates last-sync and sync-health signals with deterministic success/failure pathways. |
+| Retry/backoff cues | Done | Backoff countdown labels and disabled retry actions are shown without blocking route usage. |
+| Troubleshooting observability | Done | Incident log panel + severity taxonomy + latest-event context are now surfaced in-route. |
+| Error taxonomy UX copy | Done | Auth/rate-limit/config/network error classes are explicit in both provider cards and taxonomy panel. |
+| Responsive/a11y sweep | Done | Narrow-width layout guards and focus-visible keyboard affordances were added for integration controls. |
+
+### Unresolved Provider Gaps (Frontend Scope Aware)
+- Provider operations are still session-scoped frontend mocks; no real backend provider transport/auth token exchange.
+- No provider webhooks or real-time push updates; incident log updates are action-driven only.
+- Backoff windows are frontend heuristics and not coordinated with server-side retry schedulers.
+- No cross-route/global incident center yet; observability is currently integrations-route scoped.
+
+### Phase 5 Validation (March 6, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (environment/module issue persists: `undici` missing `./lib/dispatcher/retry-agent` during Vitest worker startup; run reported 12 worker-start errors)
+- `pnpm --filter @slotra/web-app build`: Pass
+
