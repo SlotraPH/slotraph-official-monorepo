@@ -1,6 +1,6 @@
 # UI/UX Implementation Tracker (Phase 2 Route IA Update)
 
-Last updated: March 5, 2026
+Last updated: March 6, 2026
 Scope: `apps/web-app` only
 
 ## Non-Conflict Note
@@ -371,4 +371,59 @@ No edits to mobile and landing; web-app only.
 ### Final Validation (March 5, 2026)
 - `pnpm --filter @slotra/web-app lint`: Pass
 - `pnpm --filter @slotra/web-app test`: Failed (environment/module resolution issue: `undici` missing `./lib/dispatcher/retry-agent` during Vitest worker startup)
+- `pnpm --filter @slotra/web-app build`: Pass
+
+## Phase 1 Data Integration Foundation (March 6, 2026)
+- Added a typed route-query state contract for owner/public route integration boundaries:
+  - `idle`
+  - `loading`
+  - `success`
+  - `error`
+  - files:
+    - `src/features/route-query/contracts.ts`
+    - `src/features/route-query/adapters.ts`
+- Added typed route client boundaries for owner/public route domains:
+  - owner client (`mockOwnerRouteClient`) for dashboard, services, customers, team, business-settings, payments, integrations, onboarding
+  - public booking client (`mockPublicBookingRouteClient`) for booking route data + slots/date/confirmation actions
+  - files:
+    - `src/features/owner/routeClient.ts`
+    - `src/features/public-booking/routeClient.ts`
+    - `src/features/owner/data.ts` (exported data contracts)
+    - `src/features/public-booking/data.ts` (exported `PublicBookingRouteData`)
+- Route-level loading/error UX pass (deterministic + retry affordance):
+  - standardized error retry CTA on key owner/public route surfaces and owner guard
+  - upgraded route loading card with consistent skeleton treatment
+  - files:
+    - `src/app/components/RouteStateCard.tsx`
+    - `src/app/routes/OwnerRouteGuard.tsx`
+    - `src/pages/owner/DashboardPage.tsx`
+    - `src/pages/owner/IntegrationsPage.tsx`
+    - `src/pages/owner/ServicesPage.tsx`
+    - `src/pages/owner/onboarding/OnboardingFlow.tsx`
+    - `src/modules/booking/BookingFlowScreen.tsx`
+    - `src/modules/clients/CustomerWorkspace.tsx`
+    - `src/modules/scheduling/SchedulingWorkspace.tsx`
+    - `src/modules/billing/BillingWorkspace.tsx`
+- Save-state UX standardization pass:
+  - added shared `SaveStateIndicator` (`Saving...`, `Saved`, `Failed`, `Retry`)
+  - wired into key editors/forms (services, scheduling, billing, booking preferences, business profile)
+  - files:
+    - `src/ui/SaveStateIndicator.tsx`
+    - `src/ui/index.ts`
+    - `src/pages/owner/ServicesPage.tsx`
+    - `src/modules/scheduling/SchedulingWorkspace.tsx`
+    - `src/modules/billing/BillingWorkspace.tsx`
+    - `src/pages/owner/settings/BookingPreferencesPage.tsx`
+    - `src/pages/owner/settings/BusinessProfilePage.tsx`
+    - `src/styles.css`
+
+### Phase 1 Remaining UI Integration Gaps
+- Route clients currently wrap synchronous mock resources; async fetch orchestration and real cancellation/abort behavior are still pending backend wiring.
+- `idle` query status is defined at contract level but not yet exercised by route pages (current mock path resolves `loading|success|error`).
+- Save-state UX is standardized across major editors, but some settings surfaces still rely on toast-only confirmation without explicit inline save-state indicators.
+- Retry actions currently use route reload semantics (`window.location.reload`) and should evolve to domain-level retry handlers once real fetchers are introduced.
+
+### Validation (March 6, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (unchanged environment dependency issue: `undici` missing `./lib/dispatcher/retry-agent` during Vitest worker startup)
 - `pnpm --filter @slotra/web-app build`: Pass

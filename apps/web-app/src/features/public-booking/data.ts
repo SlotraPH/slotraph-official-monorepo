@@ -1,13 +1,24 @@
+import type { BookingBusinessProfile } from '@/domain/business/types';
 import type { BookingConfirmationRecord, BookingDraft } from '@/domain/booking/types';
 import type { BookingService } from '@/domain/service/types';
+import type { BookingStaffMember } from '@/domain/staff/types';
 import { createReadyResource } from '@/features/resource';
 import { mockAvailabilityRepository } from './mockAvailabilityRepository';
 import { mockPublicBookingRepository } from './mockPublicBookingRepository';
 
+export interface PublicBookingRouteData {
+  business: BookingBusinessProfile;
+  services: BookingService[];
+  servicesById: Record<string, BookingService>;
+  staff: BookingStaffMember[];
+  staffById: Record<string, BookingStaffMember>;
+  bookingEnabled: boolean;
+}
+
 export function getPublicBookingResource() {
   const catalog = mockPublicBookingRepository.getCatalog();
 
-  return createReadyResource({
+  return createReadyResource<PublicBookingRouteData>({
     business: catalog.business,
     services: catalog.services,
     servicesById: Object.fromEntries(catalog.services.map((service) => [service.id, service])),

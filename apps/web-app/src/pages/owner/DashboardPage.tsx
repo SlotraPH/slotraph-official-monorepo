@@ -1,20 +1,20 @@
 import { OwnerContentGrid, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
-import { getOwnerDashboardResource } from '@/features/owner/data';
+import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { DashboardActivityFeed } from './dashboard/DashboardActivityFeed';
 import { DashboardQuickActions } from './dashboard/DashboardQuickActions';
 import { DashboardSummaryCards } from './dashboard/DashboardSummaryCards';
 import { DashboardUpcomingBookings } from './dashboard/DashboardUpcomingBookings';
 
 export function DashboardPage() {
-  const resource = getOwnerDashboardResource();
+  const resource = mockOwnerRouteClient.getDashboardQuery();
 
   if (resource.status === 'loading') {
     return <RouteStateCard title="Loading dashboard" description="Preparing owner metrics and upcoming bookings." variant="loading" />;
   }
 
   if (resource.status === 'error') {
-    return <RouteStateCard title="Dashboard unavailable" description={resource.message} variant="error" />;
+    return <RouteStateCard title="Dashboard unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   const { activity, bookings, quickActions, summary } = resource.data;

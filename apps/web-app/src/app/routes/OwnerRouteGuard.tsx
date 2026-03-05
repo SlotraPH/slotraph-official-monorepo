@@ -16,7 +16,7 @@ export function OwnerRouteGuard({ children }: OwnerRouteGuardProps) {
   }
 
   if (resource.status === 'error') {
-    return <RouteStateCard title="Owner access unavailable" description={resource.message} variant="error" />;
+    return <RouteStateCard title="Owner access unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   if (resource.data.session.status !== 'authenticated') {

@@ -1,7 +1,7 @@
 import { Building2, Mail, MapPin, Phone, Save } from 'lucide-react';
 import { useState } from 'react';
 import { getOwnerBusinessSettingsResource } from '@/features/owner/data';
-import { BrandButton, BrandInput, BrandSelect, BrandTextarea, Card, useBrandToast } from '@/ui';
+import { BrandButton, BrandInput, BrandSelect, BrandTextarea, Card, SaveStateIndicator, useBrandToast, type SaveStateStatus } from '@/ui';
 
 export function BusinessProfilePage() {
   const toast = useBrandToast();
@@ -14,8 +14,17 @@ export function BusinessProfilePage() {
   const [address, setAddress] = useState(() => business?.address ?? '');
   const [timezone, setTimezone] = useState(() => business?.timezone ?? 'Asia/Manila');
   const [businessNotes, setBusinessNotes] = useState(() => business?.arrivalNotes ?? '');
+  const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
+  const [lastSaved, setLastSaved] = useState('Saved');
+
+  function markDirty() {
+    setSaveState('idle');
+  }
 
   function handleSaveProfile() {
+    setSaveState('saving');
+    setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+    setSaveState('saved');
     toast.success({
       title: 'Business profile saved',
       description: 'Contact details and operations notes were updated in this workspace draft.',
@@ -40,28 +49,28 @@ export function BusinessProfilePage() {
           <BrandInput
             label="Phone"
             value={phone}
-            onChange={(event) => setPhone(event.target.value)}
+            onChange={(event) => { setPhone(event.target.value); markDirty(); }}
             helperText="Used in reminder templates and customer support cards."
             leadingIcon={Phone}
           />
           <BrandInput
             label="Email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => { setEmail(event.target.value); markDirty(); }}
             helperText="Primary owner inbox for escalations and receipts."
             leadingIcon={Mail}
           />
           <BrandInput
             label="Address"
             value={address}
-            onChange={(event) => setAddress(event.target.value)}
+            onChange={(event) => { setAddress(event.target.value); markDirty(); }}
             helperText="Displayed on booking confirmation summaries."
             leadingIcon={MapPin}
           />
           <BrandSelect
             label="Timezone"
             value={timezone}
-            onChange={(event) => setTimezone(event.target.value)}
+            onChange={(event) => { setTimezone(event.target.value); markDirty(); }}
             helperText="Used for booking windows and notification schedules."
           >
             {timezoneOptions.map((option) => (
@@ -74,11 +83,12 @@ export function BusinessProfilePage() {
           label="Arrival notes"
           rows={3}
           value={businessNotes}
-          onChange={(event) => setBusinessNotes(event.target.value)}
+          onChange={(event) => { setBusinessNotes(event.target.value); markDirty(); }}
           helperText="Add parking, landmark, or check-in notes shown before checkout."
         />
 
         <div className="settings-button-row settings-button-row--end">
+          <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={handleSaveProfile} />
           <BrandButton startIcon={<Save size={14} />} onClick={handleSaveProfile}>Save business profile</BrandButton>
         </div>
       </Card>

@@ -1,10 +1,10 @@
-import { Compass, Mail, Phone, Search, UserPlus, Users } from 'lucide-react';
+﻿import { Compass, Mail, Phone, Search, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { CustomerRecord } from '@/domain/customer/types';
-import { getOwnerCustomersResource } from '@/features/owner/data';
+import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { EmptyFlowState, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
 import { BrandButton, BrandInput, BrandTextarea, Card, MetricCard, StatusTag, useBrandToast } from '@/ui';
 import { type ClientIntakeDraft, validateClientIntakeField, validateClientIntakeForm } from './validation';
@@ -25,12 +25,12 @@ const EMPTY_DRAFT: ClientIntakeDraft = {
 };
 
 export function CustomerWorkspace() {
-  const resource = getOwnerCustomersResource();
+  const resource = mockOwnerRouteClient.getCustomersQuery();
   const toast = useBrandToast();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<(typeof STATUS_OPTIONS)[number]['value']>('All');
   const [selectedId, setSelectedId] = useState<string | null>(
-    () => (resource.status === 'ready' ? resource.data.customers[0]?.id ?? null : null),
+    () => (resource.status === 'success' ? resource.data.customers[0]?.id ?? null : null),
   );
   const [draft, setDraft] = useState<ClientIntakeDraft>(EMPTY_DRAFT);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
@@ -40,7 +40,7 @@ export function CustomerWorkspace() {
   }
 
   if (resource.status === 'error') {
-    return <RouteStateCard title="Customers unavailable" description={resource.message} variant="error" />;
+    return <RouteStateCard title="Customers unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   const { customers } = resource.data;
@@ -119,7 +119,7 @@ export function CustomerWorkspace() {
         <MetricCard
           className="customers-kpi-card"
           label="Booked in next cycle"
-          value={`${customers.filter((customer) => customer.upcomingBooking !== '�').length}`}
+          value={`${customers.filter((customer) => customer.upcomingBooking !== '—').length}`}
         />
       </div>
 
@@ -313,3 +313,6 @@ function toStatusTone(status: CustomerRecord['status']) {
 
   return 'neutral' as const;
 }
+
+
+

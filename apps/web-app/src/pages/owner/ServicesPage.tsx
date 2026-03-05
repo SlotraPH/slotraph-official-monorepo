@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { AppPill, OwnerContentGrid, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { ServiceRecord } from '@/domain/service/types';
-import { getOwnerServicesResource } from '@/features/owner/data';
-import { Card, MetricCard } from '@/ui';
+import { mockOwnerRouteClient } from '@/features/owner/routeClient';
+import { Card, MetricCard, SaveStateIndicator, type SaveStateStatus } from '@/ui';
 import { ServiceEditor, type ServiceDraft } from './services/ServiceEditor';
 import { ServiceList } from './services/ServiceList';
 import { ServiceToolbar } from './services/ServiceToolbar';
@@ -19,16 +19,18 @@ const EMPTY_DRAFT: ServiceDraft = {
 };
 
 export function ServicesPage() {
-  const resource = getOwnerServicesResource();
-  const [services, setServices] = useState(() => (resource.status === 'ready' ? resource.data.services : []));
+  const resource = mockOwnerRouteClient.getServicesQuery();
+  const [services, setServices] = useState(() => (resource.status === 'success' ? resource.data.services : []));
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('All');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [selectedId, setSelectedId] = useState<string | null>(
-    () => (resource.status === 'ready' ? resource.data.services[0]?.id ?? null : null),
+    () => (resource.status === 'success' ? resource.data.services[0]?.id ?? null : null),
   );
   const [draft, setDraft] = useState<ServiceDraft>(EMPTY_DRAFT);
   const [mode, setMode] = useState<'create' | 'edit'>('edit');
+  const [saveState, setSaveState] = useState<SaveStateStatus>('idle');
+  const [lastSavedLabel, setLastSavedLabel] = useState('Saved');
 
   if (resource.status === 'loading') {
     return (
@@ -48,7 +50,7 @@ export function ServicesPage() {
   }
 
   if (resource.status === 'error') {
-    return <RouteStateCard title="Services unavailable" description={resource.message} variant="error" />;
+    return <RouteStateCard title="Services unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   const filtered = services.filter((service) =>
@@ -87,10 +89,14 @@ export function ServicesPage() {
       ...current,
       [field]: value,
     }));
+    setSaveState('idle');
   }
 
   function handleSave() {
+    setSaveState('saving');
+
     if (!draft.name.trim()) {
+      setSaveState('failed');
       return;
     }
 
@@ -112,10 +118,13 @@ export function ServicesPage() {
 
       setServices((current) => [newService, ...current]);
       handleSelect(newService);
+      setLastSavedLabel(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      setSaveState('saved');
       return;
     }
 
     if (!selectedId) {
+      setSaveState('failed');
       return;
     }
 
@@ -135,6 +144,8 @@ export function ServicesPage() {
           : service,
       ),
     );
+    setLastSavedLabel(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+    setSaveState('saved');
   }
 
   function handleArchiveToggle(serviceId: string) {
@@ -176,6 +187,7 @@ export function ServicesPage() {
           </>
         )}
         description="Review service performance, adjust availability, and stage updates from one production-ready workspace."
+        actions={<SaveStateIndicator status={saveState} savedLabel={lastSavedLabel} onRetry={handleSave} />}
         pills={(
           <>
             <AppPill tone="success">{activeCount} active</AppPill>

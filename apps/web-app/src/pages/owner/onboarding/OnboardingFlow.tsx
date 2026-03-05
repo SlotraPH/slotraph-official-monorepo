@@ -5,7 +5,7 @@ import { OwnerPageScaffold } from '@/app/components/PageTemplates';
 import type { ServiceRecord } from '@/domain/service/types';
 import type { TeamMemberRecord } from '@/domain/staff/types';
 import { trackWebEvent } from '@/features/analytics/trackWebEvent';
-import { getDefaultOwnerOnboardingSeed } from '@/features/owner/data';
+import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { mockOnboardingRepository } from '@/features/owner/onboarding/mockOnboardingRepository';
 import { BrandButton, Card, colors, typography } from '@/ui';
 import { sanitizeBookingSlug } from '../settings/brandDetailsShared';
@@ -46,7 +46,7 @@ function isFilled(value: string) {
 }
 
 export function OnboardingFlow() {
-  const resource = getDefaultOwnerOnboardingSeed();
+  const resource = mockOwnerRouteClient.getOnboardingQuery();
   const [draft, setDraft] = useState<OnboardingDraft>(createDefaultOnboardingDraft);
   const [currentStepId, setCurrentStepId] = useState<OnboardingStepId>('business-info');
   const [completedStepIds, setCompletedStepIds] = useState<OnboardingStepId[]>([]);
@@ -85,7 +85,7 @@ export function OnboardingFlow() {
   }
 
   if (resource.status === 'error') {
-    return <RouteStateCard title="Onboarding unavailable" description={resource.message} variant="error" />;
+    return <RouteStateCard title="Onboarding unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   const currentStepIndex = ONBOARDING_STEPS.findIndex((step) => step.id === currentStepId);

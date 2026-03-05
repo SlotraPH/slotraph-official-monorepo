@@ -1,6 +1,6 @@
 # UI/UX Implementation Plan (Web App)
 
-Last updated: March 5, 2026
+Last updated: March 6, 2026
 Scope: `apps/web-app` only
 
 ## Non-Conflict Note
@@ -138,3 +138,31 @@ No edits to mobile and landing; web-app only.
 2. Remove or formally retire inactive `TopBar` path if no reintroduction plan exists.
 3. Expand accessibility hardening for custom toggle/accordion/list controls with richer ARIA live announcements.
 4. Add integration and E2E coverage around setup-first navigation and critical owner workflows.
+
+## Phase 1 Architecture Notes (March 6, 2026)
+- Added route-level query-state contract boundary for web-app integration work:
+  - canonical status set: `idle | loading | success | error`
+  - contract files:
+    - `src/features/route-query/contracts.ts`
+    - `src/features/route-query/adapters.ts`
+- Added typed domain route clients to isolate route surfaces from repository wiring details:
+  - owner route client:
+    - `src/features/owner/routeClient.ts`
+    - consumes typed payloads from `src/features/owner/data.ts`
+  - public booking route client:
+    - `src/features/public-booking/routeClient.ts`
+    - consumes typed payloads from `src/features/public-booking/data.ts`
+- Route-state rendering conventions for key surfaces:
+  - loading: deterministic route loading card with skeleton treatment
+  - error: consistent route error card with explicit retry CTA
+  - success: route renders only against typed `success.data` contract
+- Save-state conventions for form/editor surfaces:
+  - shared indicator component for `Saving... | Saved | Failed | Retry`
+  - shared primitive:
+    - `src/ui/SaveStateIndicator.tsx`
+  - integrated in key owner editors/settings pages to reduce copy/behavior drift.
+
+### Phase 1 Boundary Intent for Phase 2
+1. Replace mock route client internals with real typed API adapters without changing route component contracts.
+2. Introduce request lifecycle controls per client method (abort, stale-response guards, retry/backoff) while preserving route-state API shape.
+3. Expand save-state adapter usage to remaining settings/forms so all owner editors share one async feedback contract.

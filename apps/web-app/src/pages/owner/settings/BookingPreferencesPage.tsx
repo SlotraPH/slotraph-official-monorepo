@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, Monitor, Save, Smartphone } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { getOwnerBusinessSettingsResource, getOwnerPaymentsResource } from '@/features/owner/data';
-import { BrandButton, BrandInput, BrandSelect, BrandTextarea, Card, useBrandToast } from '@/ui';
+import { BrandButton, BrandInput, BrandSelect, BrandTextarea, Card, SaveStateIndicator, useBrandToast, type SaveStateStatus } from '@/ui';
 
 interface BuilderSection {
   id: string;
@@ -29,7 +29,7 @@ export function BookingPreferencesPage() {
   const [bookingApproval, setBookingApproval] = useState(() => preferences?.bookingApproval ?? 'Manual review');
   const [heroHeadline, setHeroHeadline] = useState(`Book with ${businessName}`);
   const [heroSubcopy, setHeroSubcopy] = useState('Fast confirmations, clear policies, and a branded checkout experience.');
-  const [saveState, setSaveState] = useState<'saved' | 'dirty'>('saved');
+  const [saveState, setSaveState] = useState<SaveStateStatus>('saved');
   const [lastSaved, setLastSaved] = useState('Auto-saved 3m ago');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [sections, setSections] = useState<BuilderSection[]>([
@@ -49,7 +49,7 @@ export function BookingPreferencesPage() {
   const enabledSections = useMemo(() => sections.filter((section) => section.enabled), [sections]);
 
   function markDirty() {
-    setSaveState('dirty');
+    setSaveState('idle');
   }
 
   function moveSection(index: number, direction: -1 | 1) {
@@ -82,8 +82,9 @@ export function BookingPreferencesPage() {
   }
 
   function handleSave() {
-    setSaveState('saved');
+    setSaveState('saving');
     setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+    setSaveState('saved');
     toast.success({
       title: 'Booking page draft saved',
       description: 'Section order, intake fields, and preview copy were saved in this local workspace.',
@@ -102,7 +103,7 @@ export function BookingPreferencesPage() {
                 Manage the customer-facing structure for hero, services, policies, FAQ, and optional staff sections.
               </p>
             </div>
-            <span className={`booking-builder-save-state booking-builder-save-state--${saveState}`}>{saveState === 'saved' ? lastSaved : 'Unsaved changes'}</span>
+            <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={handleSave} />
           </div>
           <div className="booking-builder-section-list">
             {sections.map((section, index) => (
