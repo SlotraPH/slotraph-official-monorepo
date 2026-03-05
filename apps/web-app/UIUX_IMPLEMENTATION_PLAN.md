@@ -196,3 +196,32 @@ No edits to mobile and landing; web-app only.
 2. Retry behavior currently retries the same local persistence client operation; no backoff/network-classification yet because there is no remote transport in this phase.
 3. Unsaved-change protection is browser-leave focused; in-app route transition blocking remains a follow-up to avoid introducing router-level behavioral risk in this iteration.
 4. Centralized cross-route dirty aggregation was deferred to keep per-route contracts explicit and minimize coupling before real API adapters are introduced.
+
+## Phase 3 Architecture Notes (March 6, 2026)
+- Added dedicated scheduling integration boundary for owner calendar state flow:
+  - `src/features/owner/scheduling/persistenceClient.ts`
+  - typed snapshot contract: timezone + weekly hours + overrides + blackout dates
+  - async contract: `load()` and `save(snapshot)` with deterministic frontend retry UX
+- Scheduling state flow boundaries in `SchedulingWorkspace`:
+  - route-level seed contracts still provided by owner route client (`dashboard`, `business settings`)
+  - scheduling hydration/persistence now isolated behind scheduling persistence client
+  - save lifecycle rendered through shared `SaveStateIndicator` (`saving | saved | failed` + retry)
+  - conflict derivation layer now emits actionable guidance (timezone drift, duplicate overrides, blackout overlap)
+- Added public booking integration client for availability + confirmation transport boundaries:
+  - `src/features/public-booking/integrationClient.ts`
+  - async contract methods:
+    - `loadDateOptions(service, staffId)`
+    - `loadSlots(service, date, staffId)`
+    - `saveConfirmation(record)`
+    - `loadConfirmation()`
+- Booking flow state boundaries in `BookingFlowScreen`:
+  - service/staff catalog remains route-query sourced
+  - date and slot availability are now isolated async integration states (`idle | loading | success | error`) with explicit retry actions
+  - progression guard prevents advancing while integration states are unresolved/errored
+  - confirmation submission now has explicit transient-failure recovery path (`Retry confirmation`)
+- Booking confirmation page now follows route-style deterministic state rendering (`loading | error | empty | success`) while reading confirmation through integration boundary.
+
+### Phase 3 Integration Tradeoffs
+1. Integration clients currently wrap mocked repositories for safe UX wiring; network transport adapters remain Phase 4 work.
+2. Persistence remains browser-session scoped (`sessionStorage`) for deterministic frontend behavior while backend write contracts are pending.
+3. Retry semantics are immediate and user-driven; network-aware retry policies/backoff are deferred until real API error classes are available.

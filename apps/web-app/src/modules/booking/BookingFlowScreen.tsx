@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+﻿import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,12 +13,17 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
-import type { BookingConfirmationRecord, BookingCustomerDetails, BookingDraft } from '@/domain/booking/types';
+import type {
+  BookingConfirmationRecord,
+  BookingCustomerDetails,
+  BookingDateOption,
+  BookingDraft,
+  BookingSlot,
+} from '@/domain/booking/types';
 import { formatCurrency, formatDuration } from '@/domain/service/formatters';
 import { trackWebEvent } from '@/features/analytics/trackWebEvent';
-import {
-  mockPublicBookingRouteClient,
-} from '@/features/public-booking/routeClient';
+import { publicBookingIntegrationClient } from '@/features/public-booking/integrationClient';
+import { mockPublicBookingRouteClient } from '@/features/public-booking/routeClient';
 import { FlowActions, FlowLayout, FlowSection, FlowStepper, ReviewBlock } from '@/modules/shared/flow/FlowScaffolds';
 import { formatSelectedDate } from '@/pages/public/booking/availability';
 import {
@@ -64,6 +69,12 @@ const STAGE_COPY: Record<BookingStepId, { eyebrow: string; title: string; descri
   },
 };
 
+interface IntegrationListState<T> {
+  status: 'idle' | 'loading' | 'success' | 'error';
+  data: T[];
+  message?: string;
+}
+
 function createReference() {
   return `SLT-${Math.floor(Date.now() % 1000000).toString().padStart(6, '0')}`;
 }
@@ -97,44 +108,157 @@ function SelectionGrid({
 export function BookingFlowScreen() {
   const navigate = useNavigate();
   const resource = mockPublicBookingRouteClient.getBookingRouteQuery();
-  const [draft, setDraft] = useState<BookingDraft>(() =>
-    resource.status === 'success' ? mockPublicBookingRouteClient.createDraft(resource.data.business.id) : mockPublicBookingRouteClient.createDraft('')
-  );
+
+  const [draft, setDraft] = useState<BookingDraft>(() => mockPublicBookingRouteClient.createDraft(''));
   const [currentStep, setCurrentStep] = useState<BookingStepId>('service');
   const [customerErrors, setCustomerErrors] = useState<Record<string, string | undefined>>({});
   const [stepError, setStepError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dateOptionsState, setDateOptionsState] = useState<IntegrationListState<BookingDateOption>>({ status: 'idle', data: [] });
+  const [slotState, setSlotState] = useState<IntegrationListState<BookingSlot>>({ status: 'idle', data: [] });
+  const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'failed'>('idle');
+  const [pendingConfirmation, setPendingConfirmation] = useState<BookingConfirmationRecord | null>(null);
+
+  const bookingData = resource.status === 'success' ? resource.data : null;
+  const selectedService = bookingData && draft.serviceId ? bookingData.servicesById[draft.serviceId] ?? null : null;
+  const selectedStaff = bookingData && draft.staffId ? bookingData.staffById[draft.staffId] ?? null : null;
+  const staffRequired = selectedService?.staffSelectionMode === 'required';
+  const availableStaff = selectedService && bookingData
+    ? bookingData.staff.filter((member) => selectedService.staffIds.includes(member.id))
+    : [];
+  const slots = slotState.data;
+  const selectedSlot = slots.find((slot) => slot.id === draft.slotId) ?? null;
+
+  const steps = getBookingSteps(selectedService).map((step) => ({
+    id: step,
+    label: STAGE_COPY[step].title,
+    description: STAGE_COPY[step].eyebrow,
+  }));
+
+  const stepIds = steps.map((step) => step.id as BookingStepId);
+  const currentStepIndex = stepIds.indexOf(currentStep);
+  const context = { draft, selectedService, selectedStaff, selectedSlot };
+  const previousStep = currentStepIndex > 0 ? stepIds[currentStepIndex - 1] : null;
+
+  useEffect(() => {
+    if (!selectedService) {
+      setDateOptionsState({ status: 'idle', data: [] });
+      return;
+    }
+
+    if (staffRequired && !draft.staffId) {
+      setDateOptionsState({ status: 'idle', data: [] });
+      return;
+    }
+
+    const service = selectedService;
+    let canceled = false;
+
+    async function loadDateOptions() {
+      setDateOptionsState({ status: 'loading', data: [] });
+
+      try {
+        const options = await publicBookingIntegrationClient.loadDateOptions(service, staffRequired ? draft.staffId : null);
+
+        if (canceled) {
+          return;
+        }
+
+        setDateOptionsState({ status: 'success', data: options });
+      } catch {
+        if (canceled) {
+          return;
+        }
+
+        setDateOptionsState({
+          status: 'error',
+          data: [],
+          message: 'Unable to load available dates. Retry to continue this booking.',
+        });
+      }
+    }
+
+    void loadDateOptions();
+
+    return () => {
+      canceled = true;
+    };
+  }, [draft.staffId, selectedService, staffRequired]);
+
+  useEffect(() => {
+    if (!selectedService || !draft.date) {
+      setSlotState({ status: 'idle', data: [] });
+      return;
+    }
+
+    if (staffRequired && !draft.staffId) {
+      setSlotState({ status: 'idle', data: [] });
+      return;
+    }
+
+    const service = selectedService;
+    const bookingDate = draft.date;
+    let canceled = false;
+
+    async function loadSlots() {
+      setSlotState({ status: 'loading', data: [] });
+
+      try {
+        const nextSlots = await publicBookingIntegrationClient.loadSlots(service, bookingDate, staffRequired ? draft.staffId : null);
+
+        if (canceled) {
+          return;
+        }
+
+        setSlotState({ status: 'success', data: nextSlots });
+      } catch {
+        if (canceled) {
+          return;
+        }
+
+        setSlotState({
+          status: 'error',
+          data: [],
+          message: 'Could not load time slots for this date. Retry before selecting a slot.',
+        });
+      }
+    }
+
+    void loadSlots();
+
+    return () => {
+      canceled = true;
+    };
+  }, [draft.date, draft.staffId, selectedService, staffRequired]);
+
+  useEffect(() => {
+    if (!bookingData?.business.id) {
+      return;
+    }
+
+    setDraft((current) => (current.businessId ? current : mockPublicBookingRouteClient.createDraft(bookingData.business.id)));
+  }, [bookingData?.business.id]);
+
+  const summaryItems = useMemo(() => [
+    { label: 'Service', value: selectedService ? `${selectedService.name} (${formatCurrency(selectedService.price)})` : 'Not selected yet' },
+    { label: 'Staff', value: staffRequired ? selectedStaff?.name ?? 'Choose a staff member' : selectedService ? 'Next available' : 'Depends on service' },
+    { label: 'Date', value: draft.date ? formatSelectedDate(draft.date) : 'Choose a date' },
+    { label: 'Time', value: selectedSlot ? `${selectedSlot.startLabel} to ${selectedSlot.endLabel}` : 'Choose a slot' },
+    { label: 'Customer', value: draft.customer.fullName || 'Add contact details' },
+  ], [draft.customer.fullName, draft.date, selectedService, selectedSlot, selectedStaff?.name, staffRequired]);
 
   if (resource.status === 'loading') {
-    return <RouteStateCard title="Loading booking flow" description="Preparing the public business profile, services, and staff." variant="loading" />;
+    return <RouteStateCard title="Loading booking flow" description="Preparing service, staff, and availability contracts." variant="loading" />;
   }
 
   if (resource.status === 'error') {
     return <RouteStateCard title="Booking flow unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
-  const { bookingEnabled, business, services, servicesById, staff, staffById } = resource.data;
-
-  if (!bookingEnabled) {
-    return <RouteStateCard title="Booking not enabled" description="This public route is still guarded until the booking experience is ready to open." variant="empty" />;
+  if (!bookingData || !bookingData.bookingEnabled) {
+    return <RouteStateCard title="Booking not enabled" description="This public route is still guarded until booking is ready to open." variant="empty" />;
   }
 
-  const selectedService = draft.serviceId ? servicesById[draft.serviceId] ?? null : null;
-  const selectedStaff = draft.staffId ? staffById[draft.staffId] ?? null : null;
-  const staffRequired = selectedService?.staffSelectionMode === 'required';
-  const availableStaff = selectedService ? staff.filter((member) => selectedService.staffIds.includes(member.id)) : [];
-  const dateOptions = selectedService ? mockPublicBookingRouteClient.getDateOptions(selectedService, staffRequired ? draft.staffId : null) : [];
-  const slots = selectedService && draft.date ? mockPublicBookingRouteClient.getSlots(selectedService, draft.date, staffRequired ? draft.staffId : null) : [];
-  const selectedSlot = slots.find((slot) => slot.id === draft.slotId) ?? null;
-  const steps = getBookingSteps(selectedService).map((step) => ({
-    id: step,
-    label: STAGE_COPY[step].title,
-    description: STAGE_COPY[step].eyebrow,
-  }));
-  const stepIds = steps.map((step) => step.id as BookingStepId);
-  const currentStepIndex = stepIds.indexOf(currentStep);
-  const context = { draft, selectedService, selectedStaff, selectedSlot };
-  const previousStep = currentStepIndex > 0 ? stepIds[currentStepIndex - 1] : null;
+  const { business, services } = bookingData;
 
   function updateDraft(nextDraft: Partial<BookingDraft>) {
     setDraft((currentDraft) => ({ ...currentDraft, ...nextDraft }));
@@ -147,6 +271,7 @@ export function BookingFlowScreen() {
       ...currentDraft,
       customer: nextCustomer,
     }));
+
     setCustomerErrors((currentErrors) => ({
       ...currentErrors,
       [field]: validateBookingCustomerField(nextCustomer, field),
@@ -164,6 +289,7 @@ export function BookingFlowScreen() {
     if (!isBookingStepAccessible(stepId, stepIds, currentStepIndex, context)) {
       return;
     }
+
     setCurrentStep(stepId);
     setStepError(null);
   }
@@ -173,6 +299,26 @@ export function BookingFlowScreen() {
   }
 
   function handleContinue() {
+    if (currentStep === 'date' && dateOptionsState.status === 'loading') {
+      setStepError('Availability is still syncing. Wait for dates to finish loading.');
+      return;
+    }
+
+    if (currentStep === 'date' && dateOptionsState.status === 'error') {
+      setStepError(dateOptionsState.message ?? 'Retry date availability before continuing.');
+      return;
+    }
+
+    if (currentStep === 'time' && slotState.status === 'loading') {
+      setStepError('Time slots are still loading. Wait for the latest availability.');
+      return;
+    }
+
+    if (currentStep === 'time' && slotState.status === 'error') {
+      setStepError(slotState.message ?? 'Retry slot availability before continuing.');
+      return;
+    }
+
     const validationError = getBookingStepValidationError(currentStep, context);
     if (validationError) {
       if (currentStep === 'details') {
@@ -189,6 +335,24 @@ export function BookingFlowScreen() {
     }
   }
 
+  async function commitConfirmation(confirmation: BookingConfirmationRecord) {
+    setSubmitState('submitting');
+    setPendingConfirmation(confirmation);
+
+    try {
+      await publicBookingIntegrationClient.saveConfirmation(confirmation);
+      trackWebEvent('booking_confirmation_saved', {
+        reference: confirmation.reference,
+        serviceId: selectedService?.id ?? 'unknown',
+        staffId: selectedStaff?.id ?? 'next-available',
+      });
+      navigate('/book/confirmation');
+    } catch {
+      setSubmitState('failed');
+      setStepError('Temporary issue while saving your booking confirmation. Retry submission.');
+    }
+  }
+
   function handleSubmit() {
     if (!selectedService || !selectedSlot || !draft.date) {
       return;
@@ -201,8 +365,6 @@ export function BookingFlowScreen() {
       setStepError('Complete the customer details before reviewing the booking.');
       return;
     }
-
-    setIsSubmitting(true);
 
     const confirmation: BookingConfirmationRecord = {
       reference: createReference(),
@@ -217,25 +379,55 @@ export function BookingFlowScreen() {
       dateLabel: formatSelectedDate(draft.date),
       timeLabel: `${selectedSlot.startLabel} to ${selectedSlot.endLabel}`,
       customer: draft.customer,
-      followUpNote: 'Staff still confirms the appointment manually after reviewing availability and payment instructions.',
+      followUpNote: 'Staff confirms the appointment manually after reviewing availability and payment instructions.',
     };
 
-    mockPublicBookingRouteClient.saveConfirmation(confirmation);
-    trackWebEvent('booking_confirmation_saved', {
-      reference: confirmation.reference,
-      serviceId: selectedService.id,
-      staffId: selectedStaff?.id ?? 'next-available',
-    });
-    navigate('/book/confirmation');
+    void commitConfirmation(confirmation);
   }
 
-  const summaryItems = [
-    { label: 'Service', value: selectedService ? `${selectedService.name} (${formatCurrency(selectedService.price)})` : 'Not selected yet' },
-    { label: 'Staff', value: staffRequired ? selectedStaff?.name ?? 'Choose a staff member' : selectedService ? 'Next available' : 'Depends on service' },
-    { label: 'Date', value: draft.date ? formatSelectedDate(draft.date) : 'Choose a date' },
-    { label: 'Time', value: selectedSlot ? `${selectedSlot.startLabel} to ${selectedSlot.endLabel}` : 'Choose a slot' },
-    { label: 'Customer', value: draft.customer.fullName || 'Add contact details' },
-  ];
+  function retrySubmit() {
+    if (!pendingConfirmation) {
+      return;
+    }
+
+    void commitConfirmation(pendingConfirmation);
+  }
+
+  function retryDateOptions() {
+    if (!selectedService) {
+      return;
+    }
+
+    setDateOptionsState({ status: 'loading', data: [] });
+    setStepError(null);
+
+    void publicBookingIntegrationClient
+      .loadDateOptions(selectedService, staffRequired ? draft.staffId : null)
+      .then((options) => {
+        setDateOptionsState({ status: 'success', data: options });
+      })
+      .catch(() => {
+        setDateOptionsState({ status: 'error', data: [], message: 'Unable to load available dates. Retry to continue this booking.' });
+      });
+  }
+
+  function retrySlots() {
+    if (!selectedService || !draft.date) {
+      return;
+    }
+
+    setSlotState({ status: 'loading', data: [] });
+    setStepError(null);
+
+    void publicBookingIntegrationClient
+      .loadSlots(selectedService, draft.date, staffRequired ? draft.staffId : null)
+      .then((nextSlots) => {
+        setSlotState({ status: 'success', data: nextSlots });
+      })
+      .catch(() => {
+        setSlotState({ status: 'error', data: [], message: 'Could not load time slots for this date. Retry before selecting a slot.' });
+      });
+  }
 
   return (
     <div style={{ display: 'grid', gap: spacing[5], padding: `${spacing[6]}px ${spacing[8]}px ${spacing[8]}px` }}>
@@ -320,7 +512,7 @@ export function BookingFlowScreen() {
                     <strong style={{ fontFamily: typography.fontFamily, fontSize: typography.body.fontSize }}>{service.name}</strong>
                     <span style={{ color: colors.secondary, fontFamily: typography.fontFamily, ...typography.bodySmall }}>{service.description}</span>
                     <span style={{ color: colors.secondary, fontFamily: typography.fontFamily, ...typography.label }}>
-                      {formatDuration(service.durationMinutes)} • {formatCurrency(service.price)}
+                      {formatDuration(service.durationMinutes)} | {formatCurrency(service.price)}
                     </span>
                   </button>
                 );
@@ -354,56 +546,118 @@ export function BookingFlowScreen() {
           ) : null}
 
           {currentStep === 'date' ? (
-            <SelectionGrid columns="repeat(auto-fit, minmax(160px, 1fr))">
-              {dateOptions.map((option) => {
-                const selected = draft.date === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    aria-pressed={selected}
-                    disabled={!option.isAvailable}
-                    type="button"
-                    onClick={() => {
-                      updateDraft({ date: option.value, slotId: null });
-                      setStepError(null);
-                    }}
-                    style={selectCardStyle(selected, !option.isAvailable)}
-                  >
-                    <span style={{ color: colors.muted, fontFamily: typography.fontFamily, ...typography.overline }}>{option.weekdayLabel}</span>
-                    <strong style={{ fontFamily: typography.fontFamily, fontSize: '24px' }}>{option.dayLabel}</strong>
-                    <span style={{ color: colors.secondary, fontFamily: typography.fontFamily, ...typography.bodySmall }}>{option.monthLabel}</span>
-                    <span style={{ color: option.isAvailable ? colors.brand : colors.muted, fontFamily: typography.fontFamily, ...typography.label }}>{option.availabilityLabel}</span>
-                  </button>
-                );
-              })}
-            </SelectionGrid>
+            <div style={{ display: 'grid', gap: spacing[3] }}>
+              {dateOptionsState.status === 'loading' ? (
+                <Card padding={4}>
+                  <p style={{ color: colors.secondary, fontFamily: typography.fontFamily, margin: 0, ...typography.bodySmall }}>
+                    Loading date availability...
+                  </p>
+                </Card>
+              ) : null}
+
+              {dateOptionsState.status === 'error' ? (
+                <Card padding={4}>
+                  <div style={{ display: 'grid', gap: spacing[3] }}>
+                    <p style={{ color: colors.error, fontFamily: typography.fontFamily, margin: 0, ...typography.bodySmall }}>
+                      {dateOptionsState.message}
+                    </p>
+                    <BrandButton size="nav" variant="secondary" onClick={retryDateOptions}>Retry dates</BrandButton>
+                  </div>
+                </Card>
+              ) : null}
+
+              {dateOptionsState.status === 'success' && dateOptionsState.data.length === 0 ? (
+                <Card padding={4}>
+                  <p style={{ color: colors.secondary, fontFamily: typography.fontFamily, margin: 0, ...typography.bodySmall }}>
+                    No open dates are available for this service yet.
+                  </p>
+                </Card>
+              ) : null}
+
+              {dateOptionsState.status === 'success' && dateOptionsState.data.length > 0 ? (
+                <SelectionGrid columns="repeat(auto-fit, minmax(160px, 1fr))">
+                  {dateOptionsState.data.map((option) => {
+                    const selected = draft.date === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        aria-pressed={selected}
+                        disabled={!option.isAvailable}
+                        type="button"
+                        onClick={() => {
+                          updateDraft({ date: option.value, slotId: null });
+                          setStepError(null);
+                        }}
+                        style={selectCardStyle(selected, !option.isAvailable)}
+                      >
+                        <span style={{ color: colors.muted, fontFamily: typography.fontFamily, ...typography.overline }}>{option.weekdayLabel}</span>
+                        <strong style={{ fontFamily: typography.fontFamily, fontSize: '24px' }}>{option.dayLabel}</strong>
+                        <span style={{ color: colors.secondary, fontFamily: typography.fontFamily, ...typography.bodySmall }}>{option.monthLabel}</span>
+                        <span style={{ color: option.isAvailable ? colors.brand : colors.muted, fontFamily: typography.fontFamily, ...typography.label }}>{option.availabilityLabel}</span>
+                      </button>
+                    );
+                  })}
+                </SelectionGrid>
+              ) : null}
+            </div>
           ) : null}
 
           {currentStep === 'time' ? (
-            <SelectionGrid columns="repeat(auto-fit, minmax(180px, 1fr))">
-              {slots.map((slot) => {
-                const selected = draft.slotId === slot.id;
-                return (
-                  <button
-                    key={slot.id}
-                    aria-pressed={selected}
-                    disabled={!slot.available}
-                    type="button"
-                    onClick={() => {
-                      updateDraft({ slotId: slot.id });
-                      setStepError(null);
-                    }}
-                    style={selectCardStyle(selected, !slot.available)}
-                  >
-                    <span style={{ color: colors.muted, fontFamily: typography.fontFamily, ...typography.overline }}>
-                      {slot.available ? 'Available' : 'Unavailable'}
-                    </span>
-                    <strong style={{ fontFamily: typography.fontFamily, fontSize: typography.body.fontSize }}>{slot.startLabel}</strong>
-                    <span style={{ color: colors.secondary, fontFamily: typography.fontFamily, ...typography.bodySmall }}>{slot.endLabel}</span>
-                  </button>
-                );
-              })}
-            </SelectionGrid>
+            <div style={{ display: 'grid', gap: spacing[3] }}>
+              {slotState.status === 'loading' ? (
+                <Card padding={4}>
+                  <p style={{ color: colors.secondary, fontFamily: typography.fontFamily, margin: 0, ...typography.bodySmall }}>
+                    Loading available slots...
+                  </p>
+                </Card>
+              ) : null}
+
+              {slotState.status === 'error' ? (
+                <Card padding={4}>
+                  <div style={{ display: 'grid', gap: spacing[3] }}>
+                    <p style={{ color: colors.error, fontFamily: typography.fontFamily, margin: 0, ...typography.bodySmall }}>
+                      {slotState.message}
+                    </p>
+                    <BrandButton size="nav" variant="secondary" onClick={retrySlots}>Retry slots</BrandButton>
+                  </div>
+                </Card>
+              ) : null}
+
+              {slotState.status === 'success' && slotState.data.length === 0 ? (
+                <Card padding={4}>
+                  <p style={{ color: colors.secondary, fontFamily: typography.fontFamily, margin: 0, ...typography.bodySmall }}>
+                    This date has no slots for the selected service and staff.
+                  </p>
+                </Card>
+              ) : null}
+
+              {slotState.status === 'success' && slotState.data.length > 0 ? (
+                <SelectionGrid columns="repeat(auto-fit, minmax(180px, 1fr))">
+                  {slotState.data.map((slot) => {
+                    const selected = draft.slotId === slot.id;
+                    return (
+                      <button
+                        key={slot.id}
+                        aria-pressed={selected}
+                        disabled={!slot.available}
+                        type="button"
+                        onClick={() => {
+                          updateDraft({ slotId: slot.id });
+                          setStepError(null);
+                        }}
+                        style={selectCardStyle(selected, !slot.available)}
+                      >
+                        <span style={{ color: colors.muted, fontFamily: typography.fontFamily, ...typography.overline }}>
+                          {slot.available ? 'Available' : 'Unavailable'}
+                        </span>
+                        <strong style={{ fontFamily: typography.fontFamily, fontSize: typography.body.fontSize }}>{slot.startLabel}</strong>
+                        <span style={{ color: colors.secondary, fontFamily: typography.fontFamily, ...typography.bodySmall }}>{slot.endLabel}</span>
+                      </button>
+                    );
+                  })}
+                </SelectionGrid>
+              ) : null}
+            </div>
           ) : null}
 
           {currentStep === 'details' ? (
@@ -484,7 +738,7 @@ export function BookingFlowScreen() {
                 <div style={{ display: 'grid', gap: spacing[2] }}>
                   <span style={{ color: colors.muted, fontFamily: typography.fontFamily, ...typography.overline }}>Before you submit</span>
                   <p style={{ color: colors.secondary, fontFamily: typography.fontFamily, margin: 0, ...typography.bodySmall }}>
-                    Booking confirmation stays manual for now. Staff still reviews availability and payment instructions before the appointment is finalized.
+                    Booking confirmation is currently manual. Staff still verifies availability and payment instructions before final approval.
                   </p>
                 </div>
               </Card>
@@ -509,9 +763,14 @@ export function BookingFlowScreen() {
                     Continue
                   </BrandButton>
                 ) : (
-                  <BrandButton endIcon={<CheckCircle2 size={15} />} disabled={isSubmitting} onClick={handleSubmit}>
-                    {isSubmitting ? 'Confirming...' : 'Confirm booking'}
-                  </BrandButton>
+                  <>
+                    <BrandButton endIcon={<CheckCircle2 size={15} />} disabled={submitState === 'submitting'} onClick={handleSubmit}>
+                      {submitState === 'submitting' ? 'Confirming...' : 'Confirm booking'}
+                    </BrandButton>
+                    {submitState === 'failed' ? (
+                      <BrandButton variant="secondary" onClick={retrySubmit}>Retry confirmation</BrandButton>
+                    ) : null}
+                  </>
                 )}
               </>
             )}
@@ -530,3 +789,4 @@ function MetaRow({ icon: Icon, text }: { icon: typeof CalendarDays; text: string
     </div>
   );
 }
+

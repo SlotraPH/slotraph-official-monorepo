@@ -480,3 +480,47 @@ No edits to mobile and landing; web-app only.
 - Persistence remains browser-session scoped (`sessionStorage`) and intentionally does not call backend APIs.
 - Cross-route dirty aggregation (for global settings-tab unsaved badges) is not yet centralized; indicators are route-local.
 - In-app route-navigation blocking for unsaved changes is not implemented yet; current guard covers browser leave/refresh.
+
+## Phase 3 Scheduling + Booking Engine Integration UX (March 6, 2026)
+- Scheduling workspace (`/owner/calendar`) moved from local placeholder-only state to typed integration-facing persistence contracts:
+  - async load/save boundary with retry handling
+  - persisted weekly hours, timezone, date overrides, blackout dates
+  - deterministic `loading | empty | error | retry` route-state handling for scheduling data hydration
+  - files:
+    - `src/features/owner/scheduling/persistenceClient.ts`
+    - `src/modules/scheduling/SchedulingWorkspace.tsx`
+    - `src/styles.css`
+- Scheduling conflict/timezone hardening delivered:
+  - persistent timezone context chip in scheduling header
+  - actionable conflict guidance (timezone drift, duplicate overrides, blackout overlap)
+  - explicit save lifecycle (`saving/saved/failed + retry`) to remove ambiguous save outcomes
+- Booking flow (`/book`) integration UX upgraded:
+  - async integration-facing availability contracts for date and slot loading
+  - deterministic date/slot `idle | loading | success | error` handling with retry actions
+  - step progression now blocks ambiguous continues while availability contracts are still loading/errored
+  - confirmation submit now supports transient failure recovery via retry
+  - files:
+    - `src/features/public-booking/integrationClient.ts`
+    - `src/modules/booking/BookingFlowScreen.tsx`
+- Booking confirmation (`/book/confirmation`) now loads confirmation via async integration boundary with loading/error/retry UX.
+  - file:
+    - `src/pages/public/booking/BookingConfirmation.tsx`
+
+### Phase 3 Acceptance Checklist
+| Surface | Status | Notes |
+| --- | --- | --- |
+| `/owner/calendar` scheduling contracts | Done | Weekly hours/overrides/blackouts/timezone now persist via typed frontend integration client. |
+| `/owner/calendar` conflict + timezone UX | Done | Conflict states now include explicit action guidance and persistent timezone context. |
+| `/book` availability integration UX | Done | Date/slot states use async integration loading/error/retry flow boundaries. |
+| `/book` step progression + recovery | Done | Continue behavior now guards loading/error availability states before progression. |
+| `/book/confirmation` transient handling | Done | Confirmation load has deterministic loading/error/retry behavior. |
+
+### Phase 3 Known Limitations
+- Scheduling and booking persistence are still browser-session scoped and do not call backend APIs yet.
+- Availability and slot results still come from mock repositories through integration clients (contract shape is production-facing; transport is not).
+- Retry behavior is immediate and does not yet include exponential backoff or network-classified messaging.
+
+### Phase 3 Validation (March 6, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (environment dependency issue persists: `Cannot find module './lib/dispatcher/retry-agent'` from `undici` during Vitest worker startup)
+- `pnpm --filter @slotra/web-app build`: Pass

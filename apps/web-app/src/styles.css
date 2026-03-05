@@ -2633,12 +2633,20 @@ select.input {
   border: 1px solid #f2d4d4;
   border-radius: var(--radius-full);
   color: #7f1d1d;
+  cursor: pointer;
   font-size: var(--font-size-xs);
   font-weight: 600;
   min-height: 30px;
   padding: 0 12px;
   align-items: center;
   display: inline-flex;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.schedule-blackout-shell__tag:hover,
+.schedule-blackout-shell__tag:focus-visible {
+  background: #ffe9e9;
+  border-color: #eab8b8;
 }
 
 .schedule-conflict-shell__alerts {
@@ -2661,6 +2669,15 @@ select.input {
   background: #fff8ea;
   border: 1px solid #f5deab;
   color: #885114;
+}
+
+.schedule-conflict-shell__alert-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.schedule-conflict-shell__alert-copy strong {
+  color: #6b3f0f;
 }
 
 .schedule-conflict-shell__healthy {
