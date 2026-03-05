@@ -107,3 +107,34 @@ No edits to mobile and landing; web-app only.
 - Do not alter landing client signup flow.
 - Avoid route behavior changes unless required for UI safety/accessibility.
 - Every visual change must trace back to `brand.md` tokens/patterns.
+
+## Phase 10 Final Architecture Notes (March 5, 2026)
+- Phase status: UI/UX feature-complete and handoff-ready for functional implementation in `apps/web-app`.
+
+### Final Route + Shell Contract
+- Root and owner entry remain setup-first:
+  - `/` -> `/owner/onboarding`
+  - `/owner` -> `/owner/onboarding`
+- Owner workspace shell remains the single operational frame for all `/owner/*` routes.
+- Home is fully decommissioned as a user destination in owner IA and navigation.
+
+### UI Architecture Baseline for Functional Work
+- Routing + layout ownership:
+  - `src/router/index.tsx` controls owner/public utility route map and settings sub-route topology.
+  - `src/app/components/AppShell.tsx` and `src/app/components/SidebarNav.tsx` define global + owner nav contracts.
+  - `src/app/components/PageTemplates.tsx` provides shared page scaffolding to prevent per-page layout drift.
+- Primitive ownership:
+  - Brand-aligned primitives in `src/ui/*` are the preferred UI foundation (`Brand*`, `Card`, `StatusTag`, `MetricCard`).
+- Styling ownership:
+  - `src/styles.css` is still the transition-era global style host; stable for handoff but should be split incrementally during functional phases.
+
+### Functional Integration Boundaries
+- Treat UI states labeled saved/ready/verified/published as presentation state until backend wiring lands.
+- Replace mock repositories/datasets incrementally by route domain (onboarding -> scheduling -> customers/payments -> integrations).
+- Preserve current route IA and shell composition while integrating data to avoid UX regressions.
+
+### Post-Handoff Technical Debt Targets
+1. Extract remaining global CSS blocks into feature-owned style modules.
+2. Remove or formally retire inactive `TopBar` path if no reintroduction plan exists.
+3. Expand accessibility hardening for custom toggle/accordion/list controls with richer ARIA live announcements.
+4. Add integration and E2E coverage around setup-first navigation and critical owner workflows.

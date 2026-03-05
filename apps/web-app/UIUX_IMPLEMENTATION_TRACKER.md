@@ -84,8 +84,8 @@ No edits to mobile and landing; web-app only.
 6. [x] Add strict non-conflict note to both docs.
 7. [x] Fix obvious UI copy/encoding issue found during audit (`AppShell` footer symbol).
 8. [ ] Convert duplicated legacy/global CSS into scoped ownership layers.
-9. [ ] Execute page-by-page redesign rollout with shared primitives first.
-10. [ ] Run final responsive QA matrix and cross-route visual consistency pass.
+9. [x] Execute page-by-page redesign rollout with shared primitives first.
+10. [x] Run final responsive QA matrix and cross-route visual consistency pass.
 
 ## Phase 3 Resolved Overlap / Shell Stability (March 5, 2026)
 - Unified shell container width + gutter math so navbar/banner/footer and page containers no longer shift across breakpoints.
@@ -321,3 +321,54 @@ No edits to mobile and landing; web-app only.
     - `src/pages/owner/customers/CustomerImportCallout.tsx`
     - `src/pages/owner/customers/CustomerList.tsx`
     - `src/pages/owner/customers/CustomerToolbar.tsx`
+
+## Phase 10 Final UI/UX Acceptance + Handoff (March 5, 2026)
+- Acceptance sweep completed across owner workspace and public booking surfaces.
+- Route/IA checks completed:
+  - confirmed root and owner index are setup-first (`/` and `/owner` -> `/owner/onboarding`)
+  - confirmed no active Home page route in owner UX
+  - confirmed global/owner navigation labels and links match setup-first flow
+- Final defect pass completed:
+  - no blocking overlap, spacing, alignment, or responsive regressions found in this pass
+  - residual CSS debt remains maintainability-only (non-blocking for UI handoff)
+
+### Done / Not-Done Matrix by Page
+| Surface | Status | Notes |
+| --- | --- | --- |
+| `/owner/onboarding` | Done | Launchpad-first setup flow with checklist/progress/readiness rails. |
+| `/owner/dashboard` | Done | KPI, activity, and upcoming booking shells aligned to brand structure. |
+| `/owner/calendar` | Done | Schedule/override/blackout UX shell with responsive guardrails. |
+| `/owner/services` | Done | Toolbar + card/table modes + editor panel production-style UX. |
+| `/owner/customers` | Done | KPI/list/detail/intake flow and responsive stacking stable. |
+| `/owner/payments` | Done (UI-only) | Visual shell complete; functional wiring intentionally deferred. |
+| `/owner/integrations` | Done (UI-only) | Visual shell complete; provider workflows remain placeholders. |
+| `/owner/settings/brand` | Done | Branded form layout and publishing context complete. |
+| `/owner/settings/business` | Done | Unified settings form rhythm and card layout complete. |
+| `/owner/settings/team` | Done (UI-only) | Team roster/invite/security/billing UX shell complete. |
+| `/owner/settings/notifications` | Done (UI-only) | Trigger/template/preview UI complete; backend messaging not wired. |
+| `/owner/settings/domain` | Done (UI-only) | Domain/DNS/verification UX shell complete. |
+| `/owner/settings/booking` | Done (UI-only) | Booking page builder and intake configurator shell complete. |
+| `/owner/settings/publish` | Done (UI-only) | Readiness and go-live shell complete. |
+| `/book` | Done (UI-only data) | Public booking journey complete with mocked source data. |
+| `/book/confirmation` | Done | Confirmation surface and booking summary are stable. |
+| `/sandbox` | Done | Token/primitive validation surface retained for UI QA. |
+
+### Known Limitations (UI-Only Placeholders)
+- Owner onboarding, scheduling, services/customers, payments, integrations, and most settings actions still rely on mocked/local UI state with no API persistence.
+- Publish/domain readiness and verification indicators are UX scaffolds, not live operational checks.
+- Notification template previews/channels are visual only and do not dispatch real messages.
+- Legacy `src/styles.css` still contains overlapping historical rules; this is a maintainability concern, not a release-blocking UI defect.
+- `TopBar` remains deprecated/inactive and is intentionally not part of the current shell contract.
+
+### Recommended Next Functional Phases
+1. Data integration foundation: replace mocked repositories with typed API clients and route-level loading/error contracts.
+2. Onboarding + settings persistence: wire owner profile, hours, services, booking preferences, notifications, domain, and publish states to backend.
+3. Scheduling + booking engine integration: connect availability overrides/blackouts to real calendars and booking conflict checks.
+4. Customer + payment operations: implement real customer lifecycle data, payment state transitions, and audit events.
+5. Integrations orchestration: connect provider auth/status/sync flows and expose actionable failure states.
+6. Post-integration hardening: add E2E/regression coverage and split residual global CSS into feature-owned style modules.
+
+### Final Validation (March 5, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (environment/module resolution issue: `undici` missing `./lib/dispatcher/retry-agent` during Vitest worker startup)
+- `pnpm --filter @slotra/web-app build`: Pass
