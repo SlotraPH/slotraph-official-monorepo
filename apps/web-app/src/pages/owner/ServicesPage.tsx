@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { AppPill, OwnerContentGrid, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
+import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { ServiceRecord } from '@/domain/service/types';
 import { getOwnerServicesResource } from '@/features/owner/data';
+import { Card } from '@/ui';
 import { ServiceEditor, type ServiceDraft } from './services/ServiceEditor';
 import { ServiceList } from './services/ServiceList';
 import { ServiceToolbar } from './services/ServiceToolbar';
@@ -22,14 +23,28 @@ export function ServicesPage() {
   const [services, setServices] = useState(() => (resource.status === 'ready' ? resource.data.services : []));
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('All');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [selectedId, setSelectedId] = useState<string | null>(
-    () => (resource.status === 'ready' ? resource.data.services[0]?.id ?? null : null)
+    () => (resource.status === 'ready' ? resource.data.services[0]?.id ?? null : null),
   );
   const [draft, setDraft] = useState<ServiceDraft>(EMPTY_DRAFT);
   const [mode, setMode] = useState<'create' | 'edit'>('edit');
 
   if (resource.status === 'loading') {
-    return <RouteStateCard title="Loading services" description="Preparing the owner service catalog." variant="loading" />;
+    return (
+      <OwnerPageScaffold>
+        <PageIntro
+          eyebrow="Services"
+          title="Service catalog"
+          description="Loading your active service catalog and pricing controls."
+        />
+        <Card className="services-loading-state" padding={6}>
+          <div className="services-loading-state__pulse" />
+          <div className="services-loading-state__pulse" />
+          <div className="services-loading-state__pulse" />
+        </Card>
+      </OwnerPageScaffold>
+    );
   }
 
   if (resource.status === 'error') {
@@ -38,7 +53,7 @@ export function ServicesPage() {
 
   const filtered = services.filter((service) =>
     (status === 'All' || service.status === status)
-    && `${service.name} ${service.category}`.toLowerCase().includes(query.toLowerCase())
+    && `${service.name} ${service.category}`.toLowerCase().includes(query.toLowerCase()),
   );
 
   const selectedService = services.find((service) => service.id === selectedId) ?? null;
@@ -117,8 +132,8 @@ export function ServicesPage() {
               status: draft.status,
               description: draft.description.trim() || 'Service description pending.',
             }
-          : service
-      )
+          : service,
+      ),
     );
   }
 
@@ -130,8 +145,8 @@ export function ServicesPage() {
               ...service,
               status: service.status === 'Archived' ? 'Active' : 'Archived',
             }
-          : service
-      )
+          : service,
+      ),
     );
   }
 
@@ -148,6 +163,7 @@ export function ServicesPage() {
   const activeCount = services.filter((service) => service.status === 'Active').length;
   const hiddenCount = services.filter((service) => service.status === 'Hidden').length;
   const archivedCount = services.filter((service) => service.status === 'Archived').length;
+  const hasActiveFilters = status !== 'All' || query.trim().length > 0;
 
   return (
     <OwnerPageScaffold>
@@ -159,7 +175,7 @@ export function ServicesPage() {
             <span className="svc-count-badge">{services.length}</span>
           </>
         )}
-        description="Manage the customer-facing service catalog while keeping the current session-only CRUD preview intact."
+        description="Review service performance, adjust availability, and stage updates from one production-ready workspace."
         pills={(
           <>
             <AppPill tone="success">{activeCount} active</AppPill>
@@ -168,28 +184,58 @@ export function ServicesPage() {
           </>
         )}
       />
+
+      <div className="services-summary-grid">
+        <ServiceSummaryCard label="Visible catalog" value={`${services.filter((service) => service.visibility === 'Public').length}`} />
+        <ServiceSummaryCard label="Avg. ticket" value={`PHP ${Math.round(services.reduce((sum, service) => sum + service.price, 0) / Math.max(1, services.length)).toLocaleString()}`} />
+        <ServiceSummaryCard label="Total bookings" value={`${services.reduce((sum, service) => sum + service.bookings, 0)}`} />
+      </div>
+
       <ServiceToolbar
+        hasActiveFilters={hasActiveFilters}
         query={query}
         status={status}
+        viewMode={viewMode}
+        onAddService={handleAddService}
+        onClearFilters={() => {
+          setQuery('');
+          setStatus('All');
+        }}
         onQueryChange={setQuery}
         onStatusChange={setStatus}
-        onAddService={handleAddService}
+        onViewModeChange={setViewMode}
       />
+
       <OwnerContentGrid density="wide">
         <ServiceList
           items={filtered}
           selectedId={selectedId}
-          onSelect={handleSelect}
+          viewMode={viewMode}
           onArchiveToggle={handleArchiveToggle}
+          onCreateNew={handleAddService}
+          onResetFilters={() => {
+            setQuery('');
+            setStatus('All');
+          }}
+          onSelect={handleSelect}
         />
         <ServiceEditor
-          mode={mode}
           draft={draft}
+          mode={mode}
+          onCancel={handleCancel}
           onDraftChange={handleDraftChange}
           onSave={handleSave}
-          onCancel={handleCancel}
         />
       </OwnerContentGrid>
     </OwnerPageScaffold>
+  );
+}
+
+function ServiceSummaryCard({ label, value }: { label: string; value: string }) {
+  return (
+    <Card className="services-summary-card" padding={4}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </Card>
   );
 }

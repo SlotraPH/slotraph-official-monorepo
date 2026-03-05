@@ -1,12 +1,12 @@
-import { useState } from 'react';
 import { Compass, Mail, Phone, Search, UserPlus, Users } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { CustomerRecord } from '@/domain/customer/types';
 import { getOwnerCustomersResource } from '@/features/owner/data';
-import { EmptyFlowState, FlowLayout, FlowSection, ReviewBlock, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
-import { BrandButton, BrandInput, BrandTextarea, Card, colors, radii, spacing, typography, useBrandToast } from '@/ui';
+import { EmptyFlowState, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
+import { BrandButton, BrandInput, BrandTextarea, Card, useBrandToast } from '@/ui';
 import { type ClientIntakeDraft, validateClientIntakeField, validateClientIntakeForm } from './validation';
 
 const STATUS_OPTIONS = [
@@ -83,18 +83,16 @@ export function CustomerWorkspace() {
     setErrors({});
   }
 
-  const segmentSummary = [
-    { label: 'VIP clients', value: customers.filter((customer) => customer.status === 'VIP').length.toString() },
-    { label: 'New this cycle', value: customers.filter((customer) => customer.status === 'New').length.toString() },
-    { label: 'Follow-up queue', value: customers.filter((customer) => customer.status === 'Needs follow-up').length.toString() },
-  ];
+  const vipCount = customers.filter((customer) => customer.status === 'VIP').length;
+  const followUpCount = customers.filter((customer) => customer.status === 'Needs follow-up').length;
+  const totalSpend = customers.reduce((sum, customer) => sum + customer.totalSpend, 0);
 
   return (
     <OwnerPageScaffold>
       <PageIntro
-        eyebrow="Clients"
-        title="Client intake and relationship workspace"
-        description="Search, segment, review, and stage new intake records from one branded flow instead of several disconnected owner cards."
+        eyebrow="Customers"
+        title="Customer relationship workspace"
+        description="Review segments, monitor value, and stage intake drafts from a single owner-friendly experience."
         actions={(
           <Link style={{ textDecoration: 'none' }} to="/book">
             <BrandButton size="nav" startIcon={<Compass size={15} />} variant="secondary">
@@ -104,193 +102,219 @@ export function CustomerWorkspace() {
         )}
         pills={(
           <>
-            <AppPill tone="success">{customers.filter((customer) => customer.status === 'VIP').length} VIP</AppPill>
-            <AppPill>{customers.filter((customer) => customer.status === 'New').length} new</AppPill>
-            <AppPill>{customers.filter((customer) => customer.status === 'Needs follow-up').length} follow-up</AppPill>
+            <AppPill tone="success">{vipCount} VIP</AppPill>
+            <AppPill>{followUpCount} follow-up</AppPill>
+            <AppPill>PHP {totalSpend.toLocaleString()} lifetime spend</AppPill>
           </>
         )}
       />
 
-      <FlowLayout
-        sidebar={(
-          <>
-            <FlowSection eyebrow="Segments" title="Relationship mix" description="Use the same segment counts across routing, customer review, and intake follow-up.">
-              <ReviewBlock items={segmentSummary} title="Current pipeline" />
-            </FlowSection>
-            <FlowSection eyebrow="Intake flow" title="Create a client draft" description="This intake form validates on blur and clears errors as soon as entries become valid again.">
-              <div style={{ display: 'grid', gap: spacing[4] }}>
-                <BrandInput
-                  autoComplete="name"
-                  error={errors.fullName}
-                  label="Client name"
-                  leadingIcon={UserPlus}
-                  value={draft.fullName}
-                  onBlur={() => handleBlur('fullName')}
-                  onChange={(event) => setField('fullName', event.target.value)}
-                />
-                <BrandInput
-                  autoComplete="email"
-                  error={errors.email}
-                  label="Email"
-                  leadingIcon={Mail}
-                  value={draft.email}
-                  onBlur={() => handleBlur('email')}
-                  onChange={(event) => setField('email', event.target.value)}
-                />
-                <BrandInput
-                  autoComplete="tel"
-                  error={errors.phone}
-                  label="Mobile number"
-                  leadingIcon={Phone}
-                  value={draft.phone}
-                  onBlur={() => handleBlur('phone')}
-                  onChange={(event) => setField('phone', event.target.value)}
-                />
-                <BrandTextarea
-                  helperText="Optional retention notes, product preferences, or visit context."
-                  label="Notes"
-                  value={draft.notes}
-                  onBlur={() => handleBlur('notes')}
-                  onChange={(event) => setField('notes', event.target.value)}
-                />
-                <BrandButton startIcon={<UserPlus size={15} />} onClick={handleSubmit}>
-                  Save intake draft
-                </BrandButton>
-              </div>
-            </FlowSection>
-          </>
-        )}
-      >
-        <FlowSection eyebrow="Client lookup" title="Search and filter" description="Keyboard search and segment tabs stay at the top of the client workspace so the focus order stays predictable.">
-          <div style={{ display: 'grid', gap: spacing[4] }}>
-            <BrandInput
-              aria-label="Search clients by name, email, or tag"
-              leadingIcon={Search}
-              placeholder="Search by name, email, or tag"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            <StatusTabs current={status} onChange={(value) => setStatus(value)} options={[...STATUS_OPTIONS]} />
-          </div>
-        </FlowSection>
+      <div className="customers-kpi-grid">
+        <KpiCard label="Active pipeline" value={`${customers.length} clients`} />
+        <KpiCard label="Avg. spend per client" value={`PHP ${Math.round(totalSpend / Math.max(1, customers.length)).toLocaleString()}`} />
+        <KpiCard label="Booked in next cycle" value={`${customers.filter((customer) => customer.upcomingBooking !== '—').length}`} />
+      </div>
 
-        <FlowLayout
-          sidebar={selectedCustomer ? <CustomerProfile customer={selectedCustomer} /> : undefined}
-        >
-          <FlowSection eyebrow="Client records" title="Matching clients" description={`${filtered.length} customer${filtered.length === 1 ? '' : 's'} match the current search and segment.`}>
-            {filtered.length === 0 ? (
-              <EmptyFlowState
-                action={<BrandButton variant="secondary" onClick={() => { setQuery(''); setStatus('All'); }}>Reset filters</BrandButton>}
-                description="Try another search term or switch the current segment to review the rest of your client base."
-                icon={Users}
-                title="No clients match this view"
-              />
-            ) : (
-              <div style={{ display: 'grid', gap: spacing[3] }}>
-                {filtered.map((customer) => {
-                  const selected = customer.id === selectedId;
-                  return (
-                    <button
-                      key={customer.id}
-                      aria-pressed={selected}
-                      type="button"
-                      onClick={() => setSelectedId(customer.id)}
-                      style={{
-                        background: selected ? 'rgba(46,49,146,0.06)' : '#ffffff',
-                        border: `1px solid ${selected ? colors.brand : colors.border}`,
-                        borderRadius: radii.lg,
-                        cursor: 'pointer',
-                        display: 'grid',
-                        gap: spacing[2],
-                        padding: spacing[4],
-                        textAlign: 'left',
-                      }}
-                    >
-                      <div style={{ alignItems: 'start', display: 'flex', gap: spacing[3], justifyContent: 'space-between' }}>
-                        <div style={{ display: 'grid', gap: 2 }}>
-                          <strong style={{ color: colors.navy, fontFamily: typography.fontFamily }}>{customer.name}</strong>
-                          <span style={{ color: colors.secondary, fontFamily: typography.fontFamily, ...typography.bodySmall }}>{customer.email}</span>
-                        </div>
-                        <Tag text={customer.status} />
+      <Card className="customers-filter-card" padding={5}>
+        <div className="customers-filter-card__top">
+          <div>
+            <h2>Search and segment</h2>
+            <p>Filter by name, email, or tags, then keep one profile selected for staff handoff.</p>
+          </div>
+        </div>
+        <div className="customers-filter-card__controls">
+          <BrandInput
+            aria-label="Search clients by name, email, or tag"
+            leadingIcon={Search}
+            placeholder="Search by name, email, or tag"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <StatusTabs current={status} options={[...STATUS_OPTIONS]} onChange={(value) => setStatus(value)} />
+        </div>
+      </Card>
+
+      <div className="customers-main-grid">
+        <Card className="customers-list-card" padding={5}>
+          <div className="customers-list-card__header">
+            <h2>Matching clients</h2>
+            <span>{filtered.length} results</span>
+          </div>
+          {filtered.length === 0 ? (
+            <EmptyFlowState
+              action={<BrandButton variant="secondary" onClick={() => { setQuery(''); setStatus('All'); }}>Reset filters</BrandButton>}
+              description="Try another search term or switch the active segment to review the full client list."
+              icon={Users}
+              title="No clients match this view"
+            />
+          ) : (
+            <div className="customers-list">
+              {filtered.map((customer) => {
+                const selected = customer.id === selectedId;
+                return (
+                  <button
+                    key={customer.id}
+                    aria-pressed={selected}
+                    className={`customer-row${selected ? ' is-selected' : ''}`}
+                    type="button"
+                    onClick={() => setSelectedId(customer.id)}
+                  >
+                    <div className="customer-row__main">
+                      <div>
+                        <strong>{customer.name}</strong>
+                        <span>{customer.email}</span>
                       </div>
-                      <div style={{ color: colors.secondary, display: 'flex', flexWrap: 'wrap', gap: spacing[3], fontFamily: typography.fontFamily, ...typography.label }}>
-                        <span>{customer.totalVisits} visits</span>
-                        <span>PHP {customer.totalSpend.toLocaleString()}</span>
-                        <span>{customer.upcomingBooking}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </FlowSection>
-        </FlowLayout>
-      </FlowLayout>
+                      <StatusTag text={customer.status} tone={toStatusTone(customer.status)} />
+                    </div>
+                    <div className="customer-row__metrics">
+                      <span>{customer.totalVisits} visits</span>
+                      <span>PHP {customer.totalSpend.toLocaleString()}</span>
+                      <span>{customer.upcomingBooking}</span>
+                    </div>
+                    <div className="customer-row__tags">
+                      {customer.tags.map((tag) => (
+                        <StatusTag key={tag} text={tag} tone="neutral" />
+                      ))}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+
+        {selectedCustomer ? <CustomerProfile customer={selectedCustomer} /> : null}
+      </div>
+
+      <Card className="customers-intake-card" padding={5}>
+        <div className="customers-intake-card__header">
+          <h2>Create intake draft</h2>
+          <p>Use this to collect validated records before persistence and import workflows are wired.</p>
+        </div>
+        <div className="customers-intake-card__grid">
+          <BrandInput
+            autoComplete="name"
+            error={errors.fullName}
+            label="Client name"
+            leadingIcon={UserPlus}
+            value={draft.fullName}
+            onBlur={() => handleBlur('fullName')}
+            onChange={(event) => setField('fullName', event.target.value)}
+          />
+          <BrandInput
+            autoComplete="email"
+            error={errors.email}
+            label="Email"
+            leadingIcon={Mail}
+            value={draft.email}
+            onBlur={() => handleBlur('email')}
+            onChange={(event) => setField('email', event.target.value)}
+          />
+          <BrandInput
+            autoComplete="tel"
+            error={errors.phone}
+            label="Mobile number"
+            leadingIcon={Phone}
+            value={draft.phone}
+            onBlur={() => handleBlur('phone')}
+            onChange={(event) => setField('phone', event.target.value)}
+          />
+          <BrandTextarea
+            helperText="Optional retention notes, product preferences, or visit context."
+            label="Notes"
+            value={draft.notes}
+            onBlur={() => handleBlur('notes')}
+            onChange={(event) => setField('notes', event.target.value)}
+          />
+        </div>
+        <div className="customers-intake-card__actions">
+          <BrandButton startIcon={<UserPlus size={15} />} onClick={handleSubmit}>
+            Save intake draft
+          </BrandButton>
+        </div>
+      </Card>
     </OwnerPageScaffold>
+  );
+}
+
+function KpiCard({ label, value }: { label: string; value: string }) {
+  return (
+    <Card className="customers-kpi-card" padding={4}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </Card>
   );
 }
 
 function CustomerProfile({ customer }: { customer: CustomerRecord }) {
   return (
-    <FlowSection
-      eyebrow="Client profile"
-      title={customer.name}
-      description="Focused detail view for staff handoff, retention, and manual follow-up."
-      action={<Tag text={customer.source} />}
-    >
-      <div style={{ display: 'grid', gap: spacing[4] }}>
-        <Card padding={4} surfaceStyle={{ background: 'rgba(46,49,146,0.04)' }}>
-          <div style={{ display: 'grid', gap: spacing[2] }}>
-            <MetaLine icon={Phone} text={customer.phone} />
-            <MetaLine icon={Mail} text={customer.email} />
-          </div>
-        </Card>
-        <ReviewBlock
-          items={[
-            { label: 'Total spend', value: `PHP ${customer.totalSpend.toLocaleString()}` },
-            { label: 'Total visits', value: customer.totalVisits.toString() },
-            { label: 'Upcoming booking', value: customer.upcomingBooking },
-          ]}
-          title="Relationship value"
-        />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2] }}>
-          {customer.tags.map((tag) => <Tag key={tag} text={tag} />)}
+    <Card className="customer-profile-panel" padding={5}>
+      <div className="customer-profile-panel__header">
+        <div>
+          <span>Client profile</span>
+          <h2>{customer.name}</h2>
         </div>
-        <Card padding={4}>
-          <div style={{ display: 'grid', gap: spacing[2] }}>
-            <span style={{ color: colors.muted, fontFamily: typography.fontFamily, ...typography.overline }}>Notes</span>
-            <p style={{ color: colors.secondary, fontFamily: typography.fontFamily, margin: 0, ...typography.bodySmall }}>{customer.notes}</p>
-          </div>
-        </Card>
+        <StatusTag text={customer.source} tone="neutral" />
       </div>
-    </FlowSection>
+
+      <div className="customer-profile-panel__contact">
+        <MetaLine icon={Phone} text={customer.phone} />
+        <MetaLine icon={Mail} text={customer.email} />
+      </div>
+
+      <dl className="customer-profile-panel__stats">
+        <StatLine label="Total spend" value={`PHP ${customer.totalSpend.toLocaleString()}`} />
+        <StatLine label="Total visits" value={customer.totalVisits.toString()} />
+        <StatLine label="Upcoming booking" value={customer.upcomingBooking} />
+        <StatLine label="Last visit" value={customer.lastVisit} />
+      </dl>
+
+      <div className="customer-profile-panel__tags">
+        {customer.tags.map((tag) => <StatusTag key={tag} text={tag} tone="neutral" />)}
+      </div>
+
+      <div className="customer-profile-panel__notes">
+        <span>Notes</span>
+        <p>{customer.notes}</p>
+      </div>
+    </Card>
   );
 }
 
-function Tag({ text }: { text: string }) {
-  return (
-    <span
-      style={{
-        background: 'rgba(46,49,146,0.08)',
-        borderRadius: radii.full,
-        color: colors.brand,
-        display: 'inline-flex',
-        fontFamily: typography.fontFamily,
-        fontSize: typography.label.fontSize,
-        fontWeight: 600,
-        padding: '6px 10px',
-      }}
-    >
-      {text}
-    </span>
-  );
+function StatusTag({ text, tone }: { text: string; tone: 'critical' | 'positive' | 'accent' | 'neutral' }) {
+  return <span className={`customer-status-tag customer-status-tag--${tone}`}>{text}</span>;
 }
 
 function MetaLine({ icon: Icon, text }: { icon: typeof Mail; text: string }) {
   return (
-    <div style={{ alignItems: 'center', color: colors.secondary, display: 'flex', gap: spacing[2], fontFamily: typography.fontFamily }}>
+    <div className="customer-meta-line">
       <Icon size={15} />
-      <span style={typography.bodySmall}>{text}</span>
+      <span>{text}</span>
     </div>
   );
+}
+
+function StatLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+function toStatusTone(status: CustomerRecord['status']) {
+  if (status === 'VIP') {
+    return 'accent' as const;
+  }
+
+  if (status === 'Needs follow-up') {
+    return 'critical' as const;
+  }
+
+  if (status === 'Active') {
+    return 'positive' as const;
+  }
+
+  return 'neutral' as const;
 }

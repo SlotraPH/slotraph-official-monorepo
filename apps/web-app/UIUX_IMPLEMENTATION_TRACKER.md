@@ -166,3 +166,37 @@ No edits to mobile and landing; web-app only.
   - `src/app/components/TopBar.tsx:43`
   - `src/styles.css:441`
   - `src/app/layouts/OwnerLayout.tsx:5`
+
+## Phase 5 Services + Customers Upgrade (March 5, 2026)
+- Services workspace upgraded to a production-like layout with:
+  - KPI summary row
+  - high-fidelity toolbar (search, status filter, view toggle, clear action, create CTA)
+  - dual data presentations (card view + table view)
+  - improved empty and loading states
+  - polished sticky editor panel with grouped controls and guidance
+  - Files:
+    - `src/pages/owner/ServicesPage.tsx`
+    - `src/pages/owner/services/ServiceToolbar.tsx`
+    - `src/pages/owner/services/ServiceList.tsx`
+    - `src/pages/owner/services/ServiceEditor.tsx`
+    - `src/styles.css`
+- Customers workspace upgraded with:
+  - KPI summary row
+  - stronger filter/search header and segmented status controls
+  - improved customer list readability (clear hierarchy + metrics + tag chips)
+  - refined customer profile panel for handoff context
+  - intake draft form preserved with existing validation behavior
+  - responsive grid guards so list/detail panels stack before overlap risk
+  - Files:
+    - `src/modules/clients/CustomerWorkspace.tsx`
+    - `src/styles.css`
+
+### Resolved UI Issues (Phase 5)
+- Reduced medium-width overlap risk between list/content and detail side panel on customers route by replacing ad-hoc nested flow layout with explicit responsive grid breakpoints.
+- Removed mixed primitive styling drift on services route by migrating key controls from legacy `@slotra/ui` usage to branded `Brand*` primitives.
+- Added deterministic empty/loading states for services list interactions to avoid sparse/unstyled fallback moments.
+
+### Component Reuse Opportunities
+- Convert repeated status chip/tag patterns (`services-status-chip`, `customer-status-tag`) into a shared `StatusTag` UI primitive.
+- Extract KPI card pattern used by Services and Customers into a shared owner KPI row component.
+- Promote current services toolbar layout pattern as a reusable owner filter/action header component for Payments and Integrations tables.
