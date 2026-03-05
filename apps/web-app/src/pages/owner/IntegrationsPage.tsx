@@ -10,6 +10,7 @@ import {
   type IntegrationProviderSnapshot,
 } from '@/features/owner/integrations/persistenceClient';
 import { BrandButton, Card, StatusTag, useBrandToast } from '@/ui';
+import './integrations.css';
 
 export function IntegrationsPage() {
   const toast = useBrandToast();

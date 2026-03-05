@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { Button, FormField, Select, Textarea } from '@slotra/ui';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { useUnsavedChangesGuard } from '@/features/forms/useUnsavedChangesGuard';
@@ -88,6 +88,22 @@ export function BrandDetailsPage() {
     setSaveState('idle');
   }
 
+  function handleUploadPlaceholder(target: 'banner' | 'logo') {
+    toast.info({
+      title: `Upload ${target} coming soon`,
+      description: `The ${target} upload control is keyboard-accessible and will be wired to media storage in the next integration pass.`,
+    });
+  }
+
+  function handleUploadKeyDown(event: KeyboardEvent, target: 'banner' | 'logo') {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+
+    event.preventDefault();
+    handleUploadPlaceholder(target);
+  }
+
   async function saveBrandDraft() {
     setSubmitAttempted(true);
 
@@ -144,7 +160,14 @@ export function BrandDetailsPage() {
   return (
     <div className="brand-details-layout">
       <form className="brand-form" onSubmit={(event) => void handleSave(event)} noValidate>
-        <div className="brand-upload-banner-zone" role="button" tabIndex={0} aria-label="Upload banner image">
+        <div
+          className="brand-upload-banner-zone"
+          role="button"
+          tabIndex={0}
+          aria-label="Upload banner image"
+          onClick={() => handleUploadPlaceholder('banner')}
+          onKeyDown={(event) => handleUploadKeyDown(event, 'banner')}
+        >
           <div className="brand-upload-zone__inner">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="3" y="3" width="18" height="18" rx="3" />
@@ -155,7 +178,20 @@ export function BrandDetailsPage() {
             <span className="brand-upload-zone__hint">1400 x 400px recommended</span>
           </div>
 
-          <div className="brand-upload-logo-zone" role="button" tabIndex={0} aria-label="Upload logo" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="brand-upload-logo-zone"
+            role="button"
+            tabIndex={0}
+            aria-label="Upload logo"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleUploadPlaceholder('logo');
+            }}
+            onKeyDown={(event) => {
+              event.stopPropagation();
+              handleUploadKeyDown(event, 'logo');
+            }}
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />
             </svg>

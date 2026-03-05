@@ -296,3 +296,54 @@ No edits to mobile and landing; web-app only.
 2. Move retry/backoff authority to backend scheduler metadata and expose provider-specific retry reasons.
 3. Add provider incident drill-down route(s) with filtering by provider, severity, and error class.
 4. Add integration-focused unit + E2E coverage for lifecycle transitions, backoff gating, and log rendering order.
+
+## Phase 6 Post-Integration Hardening Architecture Notes (March 6, 2026)
+- Hardening objective was completed without changing route IA or setup-first entry behavior:
+  - `/` and `/owner` remain setup-first redirects.
+  - owner/public route topology unchanged.
+
+### Regression Coverage Expansion
+- Added high-value integration-style route flow coverage focused on behavior gates and recovery affordances:
+  - booking: availability-loading continue gate
+  - customers: status transition + undo
+  - onboarding: launchpad -> step editor path
+  - scheduling: timezone drift conflict cue
+  - payments: status transition + undo
+  - integrations: disconnected -> connect -> sync-action state progression
+- New/updated test files:
+  - `src/pages/public/booking/BookingFlow.test.tsx`
+  - `src/modules/clients/CustomerWorkspace.test.tsx`
+  - `src/pages/owner/Phase6Hardening.test.tsx`
+
+### Accessibility Hardening Decisions
+- Shared flow section contract now supports explicit heading focus handoff:
+  - `FlowSection` accepts optional `headingRef` and `headingTabIndex`.
+  - booking flow focuses active step heading whenever step changes.
+- Booking flow now emits polite live-region status messaging for:
+  - active stage changes
+  - availability loading/error/success counts
+  - confirmation submission/retry state
+- Brand settings upload zones now provide keyboard activation parity (`Enter`/`Space`) with explicit feedback rather than silent no-op interactions.
+
+### CSS Ownership Boundaries (Phase 6 Split)
+- New feature-owned stylesheet:
+  - `src/pages/owner/integrations.css`
+- Ownership moved from global `src/styles.css` to integrations module:
+  - integrations critical banner
+  - provider card/state/detail/action styles
+  - incident list/taxonomy styles
+  - integrations-specific focus-visible and compact-breakpoint rules
+- Updated rule-of-thumb after split:
+  - `src/styles.css`: global document/shell + cross-feature shared patterns only
+  - feature styles with route-local selectors should live beside route modules and be imported by that route entry
+
+### Recommended Long-Term Cleanup Order (Post-Phase 6)
+1. Resolve test-environment blocker (`undici` worker startup module resolution) so regression suites can run in CI/local deterministically.
+2. Continue CSS extraction in this order to reduce global drift risk:
+   - scheduling (`schedule-*`)
+   - onboarding launchpad/editor (`setup-*`, `onboarding-*`)
+   - settings pages (`settings-*`, `brand-*`, `publish-*`, `domain-*`)
+3. Standardize remaining legacy `@slotra/ui` form/control usage onto shared `Brand*` primitives where contracts overlap.
+4. Expand a11y hardening for complex controls with:
+   - deterministic focus-return patterns after async mutations
+   - richer contextual live announcements for status transitions and retry outcomes

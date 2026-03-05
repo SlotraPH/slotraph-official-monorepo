@@ -23,4 +23,20 @@ describe('CustomerWorkspace', () => {
     expect(screen.getByText('Enter an email address.')).toBeInTheDocument();
     expect(screen.getByText('Enter a mobile number.')).toBeInTheDocument();
   });
+
+  it('shows undo affordance after a customer status update', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ToastProvider>
+          <CustomerWorkspace />
+        </ToastProvider>
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Upgrade VIP' }));
+
+    expect(await screen.findByRole('button', { name: 'Undo change' })).toBeInTheDocument();
+  });
 });

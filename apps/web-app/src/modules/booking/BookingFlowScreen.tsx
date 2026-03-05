@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -117,6 +117,7 @@ export function BookingFlowScreen() {
   const [slotState, setSlotState] = useState<IntegrationListState<BookingSlot>>({ status: 'idle', data: [] });
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'failed'>('idle');
   const [pendingConfirmation, setPendingConfirmation] = useState<BookingConfirmationRecord | null>(null);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
 
   const bookingData = resource.status === 'success' ? resource.data : null;
   const selectedService = bookingData && draft.serviceId ? bookingData.servicesById[draft.serviceId] ?? null : null;
@@ -245,6 +246,34 @@ export function BookingFlowScreen() {
     { label: 'Time', value: selectedSlot ? `${selectedSlot.startLabel} to ${selectedSlot.endLabel}` : 'Choose a slot' },
     { label: 'Customer', value: draft.customer.fullName || 'Add contact details' },
   ], [draft.customer.fullName, draft.date, selectedService, selectedSlot, selectedStaff?.name, staffRequired]);
+  const assistiveStatusMessage = useMemo(() => {
+    const stage = STAGE_COPY[currentStep].title;
+    const dateStatus = dateOptionsState.status === 'loading'
+      ? 'Date availability is loading.'
+      : dateOptionsState.status === 'error'
+        ? (dateOptionsState.message ?? 'Date availability failed to load.')
+        : dateOptionsState.status === 'success'
+          ? `${dateOptionsState.data.length} date options loaded.`
+          : '';
+    const slotStatus = slotState.status === 'loading'
+      ? 'Time slots are loading.'
+      : slotState.status === 'error'
+        ? (slotState.message ?? 'Time slots failed to load.')
+        : slotState.status === 'success'
+          ? `${slotState.data.length} slot options loaded.`
+          : '';
+    const submitStatus = submitState === 'submitting'
+      ? 'Submitting booking confirmation.'
+      : submitState === 'failed'
+        ? 'Booking confirmation failed. Retry is available.'
+        : '';
+
+    return [stage, dateStatus, slotStatus, submitStatus].filter(Boolean).join(' ');
+  }, [currentStep, dateOptionsState.data.length, dateOptionsState.message, dateOptionsState.status, slotState.data.length, slotState.message, slotState.status, submitState]);
+
+  useEffect(() => {
+    stepHeadingRef.current?.focus();
+  }, [currentStep]);
 
   if (resource.status === 'loading') {
     return <RouteStateCard title="Loading booking flow" description="Preparing service, staff, and availability contracts." variant="loading" />;
@@ -468,7 +497,25 @@ export function BookingFlowScreen() {
           eyebrow={STAGE_COPY[currentStep].eyebrow}
           title={STAGE_COPY[currentStep].title}
           description={STAGE_COPY[currentStep].description}
+          headingRef={stepHeadingRef}
+          headingTabIndex={-1}
         >
+          <p
+            aria-live="polite"
+            role="status"
+            style={{
+              border: 0,
+              clip: 'rect(0 0 0 0)',
+              height: 1,
+              margin: -1,
+              overflow: 'hidden',
+              padding: 0,
+              position: 'absolute',
+              width: 1,
+            }}
+          >
+            {assistiveStatusMessage}
+          </p>
           {stepError ? (
             <div
               role="alert"
@@ -789,4 +836,5 @@ function MetaRow({ icon: Icon, text }: { icon: typeof CalendarDays; text: string
     </div>
   );
 }
+
 

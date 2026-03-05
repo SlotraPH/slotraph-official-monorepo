@@ -637,3 +637,56 @@ No edits to mobile and landing; web-app only.
 - `pnpm --filter @slotra/web-app test`: Failed (environment/module issue persists: `undici` missing `./lib/dispatcher/retry-agent` during Vitest worker startup; run reported 12 worker-start errors)
 - `pnpm --filter @slotra/web-app build`: Pass
 
+## Phase 6 Post-Integration Hardening (March 6, 2026)
+- E2E/regression hardening pass (Vitest flow coverage expansion):
+  - booking flow:
+    - added regression for date-step continue gating while availability is still loading
+    - file: `src/pages/public/booking/BookingFlow.test.tsx`
+  - customers flow:
+    - added status transition + undo affordance coverage
+    - file: `src/modules/clients/CustomerWorkspace.test.tsx`
+  - owner cross-surface operational flow suite:
+    - onboarding launchpad -> step-editor entry
+    - scheduling timezone drift conflict guidance
+    - payments status transition -> undo affordance
+    - integrations disconnected -> connect -> sync action-state progression
+    - file: `src/pages/owner/Phase6Hardening.test.tsx`
+- Accessibility hardening:
+  - booking flow now announces step/availability/submit status through polite live region and moves keyboard focus to active step heading on step changes.
+    - files:
+      - `src/modules/shared/flow/FlowScaffolds.tsx`
+      - `src/modules/booking/BookingFlowScreen.tsx`
+  - brand settings upload zones now support keyboard activation (`Enter` / `Space`) and provide explicit async feedback via toasts instead of silent no-op controls.
+    - file: `src/pages/owner/settings/BrandDetailsPage.tsx`
+  - upload-zone focus styles hardened to include `:focus-visible`.
+    - file: `src/styles.css`
+- CSS ownership split (maintainability):
+  - moved integrations feature styles out of global `src/styles.css` into route-owned stylesheet:
+    - new: `src/pages/owner/integrations.css`
+    - imported by: `src/pages/owner/IntegrationsPage.tsx`
+  - removed corresponding integrations selectors from `src/styles.css`, including mobile breakpoint rules now owned by integrations stylesheet.
+
+### Phase 6 Hardening Acceptance Checklist
+| Checklist item | Status | Notes |
+| --- | --- | --- |
+| Owner onboarding flow hardening | Done | Launchpad -> step editor interaction covered in new test suite. |
+| Scheduling flow hardening | Done | Timezone drift conflict guidance covered in new test suite. |
+| Public booking flow hardening | Done | Availability-loading continue-gate regression added. |
+| Customers flow hardening | Done | Status transition + undo regression added. |
+| Payments flow hardening | Done | Payment status transition + undo regression added. |
+| Integrations flow hardening | Done | Disconnected-to-connected action-state regression added. |
+| Accessibility (keyboard + focus + live announcements) | Done (targeted) | Booking focus/live-region and brand upload keyboard affordances shipped. |
+| CSS ownership split | Done (integrations slice) | Integrations feature styles extracted from global stylesheet. |
+| Cross-route acceptance sweep | Done (code/test pass) | No route IA or setup-first entry behavior changed. |
+| Validation commands | Partial | Lint/build pass; test blocked by existing `undici` environment issue. |
+
+### Residual Technical Debt (Post-Phase 6)
+- Vitest environment remains blocked by `undici` module resolution (`./lib/dispatcher/retry-agent`) during worker startup, preventing runtime execution of both legacy and new suites.
+- `src/styles.css` remains a large transition host; integrations split is complete, but additional route-level style extraction is still pending for scheduling, onboarding, and settings surfaces.
+- Custom interactive shells still include mixed legacy and brand-primitive patterns; broader accessibility semantics pass (expanded keyboard shortcuts and richer per-surface status narration) remains a follow-up.
+
+### Phase 6 Validation (March 6, 2026)
+- `pnpm --filter @slotra/web-app lint`: Pass
+- `pnpm --filter @slotra/web-app test`: Failed (unchanged environment issue: `undici` cannot resolve `./lib/dispatcher/retry-agent`; 13 Vitest worker startup errors reported)
+- `pnpm --filter @slotra/web-app build`: Pass
+
