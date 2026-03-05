@@ -255,46 +255,47 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
 
                     {/* Headline */}
                     <h1
-                        className="text-[46px] font-bold leading-[1.1] tracking-[-0.03em] max-[640px]:text-[34px]"
+                        className="text-[58px] font-black leading-[1.1] tracking-[-0.02em] max-[640px]:text-[42px]"
                         style={{ color: '#0f1f2e' }}
                     >
-                        Scheduling software<br />built for the{' '}
-                        <span className="relative inline-block whitespace-nowrap">
-                            Philippines
-                            <svg
-                                aria-hidden="true"
-                                viewBox="0 0 230 18"
-                                preserveAspectRatio="none"
-                                className="absolute pointer-events-none"
-                                style={{ bottom: '-6px', left: '-4px', width: 'calc(100% + 8px)', height: '14px' }}
+                        {/* Line 1: ✳️ Scheduling. */}
+                        <span className="flex items-center gap-[0.25em]">
+                            <span aria-hidden="true" style={{ fontSize: '0.42em', lineHeight: 1 }}>✳️</span>
+                            Scheduling.
+                        </span>
+
+                        {/* Line 2: Software. — oval */}
+                        <span className="block">
+                            <span
+                                style={{
+                                    display: 'inline-block',
+                                    border: '2.5px solid #0f1f2e',
+                                    borderRadius: '50%',
+                                    padding: '0.05em 0.36em',
+                                    transform: 'rotate(-1.5deg)',
+                                    transformOrigin: 'center',
+                                }}
                             >
-                                {/* Highlighter body — thick semi-transparent fill */}
-                                <path
-                                    d="M3 11 C40 8, 90 14, 140 10 C180 6, 210 13, 227 10"
-                                    stroke="rgba(46,49,146,0.18)"
-                                    strokeWidth="11"
-                                    fill="none"
-                                    strokeLinecap="round"
-                                    style={{
-                                        strokeDasharray: 230,
-                                        strokeDashoffset: 0,
-                                        animation: 'draw-highlight 0.5s ease-out 0.3s both',
-                                    }}
-                                />
-                                {/* Top edge — slightly darker for marker definition */}
-                                <path
-                                    d="M3 7 C40 5, 90 9, 140 6 C180 3, 210 8, 227 6"
-                                    stroke="rgba(46,49,146,0.12)"
-                                    strokeWidth="2"
-                                    fill="none"
-                                    strokeLinecap="round"
-                                    style={{
-                                        strokeDasharray: 230,
-                                        strokeDashoffset: 0,
-                                        animation: 'draw-highlight 0.5s ease-out 0.3s both',
-                                    }}
-                                />
-                            </svg>
+                                Software.
+                            </span>
+                        </span>
+
+                        {/* Line 3: built for the Philippines. */}
+                        <span className="flex items-baseline gap-[0.2em] flex-wrap">
+                            <span style={{ fontSize: '0.52em', fontWeight: 400, color: '#7a8799' }}>built for the</span>
+                            <span
+                                style={{
+                                    backgroundImage: 'linear-gradient(rgba(0,195,255,0.35), rgba(0,195,255,0.35))',
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundPosition: 'left center',
+                                    backgroundSize: '0% 100%',
+                                    padding: '0.03em 0.1em',
+                                    borderRadius: '4px',
+                                    animation: 'highlight-reveal 0.55s ease-out 0.35s forwards',
+                                }}
+                            >
+                                Philippines.
+                            </span>
                         </span>
                     </h1>
 

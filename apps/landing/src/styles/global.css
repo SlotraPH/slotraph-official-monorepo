@@ -52,10 +52,10 @@ button {
   background: none;
 }
 
-/* ── Highlight draw animation ─────────────────────────── */
-@keyframes draw-highlight {
-  from { stroke-dashoffset: 230; }
-  to   { stroke-dashoffset: 0; }
+/* ── Heading highlight reveal (left-to-right sweep) ──── */
+@keyframes highlight-reveal {
+  from { background-size: 0% 100%; }
+  to   { background-size: 100% 100%; }
 }
 
 /* ── Float animation for hero mockup ──────────────────── */
