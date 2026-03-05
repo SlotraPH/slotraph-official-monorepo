@@ -182,7 +182,7 @@ export function AppShell({ children, contentClassName }: AppShellProps) {
             <a href="https://www.facebook.com/profile.php?id=61586607277534" rel="noreferrer" target="_blank">
               Facebook
             </a>
-            <span>Â© {footerYear} Slotra Technologies Inc.</span>
+            <span>© {footerYear} Slotra Technologies Inc.</span>
           </div>
         </div>
       </footer>
