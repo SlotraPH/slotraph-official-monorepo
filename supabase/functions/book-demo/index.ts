@@ -14,9 +14,6 @@ const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
 const ipLog = new Map<string, number[]>();
 
-// Cache the numeric event type ID across warm invocations
-let cachedEventTypeId: number | null = null;
-
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const hits = (ipLog.get(ip) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
@@ -25,27 +22,6 @@ function isRateLimited(ip: string): boolean {
   return hits.length > RATE_LIMIT_MAX;
 }
 
-async function resolveEventTypeId(username: string, slug: string, apiKey: string): Promise<number | null> {
-  if (cachedEventTypeId) return cachedEventTypeId;
-  try {
-    const res = await fetch(
-      `${CAL_API_BASE}/event-types?username=${encodeURIComponent(username)}&eventSlug=${encodeURIComponent(slug)}`,
-      {
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "cal-api-version": CAL_API_VERSION,
-        },
-      }
-    );
-    const data = await res.json();
-    const id = data?.data?.eventTypes?.[0]?.id ?? data?.data?.[0]?.id ?? null;
-    if (id) cachedEventTypeId = id;
-    return id;
-  } catch (err) {
-    console.error("Failed to resolve event type ID:", err);
-    return null;
-  }
-}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -115,23 +91,16 @@ Deno.serve(async (req: Request) => {
   }
 
   const calApiKey = Deno.env.get("CAL_API_KEY");
-  const calUsername = Deno.env.get("CAL_USERNAME");
-  const calEventSlug = Deno.env.get("CAL_EVENT_SLUG");
+  const calEventTypeId = Deno.env.get("CAL_EVENT_TYPE_ID");
 
-  if (!calApiKey || !calUsername || !calEventSlug) {
+  if (!calApiKey || !calEventTypeId) {
     return new Response(JSON.stringify({ error: "not_configured" }), {
       status: 503,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
   }
 
-  const eventTypeId = await resolveEventTypeId(calUsername, calEventSlug, calApiKey);
-  if (!eventTypeId) {
-    return new Response(JSON.stringify({ error: "event_type_not_found" }), {
-      status: 502,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
-  }
+  const eventTypeId = parseInt(calEventTypeId, 10);
 
   // Create Cal.com booking
   let calData: {

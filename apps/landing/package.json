@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@astrojs/react": "^4.0.0",
+    "@calcom/embed-react": "^1.5.3",
+    "@marsidev/react-turnstile": "^1.0.0",
     "@slotra/branding": "workspace:*",
     "@slotra/ui": "workspace:*",
     "@slotra/utils": "workspace:*",
@@ -20,7 +22,6 @@
     "lucide-react": "^0.576.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "@marsidev/react-turnstile": "^1.0.0",
     "sileo": "^0.1.5"
   },
   "devDependencies": {
