@@ -132,7 +132,7 @@ export function BookDemoSection() {
                     <div className="flex items-center gap-3 flex-wrap justify-center mt-4">
                         {[
                             { icon: <Clock size={13} />, label: '30 minutes' },
-                            { icon: <Video size={13} />, label: 'Google Meet' },
+                            { icon: <img src="/icons/meet-icon.png" alt="Google Meet" style={{ width: 14, height: 14 }} />, label: 'Google Meet' },
                         ].map(({ icon, label }) => (
                             <div
                                 key={label}
