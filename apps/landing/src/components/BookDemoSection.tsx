@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { Check, Clock, Video } from 'lucide-react';
 import Cal, { getCalApi } from '@calcom/embed-react';
 
@@ -41,20 +41,61 @@ const InteractiveGridPattern = memo(function InteractiveGridPattern({
 
 // ── Main Component ─────────────────────────────────────────
 
+type EmbedStatus = 'loading' | 'ready' | 'error';
+
 export function BookDemoSection() {
+    const [embedStatus, setEmbedStatus] = useState<EmbedStatus>('loading');
+    const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     useEffect(() => {
+        let cancelled = false;
+
+        const markReady = () => { if (!cancelled) setEmbedStatus('ready'); };
+        const markError = () => { if (!cancelled) setEmbedStatus(s => s === 'loading' ? 'error' : s); };
+
+        // Cal.com fires postMessage events when the embed iframe becomes interactive
+        const handleMessage = (e: MessageEvent) => {
+            try {
+                const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+                if (
+                    d?.namespace === '123456' ||
+                    d?.type === '__iframeReady' ||
+                    d?.type === 'cal:loaded' ||
+                    d?.type === 'cal:linkReady' ||
+                    (d?.data?.namespace === '123456')
+                ) {
+                    markReady();
+                }
+            } catch { /* ignore parse errors */ }
+        };
+        window.addEventListener('message', handleMessage);
+
+        // Error fallback: if no signal after 9s, assume failed
+        errorTimer.current = setTimeout(markError, 9000);
+
         (async () => {
-            const cal = await getCalApi({ namespace: '123456' });
-            cal('ui', {
-                theme: 'light',
-                cssVarsPerTheme: {
-                    light: { 'cal-brand': '#2e3192' },
-                    dark: { 'cal-brand': '#aec8ff' },
-                },
-                hideEventTypeDetails: false,
-                layout: 'month_view',
-            });
+            try {
+                const cal = await getCalApi({ namespace: '123456' });
+                if (cancelled) return;
+                cal('ui', {
+                    theme: 'light',
+                    cssVarsPerTheme: {
+                        light: { 'cal-brand': '#2e3192' },
+                        dark: { 'cal-brand': '#aec8ff' },
+                    },
+                    hideEventTypeDetails: false,
+                    layout: 'month_view',
+                });
+            } catch {
+                markError();
+            }
         })();
+
+        return () => {
+            cancelled = true;
+            window.removeEventListener('message', handleMessage);
+            if (errorTimer.current) clearTimeout(errorTimer.current);
+        };
     }, []);
 
     return (
@@ -157,12 +198,114 @@ export function BookDemoSection() {
                     </div>
 
                     {/* Cal embed */}
-                    <Cal
-                        namespace="123456"
-                        calLink="slotraph/123456"
-                        style={{ width: '100%', height: '100%', overflow: 'scroll' }}
-                        config={{ layout: 'month_view', useSlotsViewOnSmallScreen: 'true' }}
-                    />
+                    <div className="relative" style={{ minHeight: '560px' }}>
+                        {embedStatus !== 'error' && (
+                            <Cal
+                                namespace="123456"
+                                calLink="slotraph/123456"
+                                style={{ width: '100%', height: '100%', overflow: 'scroll' }}
+                                config={{ layout: 'month_view', useSlotsViewOnSmallScreen: 'true' }}
+                            />
+                        )}
+
+                        {/* Loading skeleton */}
+                        {embedStatus === 'loading' && (
+                            <div
+                                className="absolute inset-0 rounded-2xl overflow-hidden"
+                                style={{ backgroundColor: '#ffffff', border: '1px solid #e2e6ea', boxShadow: '0 4px 24px rgba(15,31,46,0.06)' }}
+                            >
+                                <div className="p-8 flex flex-col gap-6 h-full">
+                                    {/* Month nav */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="h-5 w-28 rounded-lg animate-pulse" style={{ backgroundColor: '#eef0f3' }} />
+                                        <div className="flex gap-2">
+                                            <div className="h-8 w-8 rounded-lg animate-pulse" style={{ backgroundColor: '#eef0f3' }} />
+                                            <div className="h-8 w-8 rounded-lg animate-pulse" style={{ backgroundColor: '#eef0f3' }} />
+                                        </div>
+                                    </div>
+
+                                    {/* Day labels */}
+                                    <div className="grid grid-cols-7 gap-2">
+                                        {Array.from({ length: 7 }).map((_, i) => (
+                                            <div key={i} className="h-3 rounded-md animate-pulse mx-auto w-4/5" style={{ backgroundColor: '#eef0f3' }} />
+                                        ))}
+                                    </div>
+
+                                    {/* Calendar grid */}
+                                    <div className="grid grid-cols-7 gap-2 flex-1">
+                                        {Array.from({ length: 35 }).map((_, i) => (
+                                            <div
+                                                key={i}
+                                                className="aspect-square rounded-lg animate-pulse"
+                                                style={{ backgroundColor: i % 7 === 0 || i % 11 === 0 ? '#e6e9f5' : '#eef0f3' }}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="h-px w-full" style={{ backgroundColor: '#eef0f3' }} />
+
+                                    {/* Time slots label */}
+                                    <div className="h-4 w-36 rounded-lg animate-pulse" style={{ backgroundColor: '#eef0f3' }} />
+
+                                    {/* Time slot pills */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {Array.from({ length: 6 }).map((_, i) => (
+                                            <div key={i} className="h-10 rounded-xl animate-pulse" style={{ backgroundColor: i === 1 ? '#e6e9f5' : '#eef0f3' }} />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Error state */}
+                        {embedStatus === 'error' && (
+                            <div
+                                className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center text-center"
+                                style={{
+                                    backgroundColor: '#ffffff',
+                                    border: '1px solid #e2e6ea',
+                                    boxShadow: '0 4px 24px rgba(15,31,46,0.06)',
+                                    padding: '48px 40px',
+                                }}
+                            >
+                                {/* Icon */}
+                                <div
+                                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
+                                    style={{ backgroundColor: 'rgba(46,49,146,0.07)' }}
+                                >
+                                    <Video size={22} style={{ color: '#2e3192' }} />
+                                </div>
+
+                                {/* Text */}
+                                <p className="text-[17px] font-semibold tracking-[-0.02em] mb-2" style={{ color: '#0f1f2e' }}>
+                                    Scheduler unavailable
+                                </p>
+                                <p className="text-[14px] leading-[1.7] max-w-[300px] mb-8" style={{ color: '#7a8799' }}>
+                                    The booking widget couldn't load right now. Reach us directly and we'll get you scheduled.
+                                </p>
+
+                                {/* CTA */}
+                                <a
+                                    href="mailto:hello@slotra.ph"
+                                    className="inline-flex items-center gap-2 rounded-xl text-[13px] font-semibold transition-all duration-150 hover:opacity-90"
+                                    style={{
+                                        padding: '12px 24px',
+                                        backgroundColor: '#2e3192',
+                                        color: '#ffffff',
+                                        boxShadow: '0 2px 8px rgba(46,49,146,0.25)',
+                                    }}
+                                >
+                                    Email us to book
+                                </a>
+
+                                {/* Or contact note */}
+                                <p className="text-[12px] mt-4" style={{ color: '#b0bac6' }}>
+                                    or reach us at <span style={{ color: '#4a5668' }}>hello@slotra.ph</span>
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </section>
