@@ -24,6 +24,11 @@ const resolvedEnv = { ...rootEnv, ...appEnv, ...process.env };
 
 export default defineConfig({
   integrations: [react()],
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'tl'],
+    routing: { prefixDefaultLocale: false },
+  },
   vite: {
     plugins: [tailwindcss()],
     define: {

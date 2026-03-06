@@ -1,0 +1,14 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import { BookDemoSection } from '../../components/BookDemoSection';
+import { APP_NAME } from '@slotra/utils';
+---
+
+<PageLayout
+  locale="tl"
+  alternatePath="/demo"
+  title={`Mag-book ng Demo — ${APP_NAME}`}
+  description="Mag-book ng libreng 30-minutong Google Meet kasama ang Slotra team. Makakuha ng personalized na walkthrough ng platform."
+>
+  <BookDemoSection locale="tl" client:load />
+</PageLayout>

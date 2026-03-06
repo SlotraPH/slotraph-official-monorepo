@@ -7,21 +7,41 @@ import { DevBanner } from '../components/DevBanner';
 import { Toaster } from 'sileo';
 import { IN_DEVELOPMENT } from '../config';
 import { APP_NAME } from '@slotra/utils';
+import type { Locale } from '../i18n/utils';
 
 interface Props {
   title?: string;
   description?: string;
+  locale?: Locale;
+  alternatePath?: string;
 }
 
 const {
   title = `${APP_NAME} — Free Scheduling Software for Philippine Businesses`,
   description = 'Slotra is a free scheduling platform for Philippine businesses. Automate bookings, reminders, and payments 24/7.',
+  locale = 'en',
+  alternatePath = locale === 'en' ? '/tl' : '/',
 } = Astro.props;
+
+const canonicalBase = 'https://slotra.ph';
+const enUrl = `${canonicalBase}${locale === 'tl' ? alternatePath : Astro.url.pathname}`;
+const tlUrl = `${canonicalBase}${locale === 'tl' ? Astro.url.pathname : alternatePath}`;
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} lang={locale}>
+  <Fragment slot="head">
+    <link rel="alternate" hreflang="en" href={enUrl} />
+    <link rel="alternate" hreflang="tl" href={tlUrl} />
+    <link rel="alternate" hreflang="x-default" href={enUrl} />
+  </Fragment>
   {IN_DEVELOPMENT && <DevBanner client:load />}
-  <Navbar loginHref="/demo" inDevelopment={IN_DEVELOPMENT} client:load />
+  <Navbar
+    loginHref={locale === 'tl' ? '/tl/demo' : '/demo'}
+    inDevelopment={IN_DEVELOPMENT}
+    locale={locale}
+    alternatePath={alternatePath}
+    client:load
+  />
   <slot />
   <Footer client:load />
   <ScrollToTop client:load />

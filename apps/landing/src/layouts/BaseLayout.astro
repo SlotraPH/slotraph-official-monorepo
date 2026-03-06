@@ -4,13 +4,14 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
+  lang?: string;
 }
 
-const { title, description = 'Welcome to Slotra' } = Astro.props;
+const { title, description = 'Welcome to Slotra', lang = 'en' } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,6 +24,7 @@ const { title, description = 'Welcome to Slotra' } = Astro.props;
       rel="stylesheet"
     />
     <title>{title}</title>
+    <slot name="head" />
   </head>
   <body>
     <!-- Preloader -->
