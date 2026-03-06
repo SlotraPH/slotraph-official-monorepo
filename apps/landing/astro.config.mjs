@@ -35,6 +35,7 @@ export default defineConfig({
       __SUPABASE_URL__:       JSON.stringify(resolvedEnv.VITE_SUPABASE_URL       ?? ''),
       __SUPABASE_ANON_KEY__:  JSON.stringify(resolvedEnv.VITE_SUPABASE_ANON_KEY  ?? ''),
       __TURNSTILE_SITE_KEY__: JSON.stringify(resolvedEnv.VITE_TURNSTILE_SITE_KEY ?? ''),
+      __POSTHOG_KEY__:        JSON.stringify(resolvedEnv.VITE_POSTHOG_KEY        ?? ''),
     },
   },
 });

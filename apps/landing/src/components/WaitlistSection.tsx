@@ -4,6 +4,7 @@ import { AppIcon } from '@slotra/branding';
 import { sileo } from 'sileo';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useTranslations, type Locale } from '../i18n/utils';
+import { trackEvent } from '../lib/analytics';
 
 declare const __SUPABASE_URL__: string;
 declare const __TURNSTILE_SITE_KEY__: string;
@@ -172,6 +173,7 @@ export function WaitlistSection({ turnstileSiteKey, locale = 'en' }: { turnstile
 
         if (res.ok) {
             setSubmitted(true);
+            trackEvent('waitlist_signup', { locale });
             sileo.success({
                 title: t('toast.waitlist_success_title'),
                 description: t('toast.waitlist_success_desc'),

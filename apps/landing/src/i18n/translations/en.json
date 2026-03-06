@@ -50,5 +50,11 @@
   "toast.rate_limit_title": "Too many attempts",
   "toast.rate_limit_desc": "Please try again in a few minutes.",
   "toast.waitlist_success_title": "You're on the list!",
-  "toast.waitlist_success_desc": "We'll notify you when Slotra is ready to use."
+  "toast.waitlist_success_desc": "We'll notify you when Slotra is ready to use.",
+
+  "cookie.banner_text": "We use cookies to understand how visitors use Slotra and to improve your experience.",
+  "cookie.learn_more": "Learn more",
+  "cookie.decline": "Decline",
+  "cookie.accept": "Accept cookies",
+  "cookie.dismiss": "Dismiss cookie notice"
 }

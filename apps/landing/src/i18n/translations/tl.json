@@ -50,5 +50,11 @@
   "toast.rate_limit_title": "Masyadong maraming pagsubok",
   "toast.rate_limit_desc": "Subukan muli pagkatapos ng ilang minuto.",
   "toast.waitlist_success_title": "Nandito ka na sa listahan!",
-  "toast.waitlist_success_desc": "Aabisuhan namin ikaw kapag handa na ang Slotra."
+  "toast.waitlist_success_desc": "Aabisuhan namin ikaw kapag handa na ang Slotra.",
+
+  "cookie.banner_text": "Gumagamit kami ng cookies para maunawaan kung paano ginagamit ang Slotra at mapabuti ang iyong karanasan.",
+  "cookie.learn_more": "Alamin pa",
+  "cookie.decline": "Tanggihan",
+  "cookie.accept": "Tanggapin ang cookies",
+  "cookie.dismiss": "Isara ang abiso tungkol sa cookies"
 }

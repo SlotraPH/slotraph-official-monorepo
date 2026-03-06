@@ -3,6 +3,8 @@ import BaseLayout from './BaseLayout.astro';
 import { Navbar } from '@slotra/ui';
 import { Footer } from '../components/Footer';
 import { ScrollToTop } from '../components/ScrollToTop';
+import { AnalyticsProvider } from '../components/AnalyticsProvider';
+import { CookieBanner } from '../components/CookieBanner';
 import { DevBanner } from '../components/DevBanner';
 import { Toaster } from 'sileo';
 import { IN_DEVELOPMENT } from '../config';
@@ -45,6 +47,8 @@ const tlUrl = `${canonicalBase}${locale === 'tl' ? Astro.url.pathname : alternat
   <slot />
   <Footer client:load />
   <ScrollToTop client:load />
+  <AnalyticsProvider locale={locale} client:load />
+  <CookieBanner locale={locale} client:load />
   <Toaster
     position="bottom-left"
     options={{

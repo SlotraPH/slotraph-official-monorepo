@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, memo } from 'react';
 import { Check, Clock, Video } from 'lucide-react';
 import Cal, { getCalApi } from '@calcom/embed-react';
 import { useTranslations, type Locale } from '../i18n/utils';
+import { trackEvent } from '../lib/analytics';
 
 // ── Background grid ────────────────────────────────────────
 
@@ -52,7 +53,12 @@ export function BookDemoSection({ locale = 'en' }: { locale?: Locale }) {
     useEffect(() => {
         let cancelled = false;
 
-        const markReady = () => { if (!cancelled) setEmbedStatus('ready'); };
+        const markReady = () => {
+            if (!cancelled) {
+                setEmbedStatus('ready');
+                trackEvent('demo_calendar_loaded', { locale });
+            }
+        };
         const markError = () => { if (!cancelled) setEmbedStatus(s => s === 'loading' ? 'error' : s); };
 
         // Cal.com fires postMessage events when the embed iframe becomes interactive
@@ -67,6 +73,9 @@ export function BookDemoSection({ locale = 'en' }: { locale?: Locale }) {
                     (d?.data?.namespace === '123456')
                 ) {
                     markReady();
+                }
+                if (d?.type === 'cal:bookingSuccessful') {
+                    trackEvent('demo_booked', { locale });
                 }
             } catch { /* ignore parse errors */ }
         };
