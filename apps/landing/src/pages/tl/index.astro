@@ -1,0 +1,36 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import { HeroSection } from '../../components/HeroSection';
+import { SpotlightSection } from '../../components/SpotlightSection';
+import { FeatureRow } from '../../components/FeatureRow';
+import { StepsSection } from '../../components/StepsSection';
+import { SocialProofSection } from '../../components/SocialProofSection';
+import { PricingSection } from '../../components/PricingSection';
+import { FaqSection } from '../../components/FaqSection';
+import { FinalCtaBanner } from '../../components/FinalCtaBanner';
+import { WaitlistSection } from '../../components/WaitlistSection';
+import { IN_DEVELOPMENT } from '../../config';
+import { APP_NAME } from '@slotra/utils';
+---
+
+<PageLayout
+  locale="tl"
+  alternatePath="/"
+  title={`${APP_NAME} — Libreng Software para sa mga Negosyong Pilipino`}
+  description="Ang Slotra ay libreng scheduling platform para sa mga negosyong Pilipino. I-automate ang iyong mga booking, reminder, at bayad 24/7."
+>
+  {IN_DEVELOPMENT ? (
+    <WaitlistSection turnstileSiteKey={__TURNSTILE_SITE_KEY__} locale="tl" client:load />
+  ) : (
+    <>
+      <HeroSection client:load />
+      <SpotlightSection client:load />
+      <FeatureRow client:load />
+      <StepsSection client:load />
+      <SocialProofSection client:load />
+      <PricingSection client:load />
+      <FaqSection client:load />
+      <FinalCtaBanner client:load />
+    </>
+  )}
+</PageLayout>

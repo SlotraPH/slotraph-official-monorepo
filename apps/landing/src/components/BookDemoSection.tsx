@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, memo } from 'react';
 import { Check, Clock, Video } from 'lucide-react';
 import Cal, { getCalApi } from '@calcom/embed-react';
+import { useTranslations, type Locale } from '../i18n/utils';
 
 // ── Background grid ────────────────────────────────────────
 
@@ -43,7 +44,8 @@ const InteractiveGridPattern = memo(function InteractiveGridPattern({
 
 type EmbedStatus = 'loading' | 'ready' | 'error';
 
-export function BookDemoSection() {
+export function BookDemoSection({ locale = 'en' }: { locale?: Locale }) {
+    const t = useTranslations(locale);
     const [embedStatus, setEmbedStatus] = useState<EmbedStatus>('loading');
     const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -116,23 +118,23 @@ export function BookDemoSection() {
                         className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full mb-4"
                         style={{ backgroundColor: 'rgba(46,49,146,0.08)', color: '#2e3192' }}
                     >
-                        <Video size={12} /> Free 30-min demo
+                        <Video size={12} /> {t('demo.badge')}
                     </span>
                     <h1
                         className="text-[38px] font-bold leading-[1.15] tracking-[-0.03em] mb-3 max-[640px]:text-[28px]"
                         style={{ color: '#0f1f2e' }}
                     >
-                        See Slotra in action
+                        {t('demo.headline')}
                     </h1>
                     <p className="text-[15px] leading-[1.75] max-w-[520px]" style={{ color: '#4a5668' }}>
-                        Book a personalized 30-minute Google Meet with our team. We'll walk you through how Slotra fits your business and answer any questions.
+                        {t('demo.subtitle')}
                     </p>
 
                     {/* Meta pills */}
                     <div className="flex items-center gap-3 flex-wrap justify-center mt-4">
                         {[
-                            { icon: <Clock size={13} />, label: '30 minutes' },
-                            { icon: <img src="/icons/meet-icon.png" alt="Google Meet" style={{ width: 14, height: 14 }} />, label: 'Google Meet' },
+                            { icon: <Clock size={13} />, label: t('demo.pill_duration') },
+                            { icon: <img src="/icons/meet-icon.png" alt="Google Meet" style={{ width: 14, height: 14 }} />, label: t('demo.pill_platform') },
                         ].map(({ icon, label }) => (
                             <div
                                 key={label}
@@ -151,31 +153,27 @@ export function BookDemoSection() {
                     {/* What's covered + Team */}
                     <div className="flex flex-col gap-3 pt-2">
                         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: '#7a8799' }}>
-                            What we'll cover
+                            {t('demo.cover_title')}
                         </p>
-                        {[
-                            'Live walkthrough of the booking flow',
-                            'Staff scheduling & availability setup',
-                            'Automated SMS & email reminders',
-                            'GCash / Maya payment integration',
-                            'Customization for your business type',
-                            'Q&A — any questions you have',
-                        ].map(item => (
-                            <div key={item} className="flex items-center gap-3">
+                        {([
+                            'demo.cover_1', 'demo.cover_2', 'demo.cover_3',
+                            'demo.cover_4', 'demo.cover_5', 'demo.cover_6',
+                        ] as const).map(key => (
+                            <div key={key} className="flex items-center gap-3">
                                 <div
                                     className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center"
                                     style={{ backgroundColor: 'rgba(46,49,146,0.1)' }}
                                 >
                                     <Check size={11} style={{ color: '#2e3192' }} strokeWidth={3} />
                                 </div>
-                                <span className="text-[14px]" style={{ color: '#4a5668' }}>{item}</span>
+                                <span className="text-[14px]" style={{ color: '#4a5668' }}>{t(key)}</span>
                             </div>
                         ))}
 
                         {/* Team */}
                         <div className="flex flex-col gap-2 mt-5">
                             <p className="text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: '#b0bac6' }}>
-                                You'll meet
+                                {t('demo.team_title')}
                             </p>
                             {[
                                 { src: '/team/dheyn.jpg', name: 'Dheyn Orlanda', role: 'Chief Executive Officer' },
@@ -279,10 +277,10 @@ export function BookDemoSection() {
 
                                 {/* Text */}
                                 <p className="text-[17px] font-semibold tracking-[-0.02em] mb-2" style={{ color: '#0f1f2e' }}>
-                                    Scheduler unavailable
+                                    {t('demo.error_title')}
                                 </p>
                                 <p className="text-[14px] leading-[1.7] max-w-[300px] mb-8" style={{ color: '#7a8799' }}>
-                                    The booking widget couldn't load right now. Reach us directly and we'll get you scheduled.
+                                    {t('demo.error_desc')}
                                 </p>
 
                                 {/* CTA */}
@@ -296,12 +294,12 @@ export function BookDemoSection() {
                                         boxShadow: '0 2px 8px rgba(46,49,146,0.25)',
                                     }}
                                 >
-                                    Email us to book
+                                    {t('demo.error_cta')}
                                 </a>
 
                                 {/* Or contact note */}
                                 <p className="text-[12px] mt-4" style={{ color: '#b0bac6' }}>
-                                    or reach us at <span style={{ color: '#4a5668' }}>hello@slotra.ph</span>
+                                    {t('demo.error_contact')} <span style={{ color: '#4a5668' }}>hello@slotra.ph</span>
                                 </p>
                             </div>
                         )}

@@ -12,9 +12,9 @@ import { WaitlistSection } from '../components/WaitlistSection';
 import { IN_DEVELOPMENT } from '../config';
 ---
 
-<PageLayout>
+<PageLayout locale="en" alternatePath="/tl">
   {IN_DEVELOPMENT ? (
-    <WaitlistSection turnstileSiteKey={__TURNSTILE_SITE_KEY__} client:load />
+    <WaitlistSection turnstileSiteKey={__TURNSTILE_SITE_KEY__} locale="en" client:load />
   ) : (
     <>
       <HeroSection client:load />

@@ -3,6 +3,7 @@ import { Check, User, Mail, AlertCircle } from 'lucide-react';
 import { AppIcon } from '@slotra/branding';
 import { sileo } from 'sileo';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { useTranslations, type Locale } from '../i18n/utils';
 
 declare const __SUPABASE_URL__: string;
 declare const __TURNSTILE_SITE_KEY__: string;
@@ -61,20 +62,25 @@ function InteractiveGridPattern({
 type Fields = { name: string; email: string };
 type FieldErrors = Partial<Fields>;
 
-function validateName(v: string): string {
-    if (!v.trim()) return 'Full name is required.';
-    if (v.trim().length < 2) return 'Name must be at least 2 characters.';
-    if (!/^[\p{L}\s\-'.]+$/u.test(v.trim())) return 'Please enter a valid name.';
+type ErrorKey =
+    | 'error.name_required' | 'error.name_short' | 'error.name_invalid'
+    | 'error.email_required' | 'error.email_invalid';
+
+function validateName(v: string): ErrorKey | '' {
+    if (!v.trim()) return 'error.name_required';
+    if (v.trim().length < 2) return 'error.name_short';
+    if (!/^[\p{L}\s\-'.]+$/u.test(v.trim())) return 'error.name_invalid';
     return '';
 }
 
-function validateEmail(v: string): string {
-    if (!v.trim()) return 'Work email is required.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())) return 'Please enter a valid email address.';
+function validateEmail(v: string): ErrorKey | '' {
+    if (!v.trim()) return 'error.email_required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())) return 'error.email_invalid';
     return '';
 }
 
-export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string }) {
+export function WaitlistSection({ turnstileSiteKey, locale = 'en' }: { turnstileSiteKey: string; locale?: Locale }) {
+    const t = useTranslations(locale);
     const [fields, setFields] = useState<Fields>({ name: '', email: '' });
     const [errors, setErrors] = useState<FieldErrors>({});
     const [touched, setTouched] = useState<Partial<Record<keyof Fields, boolean>>>({});
@@ -106,8 +112,8 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
     }, []);
 
     const validate = (f: Fields): FieldErrors => ({
-        name: validateName(f.name) || undefined,
-        email: validateEmail(f.email) || undefined,
+        name: validateName(f.name) ? t(validateName(f.name) as ErrorKey) : undefined,
+        email: validateEmail(f.email) ? t(validateEmail(f.email) as ErrorKey) : undefined,
     });
 
     const handleBlur = (field: keyof Fields) => {
@@ -136,8 +142,8 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
         if (!turnstileToken) {
             sileo.error(
                 turnstileStatus === 'loading'
-                    ? { title: 'Still verifying', description: 'Please wait a moment and try again.' }
-                    : { title: 'Bot check failed', description: 'Please refresh and try again.' }
+                    ? { title: t('toast.still_verifying_title'), description: t('toast.still_verifying_desc') }
+                    : { title: t('toast.bot_failed_title'), description: t('toast.bot_failed_desc') }
             );
             return;
         }
@@ -159,7 +165,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
             );
         } catch {
             setLoading(false);
-            sileo.error({ title: 'Something went wrong', description: 'Please try again in a moment.' });
+            sileo.error({ title: t('toast.error_title'), description: t('toast.error_desc') });
             return;
         }
         setLoading(false);
@@ -167,8 +173,8 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
         if (res.ok) {
             setSubmitted(true);
             sileo.success({
-                title: "You're on the list!",
-                description: "We'll notify you when Slotra is ready to use.",
+                title: t('toast.waitlist_success_title'),
+                description: t('toast.waitlist_success_desc'),
             });
             return;
         }
@@ -176,23 +182,14 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
         const data = await res.json().catch(() => ({}));
 
         if (res.status === 409 && data.error === 'duplicate_email') {
-            setTouched(t => ({ ...t, email: true }));
-            setErrors(e => ({ ...e, email: 'This email is already on the waitlist.' }));
+            setTouched(prev => ({ ...prev, email: true }));
+            setErrors(e => ({ ...e, email: t('error.duplicate_email') }));
         } else if (res.status === 429) {
-            sileo.error({
-                title: 'Too many attempts',
-                description: 'Please try again in a few minutes.',
-            });
+            sileo.error({ title: t('toast.rate_limit_title'), description: t('toast.rate_limit_desc') });
         } else if (res.status === 403) {
-            sileo.error({
-                title: 'Bot check failed',
-                description: 'Please refresh and try again.',
-            });
+            sileo.error({ title: t('toast.bot_failed_title'), description: t('toast.bot_failed_desc') });
         } else {
-            sileo.error({
-                title: 'Something went wrong',
-                description: 'Please try again in a moment.',
-            });
+            sileo.error({ title: t('toast.error_title'), description: t('toast.error_desc') });
         }
     };
 
@@ -261,7 +258,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                         {/* Line 1: ✳️ Scheduling. */}
                         <span className="flex items-center gap-[0.25em]">
                             <span aria-hidden="true" style={{ fontSize: '0.42em', lineHeight: 1 }}>✳️</span>
-                            Scheduling.
+                            {t('waitlist.headline1')}
                         </span>
 
                         {/* Line 2: Software. — oval */}
@@ -276,13 +273,13 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                                     transformOrigin: 'center',
                                 }}
                             >
-                                Software.
+                                {t('waitlist.headline2')}
                             </span>
                         </span>
 
                         {/* Line 3: built for the Philippines. */}
                         <span className="flex items-baseline gap-[0.2em] flex-wrap">
-                            <span style={{ fontSize: '0.52em', fontWeight: 400, color: '#7a8799' }}>built for the</span>
+                            <span style={{ fontSize: '0.52em', fontWeight: 400, color: '#7a8799' }}>{t('waitlist.headline3_prefix')}</span>
                             <span
                                 style={{
                                     backgroundImage: 'linear-gradient(rgba(0,195,255,0.35), rgba(0,195,255,0.35))',
@@ -294,7 +291,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                                     animation: 'highlight-reveal 0.55s ease-out 0.35s forwards',
                                 }}
                             >
-                                Philippines.
+                                {t('waitlist.headline3_highlight')}
                             </span>
                         </span>
                     </h1>
@@ -304,7 +301,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                         className="text-[15px] leading-[1.75] max-w-[400px]"
                         style={{ color: '#4a5668' }}
                     >
-                        Slotra automates bookings, reminders, and payments — so you can focus on growing your business.
+                        {t('waitlist.subtitle')}
                     </p>
 
                     {/* Form / Success */}
@@ -314,7 +311,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                             style={{ color: '#2e3192' }}
                         >
                             <Check size={16} aria-hidden="true" />
-                            You're on the list! We'll reach out when we launch.
+                            {t('waitlist.success')}
                         </div>
                     ) : (
                         <>
@@ -329,7 +326,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                                         className="text-[12px] font-medium text-left"
                                         style={{ color: '#4a5668' }}
                                     >
-                                        Full Name
+                                        {t('waitlist.name_label')}
                                     </label>
                                     <div className="relative">
                                         <span className="absolute left-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: iconColor('name') }}>
@@ -338,7 +335,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                                         <input
                                             id="waitlist-name"
                                             type="text"
-                                            placeholder="Juan dela Cruz"
+                                            placeholder={t('waitlist.name_placeholder')}
                                             value={fields.name}
                                             onChange={e => handleChange('name', e.target.value)}
                                             onFocus={e => onInputFocus(e, 'name')}
@@ -368,7 +365,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                                         className="text-[12px] font-medium text-left"
                                         style={{ color: '#4a5668' }}
                                     >
-                                        Work Email
+                                        {t('waitlist.email_label')}
                                     </label>
                                     <div className="relative">
                                         <span className="absolute left-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: iconColor('email') }}>
@@ -377,7 +374,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                                         <input
                                             id="waitlist-email"
                                             type="email"
-                                            placeholder="juan@company.com"
+                                            placeholder={t('waitlist.email_placeholder')}
                                             value={fields.email}
                                             onChange={e => handleChange('email', e.target.value)}
                                             onFocus={e => onInputFocus(e, 'email')}
@@ -423,7 +420,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                                         cursor: loading || turnstileStatus === 'loading' ? 'not-allowed' : 'pointer',
                                     }}
                                 >
-                                    {loading ? 'Joining…' : turnstileStatus === 'loading' ? 'Verifying…' : 'Join the Waitlist'}
+                                    {loading ? t('waitlist.submit_loading') : turnstileStatus === 'loading' ? t('waitlist.submit_verifying') : t('waitlist.submit')}
                                 </button>
                             </form>
 
@@ -436,7 +433,7 @@ export function WaitlistSection({ turnstileSiteKey }: { turnstileSiteKey: string
                             />
 
                             <p className="text-[12px]" style={{ color: '#a0aab4' }}>
-                                No spam. We'll notify you when Slotra is ready to use.
+                                {t('waitlist.privacy')}
                             </p>
                         </>
                     )}
