@@ -113,6 +113,20 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  // Notify n8n (fire-and-forget — don't block the response)
+  const n8nWebhookUrl = Deno.env.get("N8N_WEBHOOK_URL");
+  if (n8nWebhookUrl) {
+    fetch(n8nWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        created_at: new Date().toISOString(),
+      }),
+    }).catch((err) => console.error("n8n webhook error:", err));
+  }
+
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
     headers: { ...CORS_HEADERS, "Content-Type": "application/json" },

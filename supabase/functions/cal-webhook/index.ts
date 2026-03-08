@@ -113,6 +113,26 @@ Deno.serve(async (req: Request) => {
     if (error) console.error("demo_bookings update error:", JSON.stringify(error));
   }
 
+  // Notify n8n (fire-and-forget — don't block the response)
+  const n8nWebhookUrl = Deno.env.get("N8N_BOOKING_WEBHOOK_URL");
+  if (n8nWebhookUrl) {
+    fetch(n8nWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: triggerEvent,
+        name: attendee?.name ?? "",
+        email: attendee?.email?.toLowerCase() ?? "",
+        scheduled_at: payload.startTime,
+        timezone: attendee?.timeZone ?? null,
+        meet_url: meetUrl,
+        message: (payload.additionalNotes as string | undefined) ?? null,
+        cal_booking_uid: uid,
+        created_at: new Date().toISOString(),
+      }),
+    }).catch((err) => console.error("n8n webhook error:", err));
+  }
+
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
