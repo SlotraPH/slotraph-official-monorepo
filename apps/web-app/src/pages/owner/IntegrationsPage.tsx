@@ -21,14 +21,6 @@ export function IntegrationsPage() {
   const [roadmap, setRoadmap] = useState<string[]>([]);
   const [activeAction, setActiveAction] = useState<{ providerId: string; type: IntegrationActionType } | null>(null);
   const [tickNow, setTickNow] = useState(Date.now());
-import { OwnerContentGrid, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
-import { mockOwnerRouteClient } from '@/features/owner/routeClient';
-import { IntegrationOverview } from './integrations/IntegrationOverview';
-import { IntegrationRoadmap } from './integrations/IntegrationRoadmap';
-import { IntegrationWorkflowList } from './integrations/IntegrationWorkflowList';
-
-export function IntegrationsPage() {
-  const resource = mockOwnerRouteClient.getIntegrationsQuery();
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -90,8 +82,6 @@ export function IntegrationsPage() {
 
   if (sessionStatus === 'loading') {
     return <RouteStateCard title="Loading integrations" description="Hydrating provider auth, sync, and incident state snapshots." variant="loading" />;
-  if (resource.status === 'error') {
-    return <RouteStateCard title="Integrations unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   if (sessionStatus === 'error') {

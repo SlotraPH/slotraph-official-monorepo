@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import { ownerPaymentsPersistenceClient, type PaymentOperationItem, type PaymentProcessingStatus } from '@/features/owner/payments/persistenceClient';
-import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { FlowLayout, FlowSection, ReviewBlock, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
 import {
   BrandButton,
@@ -81,35 +80,12 @@ export function BillingWorkspace() {
     } catch {
       setSessionStatus('error');
       setSessionMessage('Could not load payment operations. Retry to restore billing policy and payment activity.');
-  const resource = mockOwnerRouteClient.getPaymentsQuery();
-  const toast = useBrandToast();
-  const [view, setView] = useState<BillingView>('collection');
-  const [draft, setDraft] = useState<BillingDraft>(() => {
-    if (resource.status !== 'success') {
-      return {
-        collectionMethod: 'hybrid',
-        depositType: 'none',
-        depositValue: '0',
-        requireDepositFor: 'manual-review',
-        instructions: '',
-      };
     }
   }
 
   useEffect(() => {
     void hydratePayments();
   }, []);
-    return {
-      collectionMethod: resource.data.paymentSettings.collectionMethod,
-      depositType: resource.data.paymentSettings.depositType,
-      depositValue: resource.data.paymentSettings.depositValue,
-      requireDepositFor: resource.data.paymentSettings.requireDepositFor,
-      instructions: resource.data.paymentSettings.instructions,
-    };
-  });
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
-  const [saveState, setSaveState] = useState<SaveStateStatus>('idle');
-  const [lastSavedLabel, setLastSavedLabel] = useState('Saved');
 
   if (sessionStatus === 'loading') {
     return <RouteStateCard title="Loading payment settings" description="Preparing policy, checklist, and transaction states." variant="loading" />;
@@ -117,8 +93,6 @@ export function BillingWorkspace() {
 
   if (sessionStatus === 'error') {
     return <RouteStateCard title="Payments unavailable" description={sessionMessage} variant="error" onRetry={() => void hydratePayments()} />;
-  if (resource.status === 'error') {
-    return <RouteStateCard title="Payments unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   const operationsByStatus = (() => {
@@ -253,12 +227,6 @@ export function BillingWorkspace() {
     await transitionOperation(operation, lastOperationTransition.previousStatus, {
       trackUndo: false,
       successTitle: 'Payment status restored',
-    setSaveState('saving');
-    setLastSavedLabel(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-    setSaveState('saved');
-    toast.success({
-      title: 'Billing policy updated',
-      description: 'Collection instructions and deposit defaults were saved to the local billing preview.',
     });
     setLastOperationTransition(null);
   }
@@ -279,7 +247,6 @@ export function BillingWorkspace() {
             <SaveStateIndicator status={saveState} savedLabel={lastSavedLabel} onRetry={retrySave} />
             <AppPill tone="warning">Manual collection</AppPill>
             <AppPill>{checklist.filter((item) => item.status === 'Ready now').length} ready now</AppPill>
-            <SaveStateIndicator status={saveState} savedLabel={lastSavedLabel} onRetry={handleSave} />
           </>
         )}
       />
@@ -533,4 +500,3 @@ function toPaymentStatusTone(status: PaymentProcessingStatus) {
 
   return 'neutral' as const;
 }
-

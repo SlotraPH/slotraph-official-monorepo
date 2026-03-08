@@ -5,13 +5,6 @@ import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemp
 import { RouteStateCard } from '@/app/components/RouteStateCard';
 import type { CustomerRecord, CustomerStatus } from '@/domain/customer/types';
 import { ownerCustomerPersistenceClient } from '@/features/owner/customers/persistenceClient';
-﻿import { Compass, Mail, Phone, Search, UserPlus, Users } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { AppPill, OwnerPageScaffold, PageIntro } from '@/app/components/PageTemplates';
-import { RouteStateCard } from '@/app/components/RouteStateCard';
-import type { CustomerRecord } from '@/domain/customer/types';
-import { mockOwnerRouteClient } from '@/features/owner/routeClient';
 import { EmptyFlowState, StatusTabs } from '@/modules/shared/flow/FlowScaffolds';
 import {
   BrandButton,
@@ -42,7 +35,6 @@ const EMPTY_DRAFT: ClientIntakeDraft = {
 };
 
 export function CustomerWorkspace() {
-  const resource = mockOwnerRouteClient.getCustomersQuery();
   const toast = useBrandToast();
   const [sessionStatus, setSessionStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [sessionMessage, setSessionMessage] = useState('Loading customer records...');
@@ -51,9 +43,6 @@ export function CustomerWorkspace() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<(typeof STATUS_OPTIONS)[number]['value']>('All');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(
-    () => (resource.status === 'success' ? resource.data.customers[0]?.id ?? null : null),
-  );
   const [draft, setDraft] = useState<ClientIntakeDraft>(EMPTY_DRAFT);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [intakeSaveState, setIntakeSaveState] = useState<SaveStateStatus>('saved');
@@ -120,8 +109,6 @@ export function CustomerWorkspace() {
         actions={<BrandButton variant="secondary" onClick={() => void restoreDefaults()}>Reload sample customers</BrandButton>}
       />
     );
-  if (resource.status === 'error') {
-    return <RouteStateCard title="Customers unavailable" description={resource.message} variant="error" onRetry={() => window.location.reload()} />;
   }
 
   const filtered = customers.filter((customer) => {
@@ -546,5 +533,4 @@ function getStatusActions(customer: CustomerRecord): Array<{ label: string; stat
 
   return options.slice(0, 2);
 }
-
 

@@ -104,19 +104,6 @@ export function BusinessProfilePage() {
 
   if (loadingError) {
     return <RouteStateCard title="Business settings unavailable" description={loadingError} variant="error" onRetry={() => void loadBusinessDraft()} />;
-
-  function markDirty() {
-    setSaveState('idle');
-  }
-
-  function handleSaveProfile() {
-    setSaveState('saving');
-    setLastSaved(`Saved at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-    setSaveState('saved');
-    toast.success({
-      title: 'Business profile saved',
-      description: 'Contact details and operations notes were updated in this workspace draft.',
-    });
   }
 
   return (
@@ -181,8 +168,6 @@ export function BusinessProfilePage() {
         <div className="settings-button-row settings-button-row--end">
           <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={() => void handleSaveProfile()} />
           <BrandButton startIcon={<Save size={14} />} onClick={() => void handleSaveProfile()} disabled={saveState === 'saving'}>Save business profile</BrandButton>
-          <SaveStateIndicator status={saveState} savedLabel={lastSaved} onRetry={handleSaveProfile} />
-          <BrandButton startIcon={<Save size={14} />} onClick={handleSaveProfile}>Save business profile</BrandButton>
         </div>
       </Card>
     </div>
